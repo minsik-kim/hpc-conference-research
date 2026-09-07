@@ -1,0 +1,67 @@
+3707262|1020-1034|SmoothE: Differentiable E-Graph Extraction
+3707223|198-213|Concerto: Automatic Communication Optimization and Scheduling for Large-Scale Deep Learning
+3707270|100-115|BatchZK: A Fully Pipelined GPU-Accelerated System for Batch Generation of Zero-Knowledge Proofs
+3707287|683-697|Mint: Cost-Efficient Tracing with All Requests Collection via Commonality and Variability Analysis
+3707219|907-923|RASSM: Residue-based Acceleration of Single Sparse Matrix Computation via Adaptive Tiling
+3707240|777-793|Optimizing Quantum Circuits, Fast and Slow
+3707236|876-890|QECC-Synth: A Layout Synthesizer for Quantum Error Correction Codes on Sparse Architectures
+3707277|1069-1083|Target-Aware Implementation of Real Expressions
+3707272|524-539|FSMoE: A Flexible and Scalable Training System for Sparse Mixture-of-Experts Models
+3707239|445-462|Fast On-device LLM Inference with NPUs
+3707216|182-197|Composing Distributed Computations Through Task and Kernel Fusion
+3707229|478-492|FleetIO: Managing Multi-Tenant Cloud Storage with Multi-Agent Reinforcement Learning
+3707237|84-99|Automatic Tracing in Task-Based Runtime Systems
+3707242|637-652|Marionette: A RowHammer Attack via Row Coupling
+3707276|924-939|ReSBM: Region-based Scale and Minimal-Level Bootstrapping Management for FHE via Min-Cut
+3707278|698-714|MOAT: Securely Mitigating Rowhammer with Per-Row Activation Counters
+3707281|151-163|ClosureX: Compiler Support for Correct Persistent Fuzzing
+3707264|15-32|Accelerating Retrieval-Augmented Generation
+3707260|133-150|Cinnamon: A Framework for Scale-Out Encrypted AI
+3707238|64-83|ARC: Warp-level Adaptive Atomic Reduction in GPUs to Accelerate Differentiable Rendering
+3707253|858-875|pulse: Accelerating Distributed Pointer-Traversals on Disaggregated Memory
+3707259|264-279|DarwinGame: Playing Tournaments for Tuning Applications in Noisy Cloud Environments
+3707225|891-906|RANGE-BLOCKS: A Synchronization Facility for Domain-Specific Architectures
+3707249|987-1002|Segue & ColorGuard: Optimizing SFI Performance and Scalability on Modern Architectures
+3707282|1052-1068|Tally: Non-Intrusive Performance Isolation for Concurrent Deep Learning Workloads
+3707228|1101-1117|UniZK: Accelerating Zero-Knowledge Proof with Unified Hardware and Flexible Kernel Mapping
+3707279|47-63|AnyKey: A Key-Value SSD for All Workload Types
+3707241|1-14|Accelerating Number Theoretic Transform with Multi-GPU Systems for Efficient Zero Knowledge Proof
+3707252|1084-1100|Tela: A Temporal Load-Aware Cloud Virtual Disk Placement Scheme
+3707214|1003-1019|Selectively Uniform Concurrency Testing
+3707248|1151-1165|ZRAID: Leveraging Zone Random Write Area (ZRWA) for Alleviating Partial Parity Tax in ZNS RAID
+3707275|572-585|HALO: Loop-aware Bootstrapping Management for Fully Homomorphic Encryption
+3707285|653-668|Medusa: Accelerating Serverless LLM Inference with Materialization
+3707267|715-730|MoE-Lightning: High-Throughput MoE Inference on Memory-constrained GPUs
+3707250|116-132|ByteFS: System Support for (CXL-based) Memory-Semantic Solid-State Drives
+3707222|361-376|Earth+: On-Board Satellite Imagery Compression Leveraging Historical Earth Observations
+3707280|395-409|Efficient Lossless Compression of Scientific Floating-Point Data on CPUs and GPUs
+3707218|426-444|Exo 2: Growing a Scheduling Language
+3707251|311-325|Dilu: Enabling GPU Resourcing-on-Demand for Serverless DL Serving via Introspective Elasticity
+3707263|603-618|H-Houdini: Scalable Invariant Learning
+3707244|214-232|Cooperative Graceful Degradation in Containerized Clouds
+3707261|33-46|AnA: An Attentive Autonomous Driving System
+3707268|731-745|MVQ: Towards Efficient DNN Compression and Acceleration with Masked Vector Quantization
+3707254|342-360|Early Termination for Hyperdimensional Computing Using Inferential Statistics
+3707226|164-181|Coach: Exploiting Temporal Patterns for All-Resource Oversubscription in Cloud Platforms
+3707224|843-857|PipeLLM: Fast and Confidential Large Language Model Services with Speculative Pipelined Encryption
+3707230|410-425|Enhancing CGRA Efficiency Through Aligned Compute and Communication Provisioning
+3707266|295-310|Design and Operation of Shared Machine Learning Clusters on Campus
+3707257|233-248|Copper and Wire: Bridging Expressiveness and Performance for Service Mesh Policies
+3707232|828-842|Performance Prediction of On-NIC Network Functions with Multi-Resource Contention and Traffic Awareness
+3707243|970-986|RTL Verification for Secure Speculation Using Contract Shadow Logic
+3707217|940-954|Rethinking Java Performance Analysis
+3707246|746-761|Nazar: Monitoring and Adapting ML Models on Mobile Devices
+3707231|1118-1132|Using Analytical Performance/Power Model and Fine-Grained DVFS to Enhance AI Accelerator Energy Efficiency
+3707220|557-571|GraphPipe: Improving Performance and Scalability of DNN Training with Graph Pipeline Parallelism
+3707273|249-263|CRUSH: A Credit-Based Approach for Functional Unit Sharing in Dynamically Scheduled HLS
+3707274|762-776|Optimizing Datalog for the GPU
+3707215|586-602|Helix: Serving Large Language Models over Heterogeneous GPUs and Network via Max-Flow
+3707286|463-477|Faster Chaitin-like Register Allocation via Grammatical Decompositions of Control-Flow Graphs
+3707221|377-394|EDM: An Ultra-Low Latency Ethernet Fabric for Memory Disaggregation
+3707271|280-294|Debugger Toolchain Validation via Cross-Level Debugging
+3707245|509-523|Frugal: Efficient and Economic Embedding Model Training with Commodity GPUs
+3707284|794-810|PartIR: Composing SPMD Partitioning Strategies for Machine Learning
+3707255|811-827|PCcheck: Persistent Concurrent Checkpointing for ML
+3707265|493-508|Forecasting GPU Performance for Deep Learning Training and Inference
+3707258|1035-1051|SuperNoVA: Algorithm-Hardware Co-Design for Resource-Aware SLAM
+3707256|1133-1150|vAttention: Dynamic Memory Management for Serving LLMs without PagedAttention

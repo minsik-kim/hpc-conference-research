@@ -1,0 +1,83 @@
+3716273|1091-1106|Skia: Exposing Shadow Branches
+3716270|966-981|Ratte: Fuzzing for Miscompilations in Multi-Level Compilers Using Composable Semantics
+3716254|275-292|Einsum Trees: An Abstraction for Optimizing the Execution of Tensor Expressions
+3716021|1189-1202|StreamGrid: Streaming Point Cloud Analytics via Compulsory Splitting and Deterministic Termination
+3715989|227-243|Data Cache for Intermittent Computing Systems with Non-Volatile Main Memory
+3716279|1334-1347|Treelet Accelerated Ray Tracing on GPUs
+3716278|1302-1316|Towards End-to-End Optimization of LLM-based Applications with Ayo
+3716272|1076-1090|Simplifying and Accelerating NOR Flash I/O Stack for RAM-Restricted Microcontrollers
+3716007|689-703|Necro-reaper: Pruning away Dead Memory Traffic in Warehouse-Scale Computers
+3716013|845-861|PICACHU: Plug-In CGRA Handling Upcoming Nonlinear Operations in LLMs
+3715993|293-308|ElasticMiter: Formally Verified Dataflow Circuit Rewrites
+3716282|1251-1265|TaOPT: Tool-Agnostic Optimization of Parallelized Automated Mobile UI Testing
+3716016|982-997|ReCA: Integrated Acceleration for Real-Time and Efficient Cooperative Embodied Autonomous Agents
+3716008|734-749|Orion: A Fully Homomorphic Encryption Framework for Deep Learning
+3716014|913-932|Practical Federated Recommendation Model Learning Using ORAM with Controlled Privacy
+3715983|48-62|Aqua: Network-Accelerated Memory Offloading for LLMs in Scale-Up GPU Domains
+3716015|933-948|Protecting Cryptographic Code Against Spectre-RSB: (and, in Fact, All Known Spectre Variants)
+3716256|390-406|Fat-Tree QRAM: A High-Bandwidth Shared Quantum Random Access Memory for Parallel Queries
+3716267|862-881|PIM Is All You Need: A CXL-Enabled GPU-Free System for Large Language Model Inference
+3716019|1124-1138|Snowplow: Effective Kernel Fuzzing with a Learned White-box Test Mutator
+3716243|1156-1171|Squeezing Operator Performance Potential for the Ascend Architecture
+3715999|437-450|Formalising CXL Cache Coherence
+3716263|704-718|OctoCache: Caching Voxels for Accelerating 3D Occupancy Mapping in Autonomous Systems
+3716259|498-514|Harmonia: A Unified Framework for Heterogeneous FPGA Acceleration in the Cloud
+3715998|421-436|FlexSP: Accelerating Large Language Model Training via Flexible Sequence Parallelism
+3716253|147-161|Concurrency-Informed Orchestration for Serverless Functions
+3715990|244-259|Dynamic Partial Deadlock Detection and Recovery via Garbage Collection
+3716244|192-209|CTXNL: A Software-Hardware Co-designed Solution for Efficient CXL-Based Transaction Processing
+3716271|1044-1059|Saving Energy with Per-Variable Bitwidth Speculation
+3716012|831-844|PhasePrint: Exposing Cloud FPGA Fingerprints by Inducing Timing Faults at Runtime
+3716255|309-324|Embracing Imbalance: Dynamic Load Shifting among Microservice Containers in Shared Clusters
+3716020|1060-1075|ShadowLoad: Injecting State into Hardware Prefetchers
+3716003|589-603|Load and MLP-Aware Thread Orchestration for Recommendation Systems Inference on CPUs
+3716000|467-481|Gigaflow: Pipeline-Aware Sub-Traversal Caching for Modern SmartNICs
+3716018|1028-1043|RESCQ: Realtime Scheduling for Continuous Angle Quantum Error Correction Architectures
+3715992|1139-1155|Spindle: Efficient Distributed Training of Multi-Task Large Models via Wavefront Scheduling
+3716250|95-110|Cascade: A Dependency-aware Efficient Training Framework for Temporal Graph Neural Network
+3716248|63-78|Be CIM or Be Memory: A Dual-mode-aware DNN Compiler for CIM Accelerators
+3716281|1382-1399|Virgo: Cluster-level Matrix Unit Integration in GPUs for Scalability and Energy Efficiency
+3716017|1014-1027|Reload+Reload: Exploiting Cache and Memory Contention Side Channel on AMD SEV
+3716009|766-782|PAPI: Exploiting Dynamic Parallelism in Large Language Model Decoding with a Processing-In-Memory-Enabled Computing System
+3716276|1218-1234|Tackling ML-based Dynamic Mispredictions using Statically Computed Invariants for Attack Surface Reduction
+3715994|325-338|Enabling Efficient Mobile Tracing with BTrace
+3715984|79-94|BQSim: GPU-accelerated Batch Quantum Circuit Simulation using Decision Diagram
+3716004|622-638|MDPeek: Breaking Balanced Branches in SGX with Memory Disambiguation Unit Side Channels
+3716265|750-765|OS2G: A High-Performance DPU Offloading Architecture for GPU-based Deep Learning with Object Storage
+3715997|407-420|FLEXPROF: Flexible, Side-Channel-Free Memory Access
+3716269|949-965|Pruner: A Draft-then-Verify Exploration Mechanism to Accelerate Tensor Program Tuning
+3716251|111-130|CIPHERMATCH: Accelerating Homomorphic Encryption-Based String Matching via Memory-Efficient Data Packing and In-Flash Processing
+3715996|897-912|POD-Attention: Unlocking Full Prefill-Decode Overlap for Faster LLM Inference
+3716249|998-1013|Relax: Composable Abstractions for End-to-End Dynamic Machine Learning
+3716245|1-15|Accelerating LLM Serving for Multi-turn Dialogues with Efficient Resource Management
+3716010|783-797|Parendi: Thousand-Way Parallel RTL Simulation
+3711998|1365-1381|Velosiraptor: Code Synthesis for Memory Translation
+3716026|1317-1333|Towards Sound Reassembly of Modern x86-64 Binaries
+3716002|545-559|HyperHammer: Breaking Free from KVM-Enforced Isolation
+3716006|655-671|MoC-System: Efficient Fault Tolerance for Sparse Mixture-of-Experts Model Training
+3716252|131-146|COMET: Towards Practical W4A4KV4 LLMs Serving
+3716022|560-573|KernelGPT: Enhanced Kernel Fuzzing via Large Language Models
+3716280|1348-1364|Vela: A Virtualized LLM Training System with GPU Direct RoCE
+3716005|639-654|Micro Blossom: Accelerated Minimum-Weight Perfect Matching Decoding for Quantum Error Correction
+3716275|1172-1188|Stramash: A Fused-Kernel Operating System For Cache-Coherent, Heterogeneous-ISA Platforms
+3715988|210-226|CXLfork: Fast Remote Fork over CXL Fabrics
+3715985|162-177|Controlled Preemption: Amplifying Side-Channel Attacks from Userspace
+3716023|1235-1250|TaintEMU: Decoupling Tracking from Functional Domains for Architecture-Agnostic and Efficient Whole-System Taint Tracking
+3716262|672-688|Mosaic: Exploiting Instruction-Level Parallelism on Deep Learning Accelerators with iTex Tessellation
+3716261|574-588|Klotski: Efficient Mixture-of-Expert Inference via Expert-Aware Multi-Batch Pipeline
+3716246|16-31|Affinity-based Optimizations for TFHE on Processing-in-DRAM
+3715995|339-354|Energy-aware Scheduling and Input Buffer Overflow Prevention for Energy-harvesting Systems
+3716028|373-389|Extended User Interrupts (xUI): Fast and Flexible Notification without Polling
+3715991|260-274|DynaX: Sparse Attention Acceleration with Dynamic X:M Fine-Grained Structured Pruning
+3716001|515-528|HetEC: Architectures for Heterogeneous Quantum Error Correction Codes
+3716260|529-544|Hierarchical Prefetching: A Software-Hardware Instruction Prefetcher for Server Applications
+3716257|451-466|Generalizing Reuse Patterns for Efficient DNN on Microcontrollers
+3716247|32-47|AMuLeT: Automated Design-Time Testing of Secure Speculation Countermeasures
+3716258|482-497|Hardware Sentinel: Protecting Software Applications from Hardware Silent Data Corruptions
+3715986|178-191|CoServe: Efficient Collaboration-of-Experts (CoE) Model Inference with Limited Memory
+3716025|1266-1281|TAPAS: Thermal- and Power-Aware Scheduling for LLM Inference in Cloud Platforms
+3716274|1107-1123|SMaCk: Efficient Instruction Cache Attacks via Self-Modifying Code Conflicts
+3716277|1282-1301|TNIC: A Trusted NIC Architecture: A hardware-network substrate for building high-performance trustworthy distributed systems
+3716268|882-896|Pirate: No Compromise Low-Bandwidth VR Streaming for Edge Devices
+3716266|814-830|Pave: Information Flow Control for Privacy-preserving Online Data Processing Services
+3716011|798-813|Past-Future Scheduler for LLM Serving under SLA Guarantees

@@ -1,0 +1,433 @@
+10.1145/3712285.3759768 | 905-934 | Characterizing Performance, Power, and Energy of AMD CDNA3 GPU Family
+10.1145/3712285.3759769 | 1816-1829 | HStencil: Matrix-Vector Stencil Computation with Interleaved Outer Product and MLA
+10.1145/3712285.3759770 | 1830-1844 | Rethinking Back Transformation in 2-stage Eigenvalue Decomposition on Heterogeneous Architectures
+10.1145/3712285.3759771 | 1604-1618 | HyTiS: Hybrid Tile Scheduling for GPU GEMM with Enhanced Wave Utilization and Cache Locality
+10.1145/3712285.3759772 | 991-1005 | TurboFNO: High-Performance Fourier Neural Operator with Fused FFT-GEMM-iFFT on GPU
+10.1145/3712285.3759773 | 383-396 | TraceFlow: Efficient Trace Analysis for Large-Scale Parallel Applications via Interaction Pattern-Aware Trace Distribution
+10.1145/3712285.3759774 | 298-315 | CPU- and GPU-initiated Communication Strategies for Conjugate Gradient Methods on Large GPU Clusters
+10.1145/3712285.3759775 | 1351-1367 | Balanced and Elastic End-to-end Training of Dynamic LLMs
+10.1145/3712285.3759776 | 805-819 | MetoHash: A Memory-Efficient and Traffic-Optimized Hashing Index on Hybrid PMem-DRAM Memories
+10.1145/3712285.3759777 | 789-804 | UpANNS: Enhancing Billion-Scale ANNS Efficiency with Real-World PIM Architecture
+10.1145/3712285.3759778 | 1028-1042 | AGILE: Lightweight and Efficient Asynchronous GPU-SSD Integration
+10.1145/3712285.3759779 | 167-184 | A Sample-Free Compilation Framework for Efficient Dynamic Tensor Computation
+10.1145/3712285.3759780 | 837-854 | Optimizing Data Acquisitions in Multi-Robot Systems
+10.1145/3712285.3759781 | 1661-1675 | MISA-AKMC :Achieve Kinetic Monte Carlo Simulation of 20 Quadrillion Atoms on GPU Clusters
+10.1145/3712285.3759782 | 1524-1538 | SIGMo: High-Throughput Batched Subgraph Isomorphism on GPUs for Molecular Matching
+10.1145/3712285.3759783 | 1755-1768 | Hypertron: Efficiently Scaling Large Models by Exploring High-Dimensional Parallelization Space
+10.1145/3712285.3759784 | 1710-1724 | Hetis: Serving LLMs in Heterogeneous GPU Clusters with Fine-grained and Dynamic Parallelism
+10.1145/3712285.3759785 | 728-745 | Qonductor: A Cloud Orchestrator for Quantum Computing
+10.1145/3712285.3759786 | 2233-2250 | DHAP: Towards Efficient OLAP in a Disaggregated and Heterogeneous Environment
+10.1145/3712285.3759787 | 458-474 | ChatHPC: Building the Foundations for a Productive and Trustworthy AI-Assisted HPC Ecosystem
+10.1145/3712285.3759788 | 250-264 | Moment: Co-optimizing Physical Communication Topology and Data Placement for Multi-GPU Out-of-core GNN Training
+10.1145/3712285.3759789 | 774-788 | Optimizing Quantum Circuit Mapping to Reduce Inter-Module Communications in Distributed Architectures
+10.1145/3712285.3759790 | 586-601 | coMtainer: Compilation-assisted HPC Container Images with Enhanced Adaptability
+10.1145/3712285.3759791 | 556-569 | Bridging the Gap Between Binary and Source Based Package Management in Spack
+10.1145/3712285.3759792 | 1477-1494 | Caracal: A GPU-Resident Sparse LU Solver with Lightweight Fine-Grained Scheduling
+10.1145/3712285.3759793 | 411-436 | Breaking the System Noise Barrier at Exascale
+10.1145/3712285.3759794 | 1180-1194 | Effective Node-Level Anomaly Detection in HPC Systems via Coarse-Grained Clustering and Fine-Grained Model Sharing
+10.1145/3712285.3759795 | 2038-2055 | STZ: A High Quality and High Speed Streaming Lossy Compression Framework for Scientific Data
+10.1145/3712285.3759796 | 602-616 | Sparsified Preconditioned Conjugate Gradient Solver on GPUs
+10.1145/3712285.3759797 | 331-348 | C.A.T.S.: Memory and Control Flow Tracing for Whole-Program Performance Analysis
+10.1145/3712285.3759798 | 2024-2037 | Boosting Scientific Error-Bounded Lossy Compression through Optimized Synergistic Lossy-Lossless Orchestration
+10.1145/3712285.3759799 | 746-761 | QDockBank: A dataset for Ligand Docking on Protein Fragments Predicted on Utility-Level Quantum Computers
+10.1145/3712285.3759800 | 1646-1660 | NNQS-SCI: Tackling Trillion-Dimensional Hilbert Space with Adaptive Neural Network Quantum States
+10.1145/3712285.3759801 | 820-836 | DRIM-ANN: An Approximate Nearest Neighbor Search Engine based on Commercial DRAM-PIMs
+10.1145/3712285.3759802 | 1429-1445 | BurstEngine: An efficient distributed framework for training transformers On extremely Long sequences of over 1M tokens
+10.1145/3712285.3759803 | 1127-1144 | Demystifying the Resilience of Large Language Model Inference: An End-to-End Perspective
+10.1145/3712285.3759804 | 855-869 | ThirstyFLOPS: Water Footprint Modeling and Analysis Toward Sustainable HPC Systems
+10.1145/3712285.3759805 | 265-280 | mLR: Scalable Laminography Reconstruction based on Memoization
+10.1145/3712285.3759806 | 2251-2265 | Make Updates Faster: A Fast Multi-Stripe Updates Framework in Erasure-Coded Storage Clusters
+10.1145/3712285.3759807 | 711-727 | A Nested Krylov Method Using Half-Precision Arithmetic
+10.1145/3712285.3759808 | 1006-1027 | ODOS-MPI: HPC-Friendly SmartNIC Offloading of Computation/Communication Kernels
+10.1145/3712285.3759809 | 1590-1603 | MXBLAS: Accelerating 8-bit Deep Learning with a Unified Micro-Scaled GEMM Library
+10.1145/3712285.3759810 | 661-680 | RAPTOR: Practical Numerical Profiling of Scientific Applications
+10.1145/3712285.3759811 | 1935-1950 | A Streaming Collectives Interface Targeting Dataflow Acceleration and HPC Workloads
+10.1145/3712285.3759812 | 490-504 | HELM: Characterizing Unified Memory Accesses to Improve GPU Performance under Memory Oversubscription
+10.1145/3712285.3759813 | 1874-1887 | Million-Atom Ab Initio Electron Dynamics: Discontinuous Galerkin Real-Time Time-Dependent Density Functional Theory
+10.1145/3712285.3759814 | 2006-2023 | lsCOMP: Efficient Light Source Compression
+10.1145/3712285.3759815 | 888-904 | Benchmark-driven Models for Energy Analysis and Attribution of GPU-Accelerated Supercomputing
+10.1145/3712285.3759816 | 2216-2232 | cMPI: Using CXL Memory Sharing for MPI One-Sided and Two-Sided Inter-Node Communications
+10.1145/3712285.3759817 | 2056-2075 | GPU Lossy Compression for HPC Can Be Versatile and Ultra-Fast
+10.1145/3712285.3759818 | 237-249 | TaGNN: An Efficient Topology-aware Accelerator for High-performance Dynamic Graph Neural Network
+10.1145/3712285.3759819 | 2158-2171 | Microscopic-Level Mouse Whole Cortex Simulation Composed of 9 Million Biophysical Neurons and 26 Billion Synapses on the Supercomputer Fugaku
+10.1145/3712285.3759820 | 1495-1509 | SparStencil: Retargeting Sparse Tensor Cores to Scientific Stencil Computations via Structured Sparsity Transformation
+10.1145/3712285.3759821 | 1145-1164 | Story of Two GPUs: Characterizing the Resilience of Hopper H100 and Ampere A100 GPUs
+10.1145/3712285.3759822 | 1099-1112 | Deploying Lightweight Input-Aware Selective Instruction Duplication in HPC Applications
+10.1145/3712285.3759823 | 1725-1741 | gLLM: Global Balanced Pipeline Parallelism Systems for Distributed LLMs Serving with Token Throttling
+10.1145/3712285.3759824 | 2186-2202 | T2-RELION: Task Parallelism, Tensor Core Accelerated RELION for Cryo-EM 3D Reconstruction
+10.1145/3712285.3759825 | 1299-1314 | MANS: Efficient and Portable ANS Encoding for Multi-Byte Integer Data on CPUs and GPUs
+10.1145/3712285.3759826 | 631-644 | StraGCN: GPU-Accelerated Strassen's Sparse-Dense Matrix Multiplication for Graph Convolutional Network Training
+10.1145/3712285.3759827 | 1368-1380 | HPC-R1: Characterizing R1-like Large Reasoning Models on HPC
+10.1145/3712285.3759828 | 1917-1934 | DPAR: High-Performance, Secure, and Scalable Differential Privacy-based AllReduce
+10.1145/3712285.3759829 | 2126-2142 | Matrix Is All You Need: Rearchitecting Quantum Chemistry to Scale on AI Accelerators
+10.1145/3712285.3759830 | 368-382 | RedSan: A Redundant Memory Instruction Sanitizer for GPU Programs
+10.1145/3712285.3759831 | 1785-1799 | TianheEngine: Hierarchy-aware Adaptive Partitioning System for Trillion-scale Graph Processing
+10.1145/3712285.3759832 | 949-972 | Accelerated Spatio-Temporal Bayesian Modeling for Multivariate Gaussian Processes
+10.1145/3712285.3759833 | 2172-2185 | Trillion Ligands per Day: Performance-Portable Virtual Screening via Compound Database Optimization and Multi-Target Docking
+10.1145/3712285.3759834 | 973-990 | Towards Efficient LLM Inference via Collective and Adaptive Speculative Decoding
+10.1145/3712285.3759835 | 1901-1916 | Bine Trees: Enhancing Collective Operations by Optimizing Communication Locality
+10.1145/3712285.3759836 | 1980-1991 | Generative Latent Diffusion for Efficient Spatiotemporal Data Reduction
+10.1145/3712285.3759837 | 681-694 | Numerical Performance of the Implicitly Restarted Arnoldi Method in OFP8, Bfloat16, Posit, and Takum Arithmetics
+10.1145/3712285.3759838 | 349-367 | ATLAHS: An Application-centric Network Simulator Toolchain for AI, HPC, and Distributed Storage
+10.1145/3712285.3759839 | 1510-1523 | Fringe-SGC: Counting Subgraphs with Fringe Vertices
+10.1145/3712285.3759840 | 316-330 | Zero-Value Code Specialization via Profile-Guided Control Data Flow Analysis
+10.1145/3712285.3759841 | 617-630 | FaSTCC: Fast Sparse Tensor Contractions on CPUs
+10.1145/3712285.3759842 | 1211-1222 | ACTINA: Adapting Circuit-Switching Techniques for AI Networking Architectures
+10.1145/3712285.3759843 | 1240-1251 | Scaling Out Chip Interconnect Networks with Implicit Sequence Numbers
+10.1145/3712285.3759844 | 1631-1645 | TENSORMD: Accelerating Molecular Dynamics with a High-Performance Machine Learning Interatomic Potential
+10.1145/3712285.3759845 | 2076-2093 | HP-MDR: High-performance and Portable Data Refactoring and Progressive Retrieval with Advanced GPUs
+10.1145/3712285.3759846 | 1697-1709 | Compile-Time QoS Scheme for Deep Learning Inferences
+10.1145/3712285.3759848 | 2203-2215 | Workload Intelligence: Workload-Aware IaaS abstraction for Cloud Efficiency
+10.1145/3712285.3759849 | 645-660 | Bridging the Gap between Unstructured SpMM and Structured Sparse Tensor Cores
+10.1145/3712285.3759850 | 1888-1900 | Deep Learning-Enabled Supercritical Flame Simulation at Detailed Chemistry and Real-Fluid Accuracy Towards Trillion-Cell Scale
+10.1145/3712285.3759851 | 1539-1552 | Graphago: Accelerating SSD-based Graph Processing via Activity-Aware Graph Preprocessing
+10.1145/3712285.3759852 | 1619-1630 | LiquidGEMM: Hardware-Efficient W4A8 GEMM Kernel for High-Performance LLM Serving
+10.1145/3712285.3759853 | 1085-1098 | FT-Transformer: Resilient and Reliable Transformer with End-to-End Fault Tolerant Attention
+10.1145/3712285.3759854 | 570-585 | EDDE: Container Deployment Framework Beyond the Cloud
+10.1145/3712285.3759855 | 1409-1428 | SlimPipe: Memory-Thrifty and Efficient Pipeline Parallelism for Long-Context LLM Training
+10.1145/3712285.3759856 | 1966-1979 | What to Support When You're Compressing
+10.1145/3712285.3759857 | 519-532 | BOER: Enhancing Resource Utilization for Deep Learning Inference with Hybrid Spatial GPU Sharing
+10.1145/3712285.3759858 | 870-887 | Core Hours and Carbon Credits: Incentivizing Sustainability in HPC
+10.1145/3712285.3759859 | 1395-1408 | RingX: Scalable Parallel Attention for Long-Context Learning on HPC
+10.1145/3712285.3759860 | 1060-1072 | COSMOS: Performance Portable Graph Pattern Matching with Domain-Specific Software Distributed Shared Memory
+10.1145/3712285.3759861 | 475-489 | GreenMix: Energy-Efficient Serverless Computing via Randomized Sketching on Asymmetric Multi-Cores
+10.1145/3712285.3759862 | 1267-1283 | Phoenix: A Refactored I/O Stack for GPU Direct Storage without Phony Buffers
+10.1145/3712285.3759863 | 2094-2108 | AMRaCut: Scalable Partitioning for Adaptive Mesh Refinement
+10.1145/3712285.3759864 | 1381-1394 | MLP-Offload: Multi-Level, Multi-Path Offloading for LLM Pre-training to Break the GPU Memory Wall
+10.1145/3712285.3759865 | 1800-1815 | Parallel Rank-Adaptive Higher Order Orthogonal Iteration
+10.1145/3712285.3759866 | 1859-1873 | The First Star-by-star N-body/Hydrodynamics Simulation of Our Galaxy Coupling with a Surrogate Model
+10.1145/3712285.3759867 | 1676-1696 | MaverIQ: Fingerprint-Guided Extrapolation and Fragmentation-Aware Layering for Intent-Based LLM Serving
+10.1145/3712285.3759868 | 533-555 | XaaS Containers: Performance-Portable Representation With Source and IR Containers
+10.1145/3712285.3759869 | 152-166 | Automatic Generation of Mappings for Distributed Fourier Operations
+10.1145/3712285.3759870 | 935-948 | Distributed Cross-Channel Hierarchical Aggregation for Foundation Models
+10.1145/3712285.3759871 | 762-773 | Augmenting Simulated Noisy Quantum Data Collection by Orders of Magnitude Using Pre-Trajectory Sampling with Batched Execution
+10.1145/3712285.3759872 | 2109-2125 | Wasp: Efficient Asynchronous Single-Source Shortest Path on Multicore Systems via Work Stealing
+10.1145/3712285.3759873 | 1742-1754 | SIREN: Software Identification and Recognition in HPC Systems
+10.1145/3712285.3759874 | 437-457 | Addressing Reproducibility Challenges in HPC with Continuous Integration
+10.1145/3712285.3759875 | 397-410 | Insights from Optimizing HPL Performance on Exascale Systems: A Comparative Analysis of Panel Factorization
+10.1145/3712285.3759876 | 695-710 | High-Performance Branch-Free Algorithms for Extended-Precision Floating-Point Arithmetic
+10.1145/3712285.3759877 | 281-297 | Scaling the memory wall using mixed-precision - HPG-MxP on an exascale machine
+10.1145/3712285.3759878 | 1992-2005 | Stability-preserving Lossy Compression for Large-scale Partial Differential Equations
+10.1145/3712285.3759879 | 505-518 | Minimizing Power Waste in Heterogenous Computing via Adaptive Uncore Scaling
+10.1145/3712285.3759880 | 217-236 | PGT-I: Scaling Spatiotemporal GNNs with Memory-Efficient Distributed Training
+10.1145/3712285.3759881 | 1043-1059 | LCI: a Lightweight Communication Interface for Efficient Asynchronous Multithreaded Communication
+10.1145/3712285.3759882 | 1845-1858 | DAS-ILU: A Distributed Asynchronous Parallel ILU Factorization Based on Domain Decomposition
+10.1145/3712285.3759883 | 1073-1084 | Fine-grained Automated Failure Management for Extreme-Scale GPU Accelerated Systems
+10.1145/3712285.3759884 | 1195-1210 | Uno: A One-Stop Solution for Inter- and Intra-Data Center Congestion Control and Reliable Connectivity
+10.1145/3712285.3759885 | 1446-1463 | Improving SpGEMM Performance Through Matrix-Reordering and Cluster-wise Computation
+10.1145/3712285.3759886 | 1315-1331 | X-MoE: Enabling Scalable Training for Emerging Mixture-of-Experts Architectures on HPC Platforms
+10.1145/3712285.3759887 | 1252-1266 | STELLAR: Storage Tuning Engine Leveraging LLM Autonomous Reasoning for High Performance Parallel File Systems
+10.1145/3712285.3759888 | 1332-1350 | TT-LoRA MoE: Using Parameter-Efficient Fine-Tuning and Sparse Mixture-Of-Experts
+10.1145/3712285.3759890 | 200-216 | Plexus: Taming Billion-edge Graphs with 3D Parallel Full-graph GNN Training
+10.1145/3712285.3759891 | 1113-1126 | LowDiff: Efficient Frequent Checkpointing via Low-Cost Differential for High-Performance Distributed Training Systems
+10.1145/3712285.3759892 | 2143-2157 | BLAZE: Exploiting Hybrid Parallelism and Size-customized Kernels to Accelerate BLASTP on GPUs
+10.1145/3712285.3759893 | 1165-1179 | Exploring and Mitigating Failure Behavior of Large Language Model Training Workloads in HPC Systems
+10.1145/3712285.3759894 | 1769-1784 | UltraAttn: Efficiently Parallelizing Attention through Hierarchical Context-Tiling
+10.1145/3712285.3759895 | 1572-1589 | KAMI: Communication-Avoiding General Matrix Multiplication within a Single GPU
+10.1145/3712285.3759896 | 1284-1298 | gParaKV: A GPGPU-accelerated Key-Value Separation-based KV Store with Optimized Compaction and Garbage Collection
+10.1145/3712285.3759897 | 1553-1571 | Bubble: Towards Scalable Evolving Graph Processing via Mini-Batch Sorting
+10.1145/3712285.3759898 | 185-199 | Constraint-Driven Auto-Tuning of GEMM-like Operators for MT-3000 Many-core Processor
+10.1145/3712285.3759900 | 137-151 | PerfDojo: Automated ML Library Generation for Heterogeneous Architectures
+10.1145/3712285.3759902 | 1223-1239 | SDR-RDMA: Software-Defined Reliability Architecture for Planetary Scale RDMA Communication
+10.1145/3712285.3759903 | 1951-1965 | Diff-MoE: Efficient Batched MoE Inference with Priority-Driven Differential Expert Caching
+10.1145/3712285.3759904 | 1464-1476 | Utilizing Sparsity in the GPU-accelerated Assembly of Schur Complement Matrices in Domain Decomposition Methods
+10.1145/3712285.3769434 | 2266-2267 | Reproducibility Report for SC25 Paper Uno: A One-Stop Solution for Inter- and Intra- Data Center Congestion Control and Reliable Connectivity
+10.1145/3712285.3769435 | 2268-2268 | Reproducibility Report for SC25 Paper ATLAHS: An Application-centric Network Simulator Toolchain for AI, HPC, and Distributed Storage
+10.1145/3712285.3769436 | 2269-2270 | Reproducibility Report for SC25 Paper TensorMD: Accelerating Molecular Dynamics with a High-Performance Machine Learning Interatomic Potential
+10.1145/3712285.3769437 | 2271-2271 | Reproducibility Report for SC25 Paper TurboFNO: High-Performance Fourier Neural Operator with Fused FFT-GEMM-iFFT on GPU
+10.1145/3712285.3769438 | 2329-2329 | Reproducibility Report for SC25 Paper XaaS Containers: Performance-Portable Representation With Source and IR Containers
+10.1145/3712285.3769439 | 2272-2273 | Reproducibility Report for SC25 Paper X-MoE: Enabling Scalable Training for Emerging Mixture-of-Experts Architectures on HPC Platforms
+10.1145/3712285.3769440 | 2327-2328 | Reproducibility Report for SC25 Paper Bine Trees: Enhancing Collective Operations by Optimizing Communication Locality
+10.1145/3712285.3769441 | 2325-2326 | Reproducibility Report for SC25 Paper DRIM-ANN: An Approximate Nearest Neighbor Search Engine based on Commercial DRAM-PIMs
+10.1145/3712285.3769442 | 2323-2324 | Reproducibility Report for SC25 Paper ThirstyFLOPS: Water Footprint Modeling and Analysis Toward Sustainable HPC Systems
+10.1145/3712285.3769443 | 2322-2322 | Reproducibility Report for SC25 Paper Addressing Reproducibility Challenges in HPC with Continuous Integration
+10.1145/3712285.3769444 | 2274-2274 | Reproducibility Report for SC25 Paper SIGMo: High-Throughput Batched Subgraph Isomorphism on GPUs for Molecular Matching
+10.1145/3712285.3769445 | 2321-2321 | Reproducibility Report for SC25 Paper RAPTOR: Practical Numerical Profiling of Scientific Applications
+10.1145/3712285.3769446 | 2319-2320 | Reproducibility Report for SC25 Paper RedSan: A Redundant Memory Instruction Sanitizer for GPU Programs
+10.1145/3712285.3769447 | 2318-2318 | Reproducibility Report for SC25 Paper FaSTCC: Fast Sparse Tensor Contractions on CPUs
+10.1145/3712285.3769448 | 2316-2317 | Reproducibility Report for SC25 Paper Bridging the Gap Between Binary and Source Based Package Management in Spack
+10.1145/3712285.3769449 | 2314-2315 | Reproducibility Report for SC25 Paper HP-MDR: High-performance and Portable Data Refactoring and Progressive Retrieval with Advanced GPUs
+10.1145/3712285.3769450 | 2311-2313 | Reproducibility Report for SC25 Paper Demystifying the Resilience of Large Language Model Inference: An End-to-End Perspective
+10.1145/3712285.3769451 | 2309-2310 | Reproducibility Report for SC25 Paper KAMI: Communication-Avoiding General Matrix Multiplication within a Single GPU
+10.1145/3712285.3769452 | 2307-2308 | Reproducibility Report for SC25 Paper Ab-initio Quantum Transport with the GW Approximation, 42,240 Atoms, and Sustained Exascale Performance
+10.1145/3712285.3769453 | 2306-2306 | Reproducibility Report for SC25 Paper GPU Lossy Compression for HPC Can Be Versatile and Ultra-Fast
+10.1145/3712285.3769454 | 2304-2305 | Reproducibility Report for SC25 Paper High-Performance Branch-Free Algorithms for Extended-Precision Floating-Point Arithmetic
+10.1145/3712285.3769455 | 2300-2303 | Reproducibility Report for SC25 Paper Zero-Value Code Specialization via Profile-Guided Control Data Flow Analysis
+10.1145/3712285.3769456 | 2297-2297 | Reproducibility Report for SC25 Paper lsCOMP: Efficient Light Source Compression
+10.1145/3712285.3769457 | 2298-2299 | Reproducibility Report for SC25 Paper lsCOMP: Efficient Light Source Compression
+10.1145/3712285.3769458 | 2295-2296 | Reproducibility Report for SC25 Paper CPU- and GPU-initiated Communication Strategies for Conjugate Gradient Methods on Large GPU Clusters
+10.1145/3712285.3769459 | 2294-2294 | Reproducibility Report for SC25 Paper MetoHash: A Memory-Efficient and Traffic-Optimized Hashing Index on Hybrid PMem-DRAM Memories
+10.1145/3712285.3769460 | 2275-2276 | Reproducibility Report for SC25 Paper MLP-Offload: Multi-Level, Multi-Path Offloading for LLM Pre-training to Break the GPU Memory Wall
+10.1145/3712285.3769461 | 2277-2277 | Reproducibility Report for SC25 Paper STZ: A High Quality and High Speed Streaming Lossy Compression Framework for Scientific Data
+10.1145/3712285.3769462 | 2278-2279 | Reproducibility Report for SC25 Paper Story of Two GPUs: Characterizing the Resilience of Hopper H100 and Ampere A100 GPUs
+10.1145/3712285.3769463 | 2280-2281 | Reproducibility Report for SC25 Paper Optimizing Quantum Circuit Mapping to Reduce Inter-Module Communications in Distributed Architectures
+10.1145/3712285.3769464 | 2282-2282 | Reproducibility Report for SC25 Paper MXBLAS: Accelerating 8-bit Deep Learning with a Unified Micro-Scaled GEMM Library
+10.1145/3712285.3769465 | 2283-2284 | Reproducibility Report for SC25 Paper C.A.T.S.: Memory and Control Flow Tracing for Whole-Program Performance Analysis
+10.1145/3712285.3769466 | 2285-2285 | Reproducibility Report for SC25 Paper Numerical Performance of the Implicitly Restarted Arnoldi Method in OFP8, Bfloat16, Posit, and Takum Arithmetics
+10.1145/3712285.3769467 | 2286-2286 | Reproducibility Report for SC25 Paper Moment: Co-optimizing Physical Communication Topology and Data Placement for Multi-GPU Out-of-core GNN Training
+10.1145/3712285.3769468 | 2287-2289 | Reproducibility Report for SC25 Paper Sparsified Preconditioned Conjugate Gradient Solver on GPUs
+10.1145/3712285.3769469 | 2290-2291 | Reproducibility Report for SC25 Paper MANS: Efficient and Portable ANS Encoding for Multi-Byte Integer Data on CPUs and GPUs
+10.1145/3712285.3769470 | 2292-2293 | Reproducibility Report for SC25 Paper Caracal: A GPU-Resident Sparse LU Solver with Lightweight Fine-Grained Scheduling
+10.1145/3712285.3771783 | 14-24 | Simulating many-engine spacecraft: Exceeding 1 quadrillion degrees of freedom via information geometric regularization
+10.1145/3712285.3771784 | 1-13 | Ab-initio Quantum Transport with the GW Approximation, 42,240 Atoms, and Sustained Exascale Performance
+10.1145/3712285.3771785 | 36-47 | Multiscale Light-Matter Dynamics in Quantum Materials: From Electrons to Topological Superlattices
+10.1145/3712285.3771786 | 25-35 | Cosmological Hydrodynamics at Exascale: A Trillion-Particle Leap in Capability
+10.1145/3712285.3771787 | 60-71 | Real-Time Bayesian Inference at Extreme Scale: A Digital Twin for Tsunami Early Warning Applied to the Cascadia Subduction Zone
+10.1145/3712285.3771788 | 111-124 | Kilometer-Scale AI-Powered and Performance-Portable Earth System Model (AP3ESM) to Achieve Year-Scale Simulation Speed on Heterogeneous Supercomputers
+10.1145/3712285.3771789 | 125-136 | Computing the Full Earth System at 1km Resolution
+10.1145/3712285.3771790 | 99-110 | Destination Earth: The Climate Change Adaptation Digital Twin
+10.1145/3712285.3771989 | 86-98 | ORBIT-2: Scaling Exascale Vision Foundation Models for Weather and Climate Downscaling
+10.1145/3712285.3772093 | 48-59 | Advancing Quantum Many-Body GW Calculations on Exascale Supercomputing Platforms
+10.1145/3712285.3772094 | 72-85 | AERIS: Argonne Earth Systems Model for Reliable and Skillful Predictions
+10.1145/3731599.3767340 | 1-10 | Intelligent Sampling of Extreme-Scale Turbulence Datasets for Accurate and Efficient Spatiotemporal Model Training
+10.1145/3731599.3767341 | 11-19 | Guiding Application Users via Estimation of Computational Resources for Massively Parallel Chemistry Computations
+10.1145/3731599.3767342 | 20-28 | InferA: A Smart Assistant for Cosmological Ensemble Data
+10.1145/3731599.3767343 | 29-36 | Inverse Design for Generating Initial Conditions in Scientific Simulations
+10.1145/3731599.3767344 | 37-44 | Applying Surrogate Modeling to Decouple Data Collection and Analysis from Simulation for Accelerated In-Situ Analysis
+10.1145/3731599.3767345 | 45-51 | Compute4Biology: Taking Stock of High Performance Computing Needs for Foundation Models in Biological Sciences
+10.1145/3731599.3767346 | 52-60 | FIRST: Federated Inference Resource Scheduling Toolkit for Scientific AI Model Access
+10.1145/3731599.3767347 | 61-70 | ROSE: RADICAL Orchestrator for Surrogate Exploration
+10.1145/3731599.3767348 | 71-77 | InferCT: An Efficient and Generalizable Framework to Enable 3D Machine Learning for Computed Tomography
+10.1145/3731599.3767349 | 78-85 | LangChain-Parsl: Connect Large Language Model Agents to High Performance Computing Resource
+10.1145/3731599.3767350 | 86-95 | A Query Engine for Scientific Data Exploration using Theory, Simulation, and Artificial Intelligence Models
+10.1145/3731599.3767351 | 96-103 | Classification of Three-dimensional Electron Diffraction Data with a Large Language Model
+10.1145/3731599.3767352 | 163-171 | Evaluating HPK for Running Cloud-Native Workloads on Slurm Clusters
+10.1145/3731599.3767353 | 135-150 | Usability Evaluation of Cloud for HPC Applications
+10.1145/3731599.3767354 | 114-125 | Engine-Agnostic Model Hot-Swapping for Cost-Effective LLM Inference
+10.1145/3731599.3767355 | 126-134 | Seamless end-to-end containerized HPC environments
+10.1145/3731599.3767356 | 104-113 | Experience Deploying Containerized GenAI Services at an HPC Center
+10.1145/3731599.3767357 | 172-178 | Towards Enabling Hostile Multi-tenancy in Kubernetes
+10.1145/3731599.3767358 | 151-162 | An elastic job scheduler for HPC applications on the cloud
+10.1145/3731599.3767359 | 179-187 | Using Code Coverage to Assess Feature Gaps in MPI Correctness Tool Classification Tests
+10.1145/3731599.3767360 | 188-197 | Coupling Static and Dynamic MPI Correctness Tools to Optimize Accuracy and Overhead
+10.1145/3731599.3767361 | 217-224 | Towards an Automated Workflow for Floating-Point Analysis of GPU Kernels
+10.1145/3731599.3767362 | 225-234 | LLM4FP: LLM-Based Program Generation for Triggering Floating-Point Inconsistencies Across Compilers
+10.1145/3731599.3767363 | 198-206 | Data Race Detection through Vibe Translation
+10.1145/3731599.3767364 | 235-243 | Exploring Reduced Precision for Deep Learning Activation Functions
+10.1145/3731599.3767365 | 207-216 | Differential Testing for Sequential to Parallel Transformations
+10.1145/3731599.3767366 | 244-248 | Extending MPI Correctness Benchmarking to the Fortran Language
+10.1145/3731599.3767367 | 249-258 | Design and Implementation of a Custom Hardware Accelerator for SZx Compression in Chipyard
+10.1145/3731599.3767368 | 259-268 | ASCRIBE-XR: Extended Reality for Visualization of Scientific Images
+10.1145/3731599.3767369 | 269-278 | Characterizing the Performance of Parallel Data-Compression Algorithms across Compilers and GPUs
+10.1145/3731599.3767370 | 279-289 | Data Management System Analysis for Distributed Computing Workloads
+10.1145/3731599.3767371 | 290-299 | Integrating Distributed SQL Query Engines with Object-Based Computational Storage
+10.1145/3731599.3767372 | 300-306 | On the Compressibility of Floating-Point Data in Posit and IEEE-754 Representation
+10.1145/3731599.3767373 | 307-313 | Building n-Dimensional Trees for Resolution-Based Progressive Compression
+10.1145/3731599.3767374 | 314-323 | Lightweight CNN-Based Artifact Reduction for Scientific Error-bounded Lossy Compression
+10.1145/3731599.3767375 | 324-331 | Benchmarking Cutting-Edge Scientific Error-Bounded Lossy Compressors on Correlation-Based Rate-Distortion
+10.1145/3731599.3767376 | 332-338 | FZModules: A Heterogeneous Computing Framework for Customizable Scientific Data Compression Pipelines
+10.1145/3731599.3767377 | 339-348 | Compression Error Sensitivity Analysis for Different Experts in MoE Model Inference
+10.1145/3731599.3767378 | 349-358 | Evaluating Accuracy and Performance Tradeoffs in GPU Accelerated Single Cell RNA-seq Analysis
+10.1145/3731599.3767379 | 359-366 | Hybrid GPU Programming Education with Python and C++: Preferences, Performance and Common Python Pitfalls
+10.1145/3731599.3767380 | 401-408 | A Model for Teaching Machine Learning, Deep Learning, and Research Computing to Domain Scientists on HPC Resources
+10.1145/3731599.3767381 | 384-392 | GPU Programming for AI Workflow Development on AWS SageMaker: An Instructional Approach
+10.1145/3731599.3767382 | 433-438 | "Offloading" Undergraduate Research to the Graphics Processing Unit for Acceleration
+10.1145/3731599.3767383 | 416-423 | Microcredentials for Open Hardware and HPC Workforce Development: The Openchip Approach with RISC-V Ecosystem
+10.1145/3731599.3767384 | 424-432 | From Soil to Software: Experience from a STEM Workshop on Smart Plant Care and Teachable Machines
+10.1145/3731599.3767385 | 393-400 | The Cost of Teaching Operational ML
+10.1145/3731599.3767386 | 367-375 | An Interactive Agentic HPC Tutor for Lesson Planning, Teaching, and Assessment
+10.1145/3731599.3767387 | 376-383 | Teaching Task-Based Parallel Programming with a Runtime Systems-Aware Perspective
+10.1145/3731599.3767388 | 409-415 | Peachy Parallel Assignments (EduHPC 2025)
+10.1145/3731599.3767389 | 461-467 | Large-Message All-to-All Communication at Frontier Scale
+10.1145/3731599.3767390 | 439-448 | MPPI - Type safe C++ Datatypes for MPI
+10.1145/3731599.3767391 | 468-478 | MPI Collectives with Programmable Smart Switches
+10.1145/3731599.3767392 | 449-460 | Accelerating Intra-Node GPU Communication: A Performance Model for Multi-Path Transfers
+10.1145/3731599.3767393 | 479-488 | Scaling All-to-All Operations Across Emerging Many-Core Supercomputers
+10.1145/3731599.3767394 | 489-499 | On the integration of lightweight tasks with MPI using the C++26 std::execution 'Senders' API
+10.1145/3731599.3767395 | 500-507 | Enabling Unstructured Sparse Fine-Tuning and Inference for Foundation Models on Wafer-Scale Engine
+10.1145/3731599.3767396 | 508-515 | WAGES: Workload-Aware GPU Sharing System for Energy-Efficient Serverless LLM Serving
+10.1145/3731599.3767397 | 516-523 | OmniFed: A Modular Framework for Configurable Federated Learning from Edge to HPC
+10.1145/3731599.3767398 | 524-533 | Enhancing ChatPORT with CUDA-to-SYCL Kernel Translation Capability
+10.1145/3731599.3767399 | 607-615 | LABMATE: Language Model Based Multi-Agent System to Accelerate Catalysis Experiments
+10.1145/3731599.3767400 | 594-601 | BioR5: A Three-Layer Architecture for Biological Reasoning in Scientific AI
+10.1145/3731599.3767401 | 553-559 | Agentic AI vs ML-based Autotuning: A Comparative Study for Loop Reordering Optimization
+10.1145/3731599.3767402 | 582-587 | EQSIM Agent: A Conversational AI for Interactive Exploration of Large-scale Earthquake Simulation Data
+10.1145/3731599.3767403 | 569-574 | Frameworks for Large Language Model Serving in HPC Environments
+10.1145/3731599.3767404 | 575-581 | Exploring Distributed Vector Databases Performance on HPC Platforms: A Study with Qdrant
+10.1145/3731599.3767405 | 588-593 | Beyond End-to-End: Understanding the Limits of LLMs in Scientific Problem Solving
+10.1145/3731599.3767406 | 534-539 | Evaluation of Test-Time Compute Constraints on Safety and Skill Large Reasoning Models
+10.1145/3731599.3767407 | 540-544 | Batch Tiling on Attention: Efficient Mixture of Experts Training on Wafer-Scale Processors
+10.1145/3731599.3767408 | 602-606 | ChatEED: An agentic retrieval assistant for accelerator operators
+10.1145/3731599.3767409 | 560-568 | GridMind: LLMs-Powered Agents for Power System Analysis and Operations
+10.1145/3731599.3767410 | 545-552 | Automated MCQA Benchmarking at Scale: Evaluating Reasoning Traces as Retrieval Sources for Domain Adaptation of Small Language Models
+10.1145/3731599.3767411 | 624-632 | A Compute Graph Simulation and Implementation Framework Targeting AMD Versal AI Engines
+10.1145/3731599.3767412 | 633-641 | SNAcc: An Open-Source Framework for Streaming-based Network-to-Storage Accelerators
+10.1145/3731599.3767413 | 642-650 | Connected-Component Labeling Using HLS for High-Energy Particle Physics Instruments
+10.1145/3731599.3767414 | 616-623 | Programmer productivity and performance on AMD's AI Engines: Offloading Fortran intrinsics via MLIR a case-study
+10.1145/3731599.3767424 | 669-677 | Testing and Benchmarking Emerging Supercomputers via the MFC Flow Solver
+10.1145/3731599.3767425 | 651-661 | Aurora Acceptance: A Collaborative Exascale Test Harness
+10.1145/3731599.3767426 | 662-668 | Experiences Integrating Database Support into the OLCF Test Harness
+10.1145/3731599.3767427 | 678-687 | Seeking Cost-Optimal Infrastructure Size for Distributed Filesystems: A Ceph Case Study
+10.1145/3731599.3767428 | 697-704 | Open Composer: A Web-Based Application for Generating and Managing Batch Jobs on HPC Clusters
+10.1145/3731599.3767429 | 715-726 | Generating Frequently Asked Questions from Technical Support Tickets using Large Language Models
+10.1145/3731599.3767430 | 750-756 | Dori: User Centered HPC for Data Intensive Computing
+10.1145/3731599.3767431 | 705-714 | Is it an HPC Workflow Assistant? Is it a Framework? It's Drona Workflow Engine
+10.1145/3731599.3767433 | 727-739 | AskHPC: A ChatBot for High Performance Computing User Support
+10.1145/3731599.3767434 | 688-696 | A Modular, Responsive, and Accessible HPC Dashboard Built upon Open OnDemand
+10.1145/3731599.3767435 | 740-749 | ModuLair: Streamlining Python Virtual Environment Management for HPC
+10.1145/3731599.3767436 | 766-774 | Generating Permutations at Scale
+10.1145/3731599.3767437 | 793-803 | Architecting Tensor Core-Based Reductions for Irregular Molecular Docking Kernels
+10.1145/3731599.3767438 | 818-822 | Benchmarking the Cerebras Wafer Scale Engine-2 Architecture
+10.1145/3731599.3767439 | 775-783 | An Optimized Generalized Multi-Color Point Implicit Solver for Intel GPUs using OneAPI ESIMD
+10.1145/3731599.3767440 | 804-812 | Performance-Portable Symbolic Factorization through Common Graph Operations
+10.1145/3731599.3767441 | 823-827 | How effective is matrix reordering for improving performance of sparse matrix-vector multiplication?
+10.1145/3731599.3767442 | 757-765 | eIM: GPU-Accelerated Efficient Influence Maximization in Large-Scale Social Networks
+10.1145/3731599.3767443 | 784-792 | Profiling Application-Specific Properties of Irregular Graph Algorithms on GPUs
+10.1145/3731599.3767444 | 813-817 | Comparing Graph Algorithm Styles on NVIDIA and AMD GPUs
+10.1145/3731599.3767445 | 908-918 | eCounter: Inline Per-IP Network Monitoring at Millisecond Resolution via eBPF
+10.1145/3731599.3767446 | 939-948 | Modular Architecture for High-Performance and Low Overhead Data Transfers
+10.1145/3731599.3767447 | 897-907 | Network Replay and Consistency Across Testbeds
+10.1145/3731599.3767449 | 860-865 | Optimizing Network Resilience Using Domain-Specific Hardware Accelerator for Dynamic Programming
+10.1145/3731599.3767450 | 919-928 | Implementing Network-level QoS at HPC Datacenters to Enable Distributed Scientific Workflows
+10.1145/3731599.3767451 | 866-874 | Complex Parsing for In-Network Acceleration of High-Energy Physics Experiments
+10.1145/3731599.3767452 | 949-959 | From Edge to HPC: Investigating Cross-Facility Data Streaming Architectures
+10.1145/3731599.3767453 | 886-896 | Scaling LLM Training Using RDMA over Converged Ethernet
+10.1145/3731599.3767454 | 875-885 | SENSE in Practice: Quantifying the End-to-End Benefits of Intent-Based Bandwidth Reservation for Exascale Science Workflows
+10.1145/3731599.3767455 | 834-840 | To Stream or Not to Stream: Towards A Quantitative Model for Remote HPC Processing Decisions
+10.1145/3731599.3767456 | 828-833 | Rapid Quantum Network Simulation Design with a Path to Scalable Execution
+10.1145/3731599.3767457 | 848-853 | Learning to Schedule: A Supervised Learning Framework for Network-Aware Scheduling of Data-Intensive Workloads
+10.1145/3731599.3767458 | 854-859 | LLM-based Optimization Algorithm Selection for High-Performance Networks Orchestration
+10.1145/3731599.3767459 | 929-938 | StreamHub: High-performance Managed SciStream as a Service
+10.1145/3731599.3767460 | 960-967 | SmartNIC Data Exchange Framework
+10.1145/3731599.3767461 | 968-976 | Error Analysis of Globally Distributed Workflow Management System
+10.1145/3731599.3767462 | 977-984 | MPI Communication Performance on AMD MI300A: Microbenchmarks and Applications
+10.1145/3731599.3767464 | 985-996 | In-Transit Data Transport Strategies for Coupled AI-Simulation Workflow Patterns
+10.1145/3731599.3767466 | 1003-1008 | A Data-Size Adaptive Approach to I/O of Poorly Load Balanced In Situ Data Extracts
+10.1145/3731599.3767471 | 997-1002 | From Exploration to Explanation: ML-Driven Causal Discovery for Datacenter Reliability at Scale
+10.1145/3731599.3767472 | 2137-2145 | Physical System Study on Balancing Interactive and Batch Job Performance through Oversubscribing Scheduling
+10.1145/3731599.3767473 | 2146-2150 | Implementing support for Interactive and AI workloads in a traditional HPC environment
+10.1145/3731599.3767474 | 2151-2160 | Evaluating HPC Scheduling Strategies for Urgent Workloads
+10.1145/3731599.3767475 | 2161-2168 | Modeling and Optimizing Real-Time Telescope Interaction for Multi-wavelength Observation of Gamma-ray Bursts
+10.1145/3731599.3767476 | 1009-1016 | Lessons Learned: Template-Heavy C++ in Production HPC Runtime Systems
+10.1145/3731599.3767477 | 1017-1027 | ASaP: Automatic Software Prefetching for Sparse Tensor Computations in MLIR
+10.1145/3731599.3767478 | 1028-1038 | Implementing OpenMP Offload Support in the AMD Next Generation Fortran Compiler
+10.1145/3731599.3767479 | 1039-1047 | CIRE: LLVM Analysis for Floating-Point Rounding Error Affected by Precision and Optimizations
+10.1145/3731599.3767480 | 1048-1056 | Lowering and Runtime Support for Fortran's Multi-Image Parallel Features using LLVM Flang, PRIF, and Caffeine
+10.1145/3731599.3767481 | 1057-1065 | Scabbard: LLVM Instrumentation-aided Race Checking in CPU/GPU Unified Memory for AMD GPUs
+10.1145/3731599.3767482 | 1066-1074 | Dynamic Thread Coarsening for CPU and GPU OpenMP Code
+10.1145/3731599.3767483 | 1075-1087 | OpenSHMEM MLIR: A Dialect for Compile-Time Optimization of One-Sided Communications
+10.1145/3731599.3767484 | 1088-1095 | Distributed Sparse Tensor Computations in MLIR
+10.1145/3731599.3767485 | 1096-1103 | An MLIR pipeline for offloading Fortran to FPGAs via OpenMP
+10.1145/3731599.3767486 | 1104-1109 | Umpire: Portable Memory Management for High-Performance Computing Applications
+10.1145/3731599.3767487 | 1110-1116 | The MALL is Open: Exploring Shared Caches and Latency in AMD CDNA™ 3 GPUs
+10.1145/3731599.3767488 | 1117-1125 | CaRDS: Compiler-aided Remote Data Structures
+10.1145/3731599.3767489 | 1126-1132 | Hardware-Software Co-Design of Iterative Filter-Update Numerical Methods Using Processing-In-Memory
+10.1145/3731599.3767490 | 1133-1146 | Mixed-Precision Performance Portability of FFT-Based GPU-Accelerated Algorithms for Block-Triangular Toeplitz Matrices
+10.1145/3731599.3767491 | 1147-1158 | Performance portable batched linear algebra kernels for transport sweeps using Kokkos
+10.1145/3731599.3767492 | 1159-1171 | Extending RAJA Parallel Programming Abstractions with Just-In-Time Optimization
+10.1145/3731599.3767493 | 1172-1182 | Bridging Performance Portability and Scalability for Plasma Simulations on Heterogeneous Systems
+10.1145/3731599.3767494 | 1233-1242 | Development of a performance portable distributed FFT interface on top of the Kokkos ecosystem
+10.1145/3731599.3767495 | 1183-1195 | Energy-aware performance portability with OpenMP dynamic variants
+10.1145/3731599.3767496 | 1196-1204 | Preserving CUDA Syntax for SYCL Portability: A Thin C++ Abstraction without Kernel Migration
+10.1145/3731599.3767497 | 1205-1216 | Roofline Analysis of Tightly-Coupled CPU-GPU Superchips: A Study on MI300A and GH200
+10.1145/3731599.3767498 | 1217-1232 | LAMMPS-KOKKOS: Performance Portable Molecular Dynamics Across Exascale Architectures
+10.1145/3731599.3767499 | 1243-1262 | KVMSR+UDWeave: Extreme-Scaling with Fine-grained Parallelism on the UpDown Graph Supercomputer
+10.1145/3731599.3767500 | 1263-1275 | Comparing Distributed-Memory Programming Frameworks with Radix Sort
+10.1145/3731599.3767501 | 1351-1365 | KDRSolvers: Scalable, Flexible, Task-Oriented Krylov Solvers
+10.1145/3731599.3767502 | 1341-1350 | Stackless vs. Stackful Coroutines: A Comparative Study for RDMA-based Asynchronous Many-Task (AMT) Runtimes
+10.1145/3731599.3767504 | 1276-1288 | Slicing Is All You Need: Towards A Universal One-Sided Algorithm for Distributed Matrix Multiplication
+10.1145/3731599.3767505 | 1289-1301 | DiOMP-Offloading: Toward Portable Distributed Heterogeneous OpenMP
+10.1145/3731599.3767506 | 1302-1313 | Weak Scaling of NVSHMEM Applied To Hashed Distributed Structured Data
+10.1145/3731599.3767507 | 1330-1340 | Enhancing HPX with FleCSI
+10.1145/3731599.3767508 | 1314-1329 | Redesigning GROMACS Halo Exchange: Improving Strong Scaling with GPU-initiated NVSHMEM
+10.1145/3731599.3767509 | 1396-1405 | SmartIO: A Lightweight End-to-End Workflow for Runtime I/O Optimization of HPC Systems
+10.1145/3731599.3767510 | 1424-1432 | Secure In-Storage Execution of VTK Workloads on Modern Parallel NFS Data Servers
+10.1145/3731599.3767511 | 1375-1384 | SlimIO: Lightweight I/O Path Design for Write Isolation in FDP-backed In-Memory Databases
+10.1145/3731599.3767512 | 1385-1395 | Parallel Data Object Creation: Scalable Metadata Management in Parallel I/O Library
+10.1145/3731599.3767513 | 1415-1423 | Quantifying AWS S3 I/O Performance Boundaries Using the Roofline Model
+10.1145/3731599.3767514 | 1406-1414 | RL4Sys: A Lightweight System-driven RL Framework for Drop-in Integration in System Optimization
+10.1145/3731599.3767515 | 1366-1374 | LLMTailor: A Layer-wise Tailoring Tool for Efficient Checkpointing of Large Language Models
+10.1145/3731599.3767516 | 1564-1573 | A Cache Interaction Graph for Data Locality Optimization
+10.1145/3731599.3767517 | 1587-1600 | Fantastic Hardware Counters and How to Find Them: Automating the Detection of Noise-Resilient Performance Counters in HPC
+10.1145/3731599.3767518 | 1574-1586 | MT4G: A Tool for Reliable Auto-Discovery of NVIDIA and AMD GPU Compute and Memory Topologies
+10.1145/3731599.3767519 | 1601-1610 | Extending THAPI with CXI Hardware Counter Sampling for High Resolution NIC Telemetry
+10.1145/3731599.3767520 | 1611-1623 | Scalable, High-Fidelity Monitoring of Application Communication Patterns in Vernier
+10.1145/3731599.3767521 | 1624-1633 | PEAK: Cost-Adaptive Profiling in a Heartbeat
+10.1145/3731599.3767522 | 1650-1657 | An RDMA-First Object Storage System with SmartNIC Offload
+10.1145/3731599.3767523 | 1634-1642 | Fast on-demand Memory Mapping for Shared Memory and Disaggregated Systems
+10.1145/3731599.3767524 | 1643-1649 | TEGRA - Scaling Up Graph Processing with Disaggregated Computing
+10.1145/3731599.3767525 | 1658-1666 | DoCeph: DPU-Offloaded Messaging in Ceph for Reduced Host CPU Utilization
+10.1145/3731599.3767526 | 1736-1742 | Assessing a RISC-V Accelerator for Cross-Section Lookup in Chipyard
+10.1145/3731599.3767527 | 1743-1750 | Dyninst on the RISC-V: Binary Instrumentation in Support of Performance, Debugging, and Other Tools
+10.1145/3731599.3767528 | 1729-1735 | Accelerating Gravitational N-Body Simulations Using the RISC-V-Based Tenstorrent Wormhole
+10.1145/3731599.3767529 | 1667-1675 | IzhiRISC-V - a RISC-V-based Processor with Custom ISA Extension for Spiking Neuron Networks Processing with Izhikevich Neurons
+10.1145/3731599.3767530 | 1684-1693 | A RISC-V Vector Extension for Multi-word Arithmetic
+10.1145/3731599.3767531 | 1703-1711 | Is RISC-V ready for High Performance Computing? An evaluation of the Sophon SG2044
+10.1145/3731599.3767532 | 1723-1728 | Simulating Hybrid Analog + RISC-V Systems for HPC Applications
+10.1145/3731599.3767533 | 1694-1702 | Enabling the syscall_intercept library for RISC-V
+10.1145/3731599.3767534 | 1712-1722 | Bridging Simulation and Silicon: A Study of RISC-V Hardware and FireSim Simulation
+10.1145/3731599.3767535 | 1676-1683 | RISC-V Vectorization Coverage for HPC: A TSVC-Based Analysis
+10.1145/3731599.3767536 | 1751-1761 | Extending the C++ Execution Control Library to Support Dynamic Parallel Runtime Systems
+10.1145/3731599.3767537 | 1762-1769 | Assessing Page Reclamation Mechanisms for Linux
+10.1145/3731599.3767538 | 1770-1778 | Reproducible Performance Evaluation of OpenMP and SYCL Workloads under Noise Injection
+10.1145/3731599.3767539 | 1824-1831 | High-Performance and Power-Efficient Emulation of Matrix Multiplication using INT8 Matrix Engines
+10.1145/3731599.3767540 | 1816-1823 | Post-Variational Quantum Neural Networks on a Hybrid HPC-QC System
+10.1145/3731599.3767541 | 1790-1799 | Efficient Embedding Initialization via Dominant Eigenvector Projections
+10.1145/3731599.3767542 | 1779-1789 | Numerical Properties and Scalability of s-Step Preconditioned Conjugate Gradient Methods
+10.1145/3731599.3767543 | 1800-1807 | Fast Linear Solvers via AI-Tuned Markov Chain Monte Carlo-based Matrix Inversion
+10.1145/3731599.3767544 | 1808-1815 | A High Performance GPU CountSketch Implementation and Its Application to Multisketching and Least Squares Problems
+10.1145/3731599.3767545 | 1832-1841 | Scalable Hydrodynamics on multiple Field-Programmable Gate Arrays (FPGAs)
+10.1145/3731599.3767546 | 1907-1915 | Towards Supporting QIR
+10.1145/3731599.3767547 | 1898-1906 | Orchestrating Quantum-HPC Workflows with Distributed Quantum Circuit Cutting
+10.1145/3731599.3767548 | 1851-1859 | A Simulation Framework for Workload Management in Hybrid Quantum-HPC Cloud System
+10.1145/3731599.3767549 | 1879-1887 | Towards a user-centric HPC-QC environment
+10.1145/3731599.3767550 | 1916-1925 | A Practical Quantum Solver for Multidimensional Partial Differential Equations
+10.1145/3731599.3767551 | 1842-1850 | First Practical Experiences Integrating Quantum Computers with HPC Resources: A Case Study With a 20-qubit Superconducting Quantum Computer
+10.1145/3731599.3767552 | 1868-1878 | Tackling the Challenges of Adding Pulse-level Support to a Heterogeneous HPCQC Software Stack
+10.1145/3731599.3767553 | 1888-1897 | Scaling Hybrid Quantum--HPC Applications with the Quantum Framework
+10.1145/3731599.3767554 | 1860-1867 | An HPC-Inspired Blueprint for a Technology-Agnostic Quantum Middle Layer
+10.1145/3731599.3767555 | 1943-1950 | Dynamic Factor Graphs for Attack Preemption
+10.1145/3731599.3767556 | 1934-1942 | CASSE: Targeted Threat Modeling for Data Management Libraries
+10.1145/3731599.3767557 | 1926-1933 | Securing HDF5 Plugins with Digital Signatures
+10.1145/3731599.3767558 | 1951-1958 | Evaluating Trusted Execution Environment Performance for Genome Sequence Alignment: An AMD SEV Case Study
+10.1145/3731599.3767559 | 1959-1969 | HPC Digital Twins for Evaluating Scheduling Policies, Incentive Structures and their Impact on Power and Cooling
+10.1145/3731599.3767560 | 1970-1979 | Run-time Energy-Efficiency Optimization for AI and HPC Workloads
+10.1145/3731599.3767561 | 1980-1989 | Improving Supercomputer Usage with Aging Awareness
+10.1145/3731599.3767562 | 1990-1996 | Optimizing Microgrid Composition for Sustainable Data Centers
+10.1145/3731599.3767563 | 1997-2006 | Energy-Aware HPC Scheduling with LLM-Based Power Prediction
+10.1145/3731599.3767564 | 2007-2016 | Bridging the Gap: User-Centric Energy Monitoring for Policy-Driven Application Optimization in HPC Data Centers
+10.1145/3731599.3767565 | 2017-2021 | Molten Chloride Small Modular Reactor Performance Characteristics for Data Center Operation
+10.1145/3731599.3767566 | 2022-2031 | EMLIO: Minimizing I/O Latency and Energy Consumption for Large-Scale AI Training
+10.1145/3731599.3767567 | 2032-2040 | Modeling the Carbon Footprint of HPC: The Top 500 and EasyC
+10.1145/3731599.3767568 | 2041-2050 | EAS-Sim: A Framework and its Methodology for the Co-Design of Multi-Objective, Energy-Aware Schedulers for AI Clusters
+10.1145/3731599.3767569 | 2068-2076 | Bridging FPGA and GPU over PCIe: A Low-Latency Communication Path using AVX-512
+10.1145/3731599.3767570 | 2077-2087 | Towards Efficient Load Balancing BFS on GPUs: One Code for AMD, Intel & Nvidia
+10.1145/3731599.3767571 | 2088-2099 | Scalable Neural Network Training: Distributed Data-Parallel Approaches
+10.1145/3731599.3767572 | 2100-2113 | Reduction-Aware Directive-Based Programming via Multi-Dimensional Homomorphisms
+10.1145/3731599.3767573 | 2114-2128 | Mojo: MLIR-based Performance-Portable HPC Science Kernels on GPUs for the Python Ecosystem
+10.1145/3731599.3767574 | 2129-2136 | A Study of Performance Portability of Low-bit Fused Matrix-Vector Multiplication Kernels in SYCL
+10.1145/3731599.3767575 | 2281-2292 | RESILIO : A Scalable and Composable Architecture for Tomographic Reconstruction Workflows
+10.1145/3731599.3767576 | 2201-2212 | CAMEO: A Co-design Architecture for Multi-objective Energy System Optimization
+10.1145/3731599.3767577 | 2269-2280 | Overcoming Dynamic I/O Boundaries: a Double-Sided Streaming Methodology with dispel4py and CAPIO
+10.1145/3731599.3767578 | 2225-2233 | Do Large Language Models Speak Scientific Workflows?
+10.1145/3731599.3767579 | 2213-2224 | DAGonStore: Reliable Data Management for Workflows on the Computing Continuum with DynoStore and DAGonStar
+10.1145/3731599.3767580 | 2305-2316 | The (R)evolution of Scientific Workflows in the Agentic AI Era: Towards Autonomous Science
+10.1145/3731599.3767581 | 2169-2180 | Adapting Classic Scheduling Heuristics for Online Execution under Uncertainty
+10.1145/3731599.3767582 | 2257-2268 | LLM Agents for Interactive Workflow Provenance: Reference Architecture and Evaluation Methodology
+10.1145/3731599.3767583 | 2293-2304 | State Machine Orchestration of an HPC Workflow in Cloud
+10.1145/3731599.3767584 | 2234-2244 | Evaluating the Efficacy of LLM-Based Reasoning for Multiobjective HPC Job Scheduling
+10.1145/3731599.3767585 | 2190-2200 | Bridging Speed and Optimality in Job Scheduling: A Hybrid Ant Colony Optimization Approach for Distributed Systems
+10.1145/3731599.3767586 | 2181-2189 | A Workflow for Error Analysis for Drug Response Prediction via Statistical Standardization and Distribution Analysis
+10.1145/3731599.3767587 | 2245-2256 | Integrating and Characterizing HPC Task Runtime Systems for hybrid AI-HPC workloads
+10.1145/3731599.3767588 | 2347-2353 | Adapting scientific streaming inference workflows for a deterministic tensor processing unit
+10.1145/3731599.3767589 | 2317-2327 | xGFabric: Coupling Sensor Networks and HPC Facilities with Private 5G Wireless Networks for Real-Time Digital Agriculture
+10.1145/3731599.3767590 | 2328-2335 | Accelerating Advanced Light Source Science Through Multi-Facility HPC Workflows
+10.1145/3731599.3767591 | 2336-2346 | Streaming X-ray Detector Data to Remote Facilities Using EJFAT
+10.1145/3731599.3767592 | 2354-2361 | AI Agents for Enabling Autonomous Experiments at ORNL's HPC and Manufacturing User Facilities
+10.1145/3731599.3767593 | 2362-2368 | X-ray Ptychography at the Edge: Towards Real-Time Feedback for High-Speed Nanoimaging
+10.1145/3731599.3767698 | 1452-1463 | Determining Levels of Detail for Simulators of Parallel and Distributed Computing Systems via Automated Calibration
+10.1145/3731599.3767699 | 1512-1523 | Pretraining LLMs at Scale: Tuning Strategies and Performance Portability.
+10.1145/3731599.3767700 | 1464-1477 | Beyond Guess and Check: Quantifying the Fidelity of Proxy Applications
+10.1145/3731599.3767701 | 1544-1553 | ILAN: The Interference- and Locality-Aware NUMA Scheduler
+10.1145/3731599.3767702 | 1524-1533 | Characterizing the Impact of GPU Power Management on an Exascale System
+10.1145/3731599.3767703 | 1534-1543 | A GPU FFT Wrapper to Co-optimize Floating-Point Precision and Library Selection via Predictive Error Modeling
+10.1145/3731599.3767704 | 1442-1451 | A Peak Performance Model for All-to-all on Hierarchical Systems and Its Applications
+10.1145/3731599.3767705 | 1554-1563 | On the Performance and Scalability of Cloud Supercomputers: Insights from Eagle and Reindeer
+10.1145/3731599.3767706 | 1502-1511 | MoE-Inference-Bench: Performance Evaluation of Mixture of Expert Large Language and Vision Models
+10.1145/3731599.3767707 | 1433-1441 | Modelling Load Imbalance In Shared Memory Multicore Systems
+10.1145/3731599.3768147 | 841-847 | From Path-Aware to Application-Aware Source Routing using Traffic Classes
+10.1145/3731599.3768148 | 2051-2067 | Porting a Fortran plasma simulation to Exascale on AMD GPUs using both OpenMP and Kokkos
+10.1145/3731599.3769276 | 1496-1501 | Experiences of Porting Structured and Unstructured Stencil Applications to FPGA using SYCL
+10.1145/3731599.3769277 | 1478-1483 | CGSim: A Simulation Framework for Large Scale Distributed Computing Environment
+10.1145/3731599.3769278 | 1484-1490 | Implications of Full-System Modeling for Superconducting Architectures
+10.1145/3731599.3769279 | 1491-1495 | PerfAnalyzer: Revealing Performance Trends using Version Oriented Visual Analysis of Scientific Software

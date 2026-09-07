@@ -1,0 +1,37 @@
+[Codesign 3620665.3640362 p216-231] Sophia Fuhui Lin (U Chicago); Joshua Viszlai (U Chicago); Kaitlin N. Smith (Super.tech, a software division of Infleqtion, Chicago); Gokul Subramanian Ravi (U Chicago); Charles Yuan (MIT CSAIL); Frederic T. Chong (U Chicago); Benjamin J. Brown (IBM Quantum, T.J. Watson Research Center; IBM Denmark)
+[MillionQubit 3620665.3640388 p1-19] Junpyo Kim; Dongmoon Min; Jungmin Cho; Hyeonseong Jeong; Ilkwon Byun; Junhyuk Choi; Juwon Hong; Jangwoo Kim — all Dept of ECE, Seoul National University, Seoul, Republic of Korea
+[Elivagar 3620665.3640354 p336-353] Sashwat Anagolum (Penn State); Narges Alavisamani (Georgia Tech); Poulami Das (UT Austin); Moinuddin Qureshi (Georgia Tech); Yunong Shi (Amazon Quantum Technologies, New York)
+[Red-QAOA 3620665.3640363 p980-998] Meng Wang (UBC Vancouver; PNNL Richland); Bo Fang (PNNL); Ang Li (PNNL); Prashant J. Nair (UBC Vancouver)
+[OneGateScheme 3620665.3640386 p779-796] Jianxin Chen (Quantum Lab, DAMO Academy, Bellevue WA); Dawei Ding (DAMO Academy); Weiyuan Gong (SEAS, Harvard); Cupjin Huang (DAMO Academy); Qi Ye (DAMO Academy Hangzhou; Tsinghua University)
+[QuFEM 3620665.3640380 p948-963] Siwei Tan; Liqiang Lu; Hanyu Zhang; Jia Yu; Congliang Lang; Yongheng Shang; Xinkui Zhao; Mingshuai Chen (all Zhejiang University); Yun Liang (Peking University); Jianwei Yin (Zhejiang University)
+[ProxiML 3620666.3651367 p834-849] Aditya Ranjan (Northeastern); Tirthak Patel (Rice); Daniel Silver (Northeastern); Harshitta Gandhi (Northeastern); Devesh Tiwari (Northeastern)
+[ItTakesTwoToEntangle 3779212.3790178 p1022-1039] Zhanghan Wang (NYU); Ding Ding (NYU); Hang Zhu (ByteDance Seed); Haibin Lin (ByteDance Seed); Aurojit Panda (NYU) -- NOT QUANTUM
+[MECH 3620665.3640377 p699-714] Hezi Zhang (UC San Diego, La Jolla); Keyi Yin (UC San Diego); Anbang Wu (UC Santa Barbara); Hassan Shapourian (Cisco Quantum Lab, San Jose); Alireza Shabani (Cisco Quantum Lab, Santa Monica); Yufei Ding (UC San Diego)
+[MorphQPV 3620666.3651360 p671-688] Siwei Tan; Debin Xiang; Liqiang Lu (Zhejiang U); Junlin Lu (Peking U); Qiuping Jiang (Ningbo U); Mingshuai Chen; Jianwei Yin (Zhejiang U)
+[Promatch 3620666.3651339 p818-833] Narges Alavisamani (Georgia Tech); Suhas Vittal (Georgia Tech); Ramin Ayanzadeh (Georgia Tech); Poulami Das (UT Austin); Moinuddin Qureshi (Georgia Tech)
+[OnePerc 3620666.3651372 p738-754] Hezi Zhang (UC San Diego); Jixuan Ruan (UC San Diego); Hassan Shapourian (Cisco Systems); Ramana Rao Kompella (Cisco Systems); Yufei Ding (UC San Diego)
+[Fermihedral 3620666.3651371 p382-397] Yuhao Liu; Shize Che; Junyu Zhou (U Pennsylvania); Yunong Shi (AWS Quantum Technologies, New York); Gushu Li (U Pennsylvania)
+[FMCC 3622781.3674185 p111-126] Yingheng Li; Aditya Pawar; Zewei Mo; Youtao Zhang; Jun Yang; Xulong Tang — all University of Pittsburgh
+[QRCC 3622781.3674179 p236-251] Aditya Pawar (ECE, U Pittsburgh); Yingheng Li (CS, U Pittsburgh); Zewei Mo (CS, U Pittsburgh); Yanan Guo (ECE, U Pittsburgh); Xulong Tang (CS, U Pittsburgh); Youtao Zhang (CS, U Pittsburgh); Jun Yang (ECE, U Pittsburgh)
+[Clapton 3622781.3674178 p47-62] Lennart Maximilian Seifert (CS, U Chicago); Siddharth Dangwal (CS, U Chicago); Frederic T. Chong (CS, U Chicago); Gokul Subramanian Ravi (EECS, U Michigan Ann Arbor)
+[OptimizingQuantumCircuits 3669940.3707240 p777-793] Amanda Xu; Abtin Molavi; Swamit Tannu; Aws Albarghouthi — all University of Wisconsin-Madison
+[QECC-Synth 3669940.3707236 p876-890] Keyi Yin; Hezi Zhang; Xiang Fang (UC San Diego); Yunong Shi (AWS Quantum Technologies, New York); Travis S. Humble (Oak Ridge National Laboratory); Ang Li (Pacific Northwest National Laboratory); Yufei Ding (UC San Diego)
+[Fat-Tree QRAM 3676641.3716256 p390-406] Shifan Xu; Alvin Lu; Yongshan Ding — all Yale Quantum Institute, Yale University
+[iSwitch 3779212.3790177 p1007-1021] Keyi Yin; Xiang Fang; Zhuo Chen (UC San Diego); David Hayes (Quantinuum, Broomfield); Eneet Kaur (Cisco Quantum Lab); Reza Nejabati (Cisco Quantum Lab); Hartmut Haeffner (UC Berkeley); Wes Campbell (UCLA); Eric Hudson (UCLA); Jens Palsberg (UCLA); Travis Humble (Oak Ridge National Laboratory); Yufei Ding (UC San Diego)
+[BQSim 3676641.3715984 p79-94] Shui Jiang (CUHK + U Wisconsin-Madison); Yi-Hua Chung (UW-Madison); Chih-Chun Chang (UW-Madison); Tsung-Yi Ho (CUHK); Tsung-Wei Huang (UW-Madison)
+[HetEC 3676641.3716001 p515-528] Samuel Stein (PNNL); Shifan Xu (Yale); Andrew W. Cross (IBM Quantum); Theodore J. Yoder (IBM Quantum); Ali Javadi-Abhari (IBM Quantum); Chenxu Liu (PNNL); Kun Liu (Yale); Zeyuan Zhou (Yale); Charlie Guinn (Princeton); Yufei Ding (UC San Diego); Yongshan Ding (Yale); Ang Li (PNNL + U Washington)
+[Micro Blossom 3676641.3716005 p639-654] Yue Wu; Namitha Liyanage; Lin Zhong — all Yale University
+[RESCQ 3676641.3716018 p1028-1043] Sayam Sethi (ECE, UT Austin); Jonathan Mark Baker (ECE, UT Austin)
+[PowerMove 3676642.3736128 p163-178] Jixuan Ruan; Xiang Fang; Hezi Zhang (UC San Diego); Ang Li (PNNL); Travis Humble (Oak Ridge National Laboratory); Yufei Ding (UC San Diego)
+[QTurbo 3760250.3762227 p203-218] Junyu Zhou; Yuhao Liu; Shize Che (U Pennsylvania); Anupam Mitra; Efekan Kokcu; Ermal Rrapaj; Costin Iancu (Lawrence Berkeley National Laboratory); Gushu Li (U Pennsylvania)
+[AccelQLDPC 3779212.3790122 p59-76] Jungmin Cho; Hyeonseong Jeong; Junpyo Kim; Junhyuk Choi; Juwon Hong; Jangwoo Kim — all Seoul National University
+[AlphaSyndrome 3779212.3790123 p77-93] Yuhao Liu; Shuohao Ping; Junyu Zhou; Ethan Decker (U Pennsylvania); Justin Kalloor (UC Berkeley); Mathias Weiden (UC Berkeley); Kean Chen (U Pennsylvania); Yunong Shi (Amazon Quantum Technologies, Pasadena); Ali Javadi-Abhari (IBM Research); Costin Iancu (LBNL); Gushu Li (U Pennsylvania)
+[ArchTrappedIon 3779212.3790128 p175-190] Scott Jones; Prakash Murali — both Dept of Computer Science and Technology, University of Cambridge, UK
+[BorrowingDirtyQubits 3779212.3790134 p274-289] Bonan Su (Tsinghua U); Li Zhou (Key Lab of System Software, Institute of Software, Chinese Academy of Sciences); Yuan Feng (Tsinghua U); Mingsheng Ying (University of Technology Sydney)
+[COMPAS 3779212.3790143 p426-441] Brayden Goldstein-Gelb (Brown U); Kun Liu (Yale); John M. Martyn (PNNL + Harvard); Hengyun (Harry) Zhou (QuEra Computing Inc.); Yongshan Ding (Yale); Yuan Liu (North Carolina State U)
+[PropHunt 3779212.3790205 p1476-1491] Joshua Viszlai (CS, U Chicago); Satvik Maurya (CS, UW-Madison); Swamit Tannu (CS, UW-Madison); Margaret Martonosi (CS, Princeton); Frederic T. Chong (CS, U Chicago)
+[ReconfigQISC 3779212.3790208 p1523-1546] Zhaohui Yang (HKUST); Dawei Ding (Fudan U + Shanghai Inst for Mathematics and Interdisciplinary Sciences); Qi Ye (Tsinghua U); Cupjin Huang (DAMO Academy, Alibaba Group, Bellevue WA); Jianxin Chen (Tsinghua U); Yuan Xie (HKUST)
+[ReducingTGates 3779212.3790210 p1589-1604] Tianyi Hao; Amanda Xu; Swamit Tannu — all University of Wisconsin-Madison
+[TreeVQA 3779212.3790239 p2063-2078] Yuewen Hou; Dhanvi Bharadwaj; Gokul Subramanian Ravi — all CSE, University of Michigan, Ann Arbor
+[VarSaw 3623278.3624764 p362-377 = 28th ASPLOS Vol 4] Siddharth Dangwal (U Chicago); Gokul Subramanian Ravi (U Michigan); Poulami Das (UT Austin); Kaitlin N. Smith (Infleqtion, Chicago); Jonathan Mark Baker (UT Austin); Frederic T. Chong (U Chicago)
+[PermutableOps 3623278.3624751 p108-124 = 28th ASPLOS Vol 4] Yuwei Jin; Fei Hua; Yanhao Chen; Ari Hayes (Rutgers); Chi Zhang (U Pittsburgh); Eddy Z. Zhang (Rutgers)

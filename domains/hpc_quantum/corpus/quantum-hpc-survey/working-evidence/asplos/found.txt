@@ -1,0 +1,80 @@
+=== 2024-04-27 offset0 (50/170) quantum hits ===
+10.1145/3620666.3651360 | MorphQPV: Exploiting Isomorphism in Quantum Programs to Facilitate Confident Verification | 671-688 | 29V3  <-- NOT IN LIST OF 31
+10.1145/3620665.3640354 | Elivagar: Efficient Quantum Circuit Search for Classification | 336-353 | 29V2
+10.1145/3622781.3674178 | Clapton: Clifford Assisted Problem Transformation for Error Mitigation in Variational Quantum Algorithms | 47-62 | 29V4  <-- CLAPTON CONFIRMED V4
+10.1145/3620665.3640380 | QuFEM: Fast and Accurate Quantum Readout Calibration Using the Finite Element Method | 948-963 | 29V2
+10.1145/3620666.3651339 | Promatch: Extending the Reach of Real-Time Quantum Error Correction with Adaptive Predecoding | 818-833 | 29V3
+=== 2024-04-27 offset50 quantum hits ===
+10.1145/3622781.3674185 | FMCC: Flexible Measurement-based Quantum Computation over Cluster State | 111-126 | 29V4
+10.1145/3620665.3640377 | MECH: Multi-Entry Communication Highway for Superconducting Quantum Chiplets | 699-714 | 29V2
+10.1145/3620666.3651372 | OnePerc: A Randomness-aware Compiler for Photonic Quantum Computing | 738-754 | 29V3 <-- NOT IN LIST
+10.1145/3620665.3640388 | A Fault-Tolerant Million Qubit-Scale Distributed Quantum Computer | 1-19 | 29V2
+10.1145/3620666.3651371 | Fermihedral: On the Optimal Compilation for Fermion-to-Qubit Encoding | 382-397 | 29V3 <-- NOT IN LIST
+10.1145/3622781.3674179 | QRCC: Evaluating Large Quantum Circuits on Small Quantum Computers through Integrated Qubit Reuse and Circuit Cutting | 236-251 | 29V4
+10.1145/3620666.3651367 | ProxiML: Building Machine Learning Classifiers for Photonic Quantum Computing | 834-849 | 29V3
+NONPAPER: 10.1145/3620666.3655590 keynote 2-2 ; 10.1145/3620666.3655591 keynote 3-3
+=== 2024-04-27 offset100 quantum hits ===
+10.1145/3620665.3640386 | One Gate Scheme to Rule Them All: Introducing a Complex Yet Reduced Instruction Set for Quantum Computing | 779-796 | 29V2 <-- NOT IN LIST
+10.1145/3620665.3640363 | Red-QAOA: Efficient Variational Optimization through Circuit Reduction | 980-998 | 29V2
+NONPAPER: 10.1145/3620666.3655592 keynote 4-4
+FALSEPOS: 10.1145/3620665.3640381 Efficient Microsecond-scale Blind Scheduling with Tiny Quanta (scheduling quanta)
+=== 2024-04-27 offset150 quantum hits (170/170 COMPLETE) ===
+10.1145/3620665.3640362 | Codesign of quantum error-correcting codes and modular chiplets in the presence of defects | 216-231 | 29V2
+NONPAPER: 10.1145/3620666.3655589 keynote 1-1
+VERIFIED: 29V4 (3622781) = exactly 24 items counted across 4 pages. Quantum in V4: Clapton 3674178, QRCC 3674179, FMCC 3674185.
+NOTE: VarSaw NOT present in any 2024 volume -> likely 28th ASPLOS Vol 4 (2023 proceedings), presented ASPLOS 2024. MUST VERIFY.
+=== 2025-03-30 offset0 (contaminated date, 341 total) quantum hits ===
+10.1145/3669940.3707240 | Optimizing Quantum Circuits, Fast and Slow | 777-793 | 30V1
+10.1145/3669940.3707236 | QECC-Synth: A Layout Synthesizer for Quantum Error Correction Codes on Sparse Architectures | 876-890 | 30V1
+10.1145/3676641.3716256 | Fat-Tree QRAM: A High-Bandwidth Shared Quantum Random Access Memory for Parallel Queries | 390-406 | 30V2
+10.1145/3676641.3716018 | RESCQ: Realtime Scheduling for Continuous Angle Quantum Error Correction Architectures | 1028-1043 | 30V2
+!! WARNING: offset paging UNSTABLE on 2025-03-30 (offset100 items1-2 == offset50 items48-49). Switch to cursor paging.
+=== 30V1 (3669940) COMPLETE via cursor: 72 items, suffixes 3707214-3707287 minus 3707233,3707283 ===
+QUANTUM in 30V1: 3707236 QECC-Synth (876-890); 3707240 Optimizing Quantum Circuits, Fast and Slow (777-793)
+FALSEPOS 30V1: 3707268 MVQ ... Masked Vector Quantization (quantization, not quantum)
+=== 2025-03-30 cursor page2 quantum hits (30V2) ===
+10.1145/3676641.3715984 | BQSim: GPU-accelerated Batch Quantum Circuit Simulation using Decision Diagram | 79-94 | 30V2
+10.1145/3676641.3716001 | HetEC: Architectures for Heterogeneous Quantum Error Correction Codes | 515-528 | 30V2
+10.1145/3676641.3716005 | Micro Blossom: Accelerated Minimum-Weight Perfect Matching Decoding for Quantum Error Correction | 639-654 | 30V2
+=== 30V2 (3676641) COMPLETE via cursor: 88 items (3711998,3711999,3715983-3716028 minus 3716024, 3716243-3716283) ===
+QUANTUM in 30V2: 3715984 BQSim; 3716001 HetEC; 3716005 Micro Blossom; 3716018 RESCQ; 3716256 Fat-Tree QRAM  (5 total)
+FALSEPOS 30V2: 3716252 COMET W4A4KV4 (quantization); 3716006 MoC-System fault tolerance (classical MoE)
+=== 30V3 (3676642) COMPLETE: 19 items on 2025-08-06 (date total 88; other 69 = 3735358 workshop) ===
+NONPAPERS: 3729205 keynote 1-2; 3729206 keynote/panel 3-4; 3736399 contest report 5-17  -> 16 regular papers OK
+QUANTUM in 30V3: 10.1145/3676642.3736128 | PowerMove: Optimizing Compilation for Neutral Atom Quantum Computers with Zoned Architecture | 163-178  *** POWERMOVE VERIFIED IN 30th V3 ***
+FALSEPOS 30V3: 3736124 Fault Escaping (DPU fault tolerance, classical)
+=== 31V1 (3760250) COMPLETE: 20 items on 2025-12-11 (date total 20, no contamination), suffixes 3762216-3762235 ===
+QUANTUM in 31V1: 10.1145/3760250.3762227 | QTurbo: A Robust and Efficient Compiler for Analog Quantum Simulation | 203-218  (ONLY ONE)
+FALSEPOS 31V1: 3762224 TiNA chiplet-based CPUs (classical chiplet); 3762235 neuro-symbolic-probabilistic
+=== 31V2 (3779212) page A-E (37 items, suffixes 3790119-3790155) quantum hits ===
+10.1145/3779212.3790122 | Accelerating Computation in Quantum LDPC Code | 59-76 | 31V2
+10.1145/3779212.3790123 | AlphaSyndrome: Tackling the Syndrome Measurement Circuit Scheduling Problem for QEC Codes | 77-93 | 31V2
+10.1145/3779212.3790128 | Architecting Scalable Trapped Ion Quantum Computers using Surface Codes | 175-190 | 31V2
+10.1145/3779212.3790134 | Borrowing Dirty Qubits in Quantum Programs | 274-289 | 31V2
+10.1145/3779212.3790143 | COMPAS: A Distributed Multi-Party SWAP Test for Parallel Quantum Algorithms | 426-441 | 31V2
+=== 31V2 (3779212) 135 items total (37+98) = 132 papers + 3 keynotes (3795611 p2-2, 3795612 p3-4, 3795613 p1-1) ===
+QUANTUM in 31V2 (11 incl. uncertain):
+3790122 Accelerating Computation in Quantum LDPC Code | 59-76
+3790123 AlphaSyndrome | 77-93
+3790128 Architecting Scalable Trapped Ion Quantum Computers using Surface Codes | 175-190
+3790134 Borrowing Dirty Qubits in Quantum Programs | 274-289
+3790143 COMPAS: A Distributed Multi-Party SWAP Test for Parallel Quantum Algorithms | 426-441
+3790177 iSwitch: QEC on Demand via In-Situ Encoding of Bare Qubits for Ion Trap Architectures | 1007-1021
+3790178 It Takes Two to Entangle | 1022-1039   <-- MUST CLASSIFY
+3790205 PropHunt: Automated Optimization of Quantum Syndrome Measurement Circuits | 1476-1491
+3790208 Reconfigurable Quantum Instruction Set Computers for High Performance Attainable on Hardware | 1523-1546
+3790210 Reducing T Gates with Unitary Synthesis | 1589-1604
+3790239 TreeVQA: A Tree-Structured Execution Framework for Shot Reduction in Variational Quantum Algorithms | 2063-2078
+FALSEPOS 31V2: 3790185 M2XFP low-bit quantization; 3790204 PrioriFI fault injection; 3790223 SNIP mixed precision
+=== SWEEP COMPLETE — all 9 volumes enumerated ===
+29V1 3617232: 28 items (3624847-3624874), 0 quantum
+29V2 3620665: 76 items (3640353-3640428 contiguous), 7 quantum
+29V3 3620666: 70 items (3651322-3651387 =66 papers + 3655589/90/91/92 =4 keynotes), 5 quantum
+29V4 3622781: 24 items (3674167-3674190 minus 3674187, + 3698899), 3 quantum
+30V1 3669940: 72 items (3707214-3707287 minus 3707233,3707283), 2 quantum
+30V2 3676641: 88 items, 5 quantum
+30V3 3676642: 19 items (16 papers + 3 front matter), 1 quantum (PowerMove)
+31V1 3760250: 20 items (3762216-3762235), 1 quantum (QTurbo)
+31V2 3779212: 135 items (132 papers + 3 keynotes), 10 quantum + 1 uncertain
+TOTAL QUANTUM = 34 confirmed + 1 uncertain. 30 of the 31 known list matched. VarSaw absent from all 9.
+EXTRAS NOT IN LIST OF 31: MorphQPV(29V3), OnePerc(29V3), Fermihedral(29V3), One Gate Scheme(29V2)

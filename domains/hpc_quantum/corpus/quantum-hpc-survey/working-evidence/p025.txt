@@ -1,0 +1,25 @@
+10.1145/3620665.3640365 | 1165-1182 | Tandem Processor: Grappling with Emerging Operators in Neural Networks
+10.1145/3620665.3640362 | 216-231 | Codesign of quantum error-correcting codes and modular chiplets in the presence of defects
+10.1145/3620665.3640399 | 1095-1111 | Slapo: A Schedule Language for Progressive Optimization of Large Deep Learning Model Training
+10.1145/3620665.3640393 | 201-215 | CMC: Video Transformer Acceleration via CODEC Assisted Matrix Condensing
+10.1145/3620665.3640413 | 530-548 | In-Storage Domain-Specific Acceleration for Serverless Computing
+10.1145/3620665.3640417 | 71-84 | An Encoding Scheme to Enlarge Practical DNA Storage Capacity by Reducing Primer-Payload Collisions
+10.1145/3620665.3640414 | 1183-1199 | TGLite: A Lightweight Programming Framework for Continuous-Time Temporal Graph Neural Networks
+10.1145/3620665.3640353 | 830-845 | Palantir: Hierarchical Similarity Detection for Post-Deduplication Delta Compression
+10.1145/3620665.3640394 | 846-861 | PDIP: Priority Directed Instruction Prefetching
+10.1145/3620665.3640385 | 514-529 | Hydride: A Retargetable and Extensible Synthesis-based Compiler for Modern Hardware Architectures
+10.1145/3620665.3640360 | 549-565 | JUNO: Optimizing High-Dimensional Approximate Nearest Neighbour Search with Sparsity-Aware Algorithm and Ray-Tracing Core Mapping
+10.1145/3620665.3640398 | 1218-1232 | Verifying Rust Implementation of Page Tables in a Software Enclave Hypervisor
+10.1145/3620665.3640354 | 336-353 | Elivagar: Efficient Quantum Circuit Search for Classification
+10.1145/3620665.3640364 | 167-184 | Carat: Unlocking Value-Level Parallelism for Multiplier-Free GEMMs
+10.1145/3620665.3640384 | 616-630 | LazyDP: Co-Designing Algorithm-Software for Scalable Training of Differentially Private Recommendation Models
+10.1145/3620665.3640372 | 55-70 | Achieving Near-Zero Read Retry for 3D NAND Flash Memory
+10.1145/3620665.3640380 | 948-963 | QuFEM: Fast and Accurate Quantum Readout Calibration Using the Finite Element Method
+10.1145/3620665.3640378 | 1061-1076 | sIOPMP: Scalable and Efficient I/O Protection for TEEs
+10.1145/3620665.3640406 | 964-979 | RAP: Resource-aware Automated GPU Sharing for Multi-GPU Recommendation Model Training and Input Preprocessing
+10.1145/3620665.3640371 | 1250-1263 | What You Trace is What You Get: Dynamic Stack-Layout Recovery for Binary Recompilation
+10.1145/3620665.3640408 | 649-665 | Lightweight Fault Isolation: Practical, Efficient, and Secure Software Sandboxing
+10.1145/3620665.3640396 | 999-1013 | RPG²: Robust Profile-Guided Runtime Prefetch Generation
+10.1145/3620665.3640416 | 251-268 | Cornucopia Reloaded: Load Barriers for CHERI Heap Temporal Safety
+10.1145/3620665.3640411 | 1112-1127 | SpotServe: Serving Generative Large Language Models on Preemptible Instances
+10.1145/3620665.3640382 | 912-928 | Plankton: Reconciling Binary Code and Debug Information

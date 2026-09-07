@@ -1,0 +1,114 @@
+00001	Title Page
+00002	Copyright Page
+00003	Table of Contents
+00004	Foreword from the General Chair
+00005	Foreword from the Technical Program Chair and Vice Chair
+00006	Foreword from the Technical Papers Chair and Vice Chair
+00007	ORBIT: Oak Ridge Base Foundation Model for Earth System Predictability
+00008	Boosting Earth System Model Outputs And Saving PetaBytes in Their Storage Using Exascale Climate Emulators
+00009	A Performance-Portable Kilometer-Scale Global Ocean Model on ORISE and New Sunway Heterogeneous Supercomputers
+00010	Democratizing AI: Open-source Scalable LLM Training on GPU-based Supercomputers
+00011	Pushing the Limit of Quantum Mechanical Simulation to the Raman Spectra of a Biological System with 100 Million Atoms
+00012	Toward Capturing Genetic Epistasis from Multivariate Genome-Wide Association Studies Using Mixed-Precision Kernel Ridge Regression
+00013	MProt-DPO: Breaking the ExaFLOPS Barrier for Multimodal Protein Design Workflows with Direct Preference Optimization
+00014	Breaking the Molecular Dynamics Timescale Barrier Using a Wafer-Scale System
+00015	Breaking the Million-Electron and 1 EFLOP/s Barriers: Biomolecular-Scale Ab Initio Molecular Dynamics Using MP2 Potentials
+00016	M3XU: Achieving High-Precision and Complex Matrix Multiplication with Low-Precision MXUs
+00017	Hydrogen: Contention-Aware Hybrid Memory for Heterogeneous CPU-GPU Architectures
+00018	EcoLife: Carbon-Aware Serverless Function Scheduling for Sustainable Computing
+00019	CUSZ-i: High-Ratio Scientific Lossy Compression on GPUs with Optimized Multi-Level Interpolation
+00020	Tango: A Cross-layer Approach to Managing I/O Interference over Local Ephemeral Storage
+00021	CUSZP2: A GPU Lossy Compressor with Extreme Throughput and Optimized Compression Ratio
+00022	LLM-Pilot: Characterize and Optimize Performance of your LLM Inference Services
+00023	DFTracer: An Analysis-Friendly Data Flow Tracer for AI-Driven Workflows
+00024	Efficient Weighted Graph Matching on GPUs
+00025	Automated Code Generation of High-Order Stencils for a Dataflow Architecture
+00026	Moirae: Generating High-Performance Composite Stencil Programs with Global Optimizations
+00027	autoGEMM: Pushing the Limits of Irregular Matrix Multiplication on Arm Architectures
+00028	Accurate and Convenient Energy Measurements for GPUs: A Detailed Study of NVIDIA GPU's Built-In Power Sensor
+00029	A Digital Twin Framework for Liquid-cooled Supercomputers as Demonstrated at Exascale
+00030	Toward Sustainable HPC: In-Production Deployment of Incentive-Based Power Efficiency Mechanism on the Fugaku Supercomputer
+00031	Towards Highly Compatible I/O-Aware Workflow Scheduling on HPC Systems
+00032	PAL: A Variability-Aware Policy for Scheduling ML Workloads in GPU Clusters
+00033	Toward High-Performance Blockchain System by Blurring the Line between Ordering and Execution
+00034	Matrix-Free Finite Volume Kernels on a Dataflow Architecture
+00035	Rapid GPU-Based Pangenome Graph Layout
+00036	Scaling Molecular Dynamics with ab initio Accuracy to 149 Nanoseconds per Day
+00037	An Evaluation of the Effect of Network Cost Optimization for Leadership Class Supercomputers
+00038	Application-Driven Exascale: The JUPITER Benchmark Suite
+00039	Exploring GPU-to-GPU Communication: Insights into Supercomputer Interconnects
+00040	MCFuser: High-Performance and Rapid Fusion of Memory-Bound Compute-Intensive Operators
+00041	Static Generation of Efficient OpenMP Offload Data Mappings
+00042	HiRace: Accurate and Fast Data Race Checking for GPU Programs
+00043	Boosting Data Center Performance via Intelligently Managed Multi-backend Disaggregated Memory
+00044	SMIless: Serving DAG-based Inference with Dynamic Invocations under Serverless Computing
+00045	Stellaris: Staleness-Aware Distributed Reinforcement Learning with Serverless Computing
+00046	PipeInfer: Accelerating LLM Inference using Asynchronous Pipelined Speculation
+00047	RecFlex: Enabling Feature Heterogeneity-Aware Optimization for Deep Recommendation Models with Flexible Schedules
+00048	ParvaGPU: Efficient Spatial GPU Sharing for Large-Scale DNN Inference in Cloud Environments
+00049	CUDASTF: Bridging the Gap Between CUDA and Task Parallelism
+00050	KaMPIng: Flexible and (Near) Zero-Overhead C++ Bindings for MPI
+00051	NetCL: A Unified Programming Framework for In-Network Computing
+00052	Distributed-Memory Parallel Algorithms for Sparse Matrix and Sparse Tall-and-Skinny Matrix Multiplication
+00053	A Sparsity-Aware Distributed-Memory Algorithm for Sparse-Sparse Matrix Multiplication
+00054	A Conflict-aware Divide-and-Conquer Algorithm for Symmetric Sparse Matrix-Vector Multiplication
+00055	Accelerating Distributed DLRM Training with Optimized TT Decomposition and Micro-Batching
+00056	Scaling New Heights: Transformative Cross-GPU Sampling for Training Billion-Edge Graphs
+00057	A Scalable Algorithm for Active Learning
+00058	AmgT: Algebraic Multigrid Solver on Tensor Cores
+00059	LoRAStencil: Low-Rank Adaptation of Stencil Computation on Tensor Cores
+00060	High Performance Unstructured SpMM Computation Using Tensor Cores
+00061	Versatile Datapath Soft Error Detection on the Cheap for HPC Applications
+00062	MCBound: An Online Framework to Characterize and Classify Memory/Compute-bound HPC Jobs
+00063	GVARP: Detecting Performance Variance on Large-Scale Heterogeneous Systems
+00064	Mille-feuille: A Tile-Grained Mixed Precision Single-Kernel Conjugate Gradient Solver on GPUs
+00065	DBSR: An Efficient Storage Format for Vectorizing Sparse Triangular Solvers on Structured Grids
+00066	Many-Body Electronic Correlation Energy using Krylov Subspace Linear Solvers
+00067	Enabling 13K-Atom Excited-State GW Calculations via Low-Rank Approximations and HPC on the New Sunway Supercomputer
+00068	Reshaping High Energy Physics Applications for Near-Interactive Execution Using TaskVine
+00069	Towards Exascale Simulations of Nanoelectronic Devices in the GW Approximation
+00070	LLAMP: Assessing Network Latency Tolerance of HPC Applications with Linear Programming
+00071	A Workflow Roofline Model for End-to-End Workflow Performance Analysis
+00072	Learning Generalizable Program and Architecture Representations for Performance Modeling
+00073	LEXIQL: Quantum Natural Language Processing on NISQ-era Machines
+00074	Optimizing Quantum Fourier Transformation (QFT) Kernels for Modern NISQ and FT Architectures
+00075	On the Efficacy of Surface Codes in Compensating for Radiation Events in Superconducting Devices
+00076	Revisiting Computation for Research: Practices and Trends
+00077	Understanding Data Movement Patterns in HPC: A NERSC Case Study
+00078	HPAC-ML: A Programming Model for Embedding ML Surrogates in Scientific Applications
+00079	PARALLAX: A Compiler for Neutral Atom Quantum Computers under Hardware Constraints
+00080	MixQ: Taming Dynamic Outliers in Mixed-Precision Quantization by Online Prediction
+00081	LONG EXPOSURE: Accelerating Parameter-Efficient Fine-Tuning for LLMs under Shadowy Sparsity
+00082	Adaptive Patching for High-resolution Image Segmentation with Transformers
+00083	TorchGT: A Holistic System for Large-Scale Graph Transformer Training
+00084	Exploring Efficient Partial Differential Equation Solution Using Speed Galerkin Transformer
+00085	Surpassing Sycamore: Achieving Energetic Superiority Through System-Level Circuit Simulation
+00086	Realizing Quantum Kernel Models at Scale with Matrix Product State Simulation
+00087	Atlas: Hierarchical Partitioning for Quantum Circuit Simulation on GPUs
+00088	Unlocking High Performance with Low-Bit NPUs and CPUs for Highly Optimized HPL-MxP on Cloud Brain II
+00089	Fire-Flyer AI-HPC: A Cost-Effective Software-Hardware Co-Design for Deep Learning
+00090	A Probabilistic Approach To Selecting Build Configurations in Package Managers
+00091	A High-Quality Workflow for Multi-Resolution Scientific Data Reduction and Visualization
+00092	Error-controlled Progressive Retrieval of Scientific Data under Derivable Quantities of Interest
+00093	CARP: Range Query-Optimized Indexing for Streaming Data
+00094	Optimizing Distributed ML Communication with Fused Computation-Collective Operations
+00095	Accelerating Communication in Deep Learning Recommendation Model Training with Dual-Level Adaptive Lossy Compression
+00096	APTMoE: Affinity-Aware Pipeline Tuning for MoE Models on Bandwidth-Constrained GPU Nodes
+00097	Accelerated Atomistic Kinetic Monte Carlo Simulations of Resistive Memory Arrays
+00098	Large Language Models for Anomaly Detection in Computational Workflows: From Supervised Fine-Tuning to In-Context Learning
+00099	Designing a GPU-Accelerated Communication Layer for Efficient Fluid-Structure Interaction Computations on Heterogeneous Systems
+00100	Efficient Tensor Offloading for Large Deep-Learning Model Training based on Compute Express Link
+00101	CoAXIAL: A CXL-Centric Memory System for Scalable Servers
+00102	Switch-Less Dragonfly on Wafers: A Scalable Interconnection Architecture based on Wafer-Scale Integration
+00103	Fast and Efficient Scaling for Microservices with SurgeGuard
+00104	Realizing Joint Extreme-Scale Simulations on Multiple Supercomputers-Two Superfacility Case Studies
+00105	AutoCheck: Automatically Identifying Variables for Checkpointing by Data Dependency Analysis
+00106	Enumeration of Billions of Maximal Bicliques in Bipartite Graphs without Using GPUs
+00107	Doubling Graph Traversal Efficiency to 198 TeraTEPS on the Supercomputer Fugaku
+00108	Asynchronous Distributed-Memory Parallel Algorithms for Influence Maximization
+00109	Network-Offloaded Bandwidth-Optimal Broadcast and Allgather for Distributed AI
+00110	hZCCL: Accelerating Collective Communication with Co-Designed Homomorphic Compression
+00111	UNR: Unified Notifiable RMA Library for HPC
+00112	EXO: Accelerating Storage Paravirtualization with eBPF
+00113	CoRD: Combining Raid and Delta for Fast Partial Updates in Erasure-Coded Storage Clusters
+00114	MegaMmap: Blurring the Boundary Between Memory and Storage for Data-Intensive Workloads

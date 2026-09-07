@@ -1,0 +1,25 @@
+10.1145/3620665.3640400 | 120-136 | Avoiding Instruction-Centric Microarchitectural Timing Channels Via Binary-Code Transformations
+10.1145/3620665.3640383 | 369-384 | ExeGPT: Constraint-Aware Resource Scheduling for LLM Inference
+10.1145/3620665.3640415 | 401-415 | FOCAL: A First-Order Carbon Model to Assess Processor Sustainability
+10.1145/3620665.3640402 | 715-729 | METAL: Caching Multi-level Indexes in Domain-Specific Architectures
+10.1145/3620665.3640361 | 385-400 | FaaSGraph: Enabling Scalable, Efficient, and Cost-Effective Graph Processing with Serverless Computing
+10.1145/3620665.3640423 | 450-466 | GMLake: Efficient and Transparent GPU Memory Defragmentation for Large-scale DNN Training with Virtual Memory Stitching
+10.1145/3620665.3640366 | 929-947 | PyTorch 2: Faster Machine Learning Through Dynamic Python Bytecode Transformation and Graph Compilation
+10.1145/3620665.3640392 | 1029-1044 | SEER: Super-Optimization Explorer for High-Level Synthesis using E-graph Rewriting
+10.1145/3620665.3640422 | 103-119 | AttAcc! Unleashing the Power of PIM for Batched Transformer-based Generative Model Inference
+10.1145/3620665.3640379 | 813-829 | ORIANNA: An Accelerator Generation Framework for Optimization-based Robotic Applications
+10.1145/3620665.3640410 | 1146-1164 | T3: Transparent Tracking & Triggering for Fine-grained Overlap of Compute & Collectives
+10.1145/3620665.3640373 | 1128-1145 | SUIT: Secure Undervolting with Instruction Traps
+10.1145/3620665.3640404 | 1014-1028 | Rubix: Reducing the Overhead of Secure Rowhammer Mitigations via Randomized Line-to-Row Mapping
+10.1145/3620665.3640426 | 683-698 | MaxK-GNN: Extremely Fast GPU Kernel Design for Accelerating Graph Neural Networks Training
+10.1145/3620665.3640388 | 1-19 | A Fault-Tolerant Million Qubit-Scale Distributed Quantum Computer
+10.1145/3620665.3640427 | 1200-1217 | Two-Face: Combining Collective and One-Sided Communication for Efficient Distributed SpMM
+10.1145/3620665.3640387 | 416-432 | FPGA Technology Mapping Using Sketch-Guided Program Synthesis
+10.1145/3620665.3640358 | 287-304 | Direct Memory Translation for Virtualized Clouds
+10.1145/3620665.3640401 | 37-54 | A Quantitative Analysis and Guidelines of Data Streaming Accelerator in Modern Intel Xeon Scalable Processors
+10.1145/3620665.3640389 | 482-498 | Greybox Fuzzing for Concurrency Testing
+10.1145/3620665.3640386 | 779-796 | One Gate Scheme to Rule Them All: Introducing a Complex Yet Reduced Instruction Set for Quantum Computing
+10.1145/3620665.3640363 | 980-998 | Red-QAOA: Efficient Variational Optimization through Circuit Reduction
+10.1145/3620665.3640370 | 601-615 | LazyBarrier: Reconstructing Android IO Stack for Barrier-Enabled Flash Storage
+10.1145/3620665.3640397 | 137-150 | BitPacker: Enabling High Arithmetic Efficiency in Fully Homomorphic Encryption Accelerators
+10.1145/3620665.3640375 | 499-513 | Heet: Accelerating Elastic Training in Heterogeneous Deep Learning Clusters
