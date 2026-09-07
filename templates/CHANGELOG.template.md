@@ -1,0 +1,16 @@
+## <YYYY-MM> — <event, e.g. SC26 import>
+
+Added:
+...
+
+Changed:
+...
+
+Closed questions:
+...
+
+New questions:
+...
+
+Revalidated:
+...
