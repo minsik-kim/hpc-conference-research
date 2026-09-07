@@ -33,3 +33,19 @@ Notes:
   will be brought in during a dedicated import step, not reconstructed from
   memory or general knowledge.
 - No GitHub push was performed as part of this bootstrap.
+
+## 2026-09-07 — HPC & Quantum: first domain content import
+
+The `hpc_quantum` domain moved from `STRUCTURE_ONLY` to `PARTIAL`: its
+first source project (`quantum-hpc-survey` — SC 2024–2025 and ASPLOS
+2024–2026 regular-paper venue censuses, a 21-venue landscape map, and
+QEC/simulation/compilation lineage synthesis, 39 files) was imported
+byte-identically from a previously staged and integrity-verified copy.
+See `domains/hpc_quantum/CHANGELOG.md` for the full per-file breakdown.
+`ai_hpc_systems` and `hpc_systems_operations` are unchanged by this entry.
+
+Root files touched: `README.md`, `GLOBAL_CONTEXT.md`, `MASTER_INDEX.md` —
+in each, only the `hpc_quantum` row/bullet was edited; the other two
+domains' rows/bullets were left exactly as they were.
+
+No GitHub push was performed as part of this import.

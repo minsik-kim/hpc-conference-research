@@ -6,7 +6,7 @@
 |---|---|---|
 | AI/HPC Systems | [domains/ai_hpc_systems/DOMAIN_CONTEXT.md](domains/ai_hpc_systems/DOMAIN_CONTEXT.md) | `EXTERNAL_IMPORT_PENDING` |
 | HPC Systems & Operations | [domains/hpc_systems_operations/DOMAIN_CONTEXT.md](domains/hpc_systems_operations/DOMAIN_CONTEXT.md) | `STRUCTURE_ONLY` |
-| HPC & Quantum | [domains/hpc_quantum/DOMAIN_CONTEXT.md](domains/hpc_quantum/DOMAIN_CONTEXT.md) | `STRUCTURE_ONLY` |
+| HPC & Quantum | [domains/hpc_quantum/DOMAIN_CONTEXT.md](domains/hpc_quantum/DOMAIN_CONTEXT.md) | `PARTIAL` |
 
 Status legend: `ACTIVE` (populated, currently maintained) · `PARTIAL`
 (some content imported, coverage incomplete) · `STRUCTURE_ONLY` (scaffolding

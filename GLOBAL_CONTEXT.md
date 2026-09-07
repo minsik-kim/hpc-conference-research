@@ -16,7 +16,7 @@ not reconstruct or infer content that is not present.
 |---|---|---|
 | AI/HPC Systems | `domains/ai_hpc_systems/` | `EXTERNAL_IMPORT_PENDING` |
 | HPC Systems & Operations | `domains/hpc_systems_operations/` | `STRUCTURE_ONLY` |
-| HPC & Quantum | `domains/hpc_quantum/` | `STRUCTURE_ONLY` |
+| HPC & Quantum | `domains/hpc_quantum/` | `PARTIAL` |
 
 ## Current data availability
 

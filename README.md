@@ -24,7 +24,11 @@ and not completed by guessing where evidence is thin.
   quantum-classical workflows, HPC-QPU integration, distributed/GPU-
   accelerated quantum simulation, quantum workflow systems, benchmarking,
   and the classical/HPC cost of quantum algorithms. VQE is a topic inside
-  this domain, not a top-level domain. Status: `STRUCTURE_ONLY`.
+  this domain, not a top-level domain. Status: `PARTIAL` — one imported
+  source project (`quantum-hpc-survey`: SC 2024–2025 + ASPLOS 2024–2026
+  regular-paper venue censuses); strongest in QEC decoding, GPU/distributed
+  simulation, compilation, and artifact discipline, not a comprehensive
+  VQE or quantum-algorithms corpus — see `domains/hpc_quantum/DOMAIN_CONTEXT.md`.
 
 ## Principles
 
