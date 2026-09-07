@@ -90,6 +90,6 @@ duplicated in the research/ index.
 
 ## 10. Deeper lookup paths
 
-`corpus/quantum-hpc-survey/corpus/data/asplos/compilation_deepdive.md` →
+`../corpus/quantum-hpc-survey/corpus/data/asplos/compilation_deepdive.md` →
 `ASPLOS_2024_2026_QUANTUM_HPC_CENSUS.md` §10.2 →
 `SC_2024_2025_QUANTUM_HPC_CENSUS.md` §7 (four acceptance pathways).

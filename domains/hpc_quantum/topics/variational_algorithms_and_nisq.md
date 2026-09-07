@@ -100,7 +100,7 @@ source corpus never attempted a VQE-methods gap analysis (see
 
 For the papers named in §3: their entries in
 `ASPLOS_2024_2026_QUANTUM_HPC_CENSUS.md` §3–5 and
-`corpus/quantum-hpc-survey/corpus/data/asplos/arch_sim_deepdive.md`. For
+`../corpus/quantum-hpc-survey/corpus/data/asplos/arch_sim_deepdive.md`. For
 VQE methods themselves (initialization, barren plateaus, gradient
 estimation): **not in this repository** — this is a `NOT_IN_REPOSITORY`
 question, per `governance/ANTI_HALLUCINATION_RULES.md`, not one this file

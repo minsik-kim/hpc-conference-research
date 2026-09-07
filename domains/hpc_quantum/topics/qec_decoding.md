@@ -45,8 +45,8 @@ machine growing with the graph, not from approximation.
 These fail in **different currencies** — Promatch trades accuracy for
 capacity; Micro Blossom trades silicon for exactness — and "which scales
 better" has no single answer.
-`corpus/quantum-hpc-survey/corpus/QUANTUM_HPC_ARCHITECTURE_LINEAGES.md`
-lines 20–40; `corpus/quantum-hpc-survey/corpus/data/asplos/qec_deepdive.md`.
+`../corpus/quantum-hpc-survey/corpus/QUANTUM_HPC_ARCHITECTURE_LINEAGES.md`
+lines 20–40; `../corpus/quantum-hpc-survey/corpus/data/asplos/qec_deepdive.md`.
 
 ## 4. Representative papers
 
@@ -108,7 +108,7 @@ Q3 — all `CANDIDATE` status, none re-falsified during this import.
 
 ## 10. Deeper lookup paths
 
-`corpus/quantum-hpc-survey/corpus/data/asplos/qec_deepdive.md` (full
+`../corpus/quantum-hpc-survey/corpus/data/asplos/qec_deepdive.md` (full
 per-paper analysis) → `ASPLOS_2024_2026_QUANTUM_HPC_CENSUS.md` §8 (tension
 table) and Appendix A (verification record) → original papers/repos cited
 there for implementation-level questions.

@@ -87,6 +87,6 @@ See `../research/CANDIDATE_QUESTIONS.md` entries G2, C3.
 
 ## 10. Deeper lookup paths
 
-`corpus/quantum-hpc-survey/corpus/data/asplos/arch_sim_deepdive.md` →
+`../corpus/quantum-hpc-survey/corpus/data/asplos/arch_sim_deepdive.md` →
 `SC_2024_2025_QUANTUM_HPC_CENSUS.md` §3.5–3.7 (Atlas, MPS, Sycamore
 entries) → original repositories listed in `../implementation/ARTIFACT_REGISTRY.md`.
