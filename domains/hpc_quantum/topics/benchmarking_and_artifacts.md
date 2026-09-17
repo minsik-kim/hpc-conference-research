@@ -96,3 +96,57 @@ findings (F5 in the ASPLOS census), not open questions.
 `ASPLOS_2024_2026_QUANTUM_HPC_CENSUS.md` §12 (artifact matrix, AE process
 and visibility subsection 12.5) → individual repositories listed in
 `../implementation/ARTIFACT_REGISTRY.md` for reproduction.
+
+---
+
+## Phase-2 extension — six-venue census (2026-09-17)
+
+Source: `../corpus/multi-venue-census-2026/QUANTUM_HPC_MULTI_VENUE_SYNTHESIS.md`
+§5 Q11, the two deep dives, and `../implementation/ARTIFACT_REGISTRY.md`.
+
+### Artifact availability across the six venues
+
+**24 of 102 relevant papers have a confirmed public code or artifact release.**
+Per venue: HPCA 6/17, ISCA 5/33, MICRO 5/11, ISC 3/13, QSW 3/20, ICS 2/8. The
+remainder are `NO_PUBLIC_ARTIFACT_FOUND` (searched, nothing found) or `UNKNOWN`
+(not searched, or search tooling failed) — **neither means "no code exists"**, and
+the distinction is preserved per-paper.
+
+**HPCA 2026 is the standout**: 3 of its 9 relevant papers ship public code,
+including the two most transferable artifacts in the corpus (BP-SF, Pinball).
+
+**By branch the asymmetry is sharp and runs opposite to intuition.** QEC decoding
+has the best artifact rate (SWIPER, Pinball, BP-SF, Coset, gladiator, and —
+as architecture/scheduling rather than decoding — Flag-Proxy Networks), while
+**classical simulation has the worst: C-3PQ, BMQSim, quEStab and the QSW ring
+simulator all have no public artifact**, and the QSW paper explicitly promised a
+URL after review that never appeared. The branch whose results are most
+reproducible-in-principle publishes the least code.
+
+### The finding that matters most for this topic
+
+**Artifact existence and claim reproducibility are different properties**, and a
+census counting artifact badges would not have found the difference. Four of the
+artifacts that do exist are materially incomplete relative to their papers'
+headline claims, each verified by cloning and reading the repository:
+
+| Artifact | What is missing |
+|---|---|
+| Coset Ensemble Decoder (ISCA 2026) | `hardware_code/` contains **only `.gitkeep`** — the RTL behind an 8.2× LUT claim is promised, not released. Modality is `CYCLE_SIMULATION`, not FPGA. |
+| Pinball (HPCA 2026) | RTL and the accuracy pipeline are present, but there is **no power model, no area model, no bandwidth accounting and no Promatch baseline** — so 0.56 mW, 3780.72×, 32.58× and the 2,668-logical-qubit figure are not reproducible from the artifact. |
+| SWIPER (ISCA 2025) | Ships FPGA synthesis **results** (`fpga_data.json`) but **no HDL, no Vivado project** — the 60 ns predictor claim cannot be re-derived. |
+| Qoncord (MICRO 2024) | Every component is reproducible, but **no shipped script emits the 17.4× headline**; the composition is absent. |
+
+A fifth is a plain broken link: QSW 2026's **qScheduler** is indexed by a
+third-party wiki but its GitHub URL **404s**.
+
+### Evaluation-modality discipline
+
+The census records modality explicitly for every paper because it is routinely
+mistaken at architecture venues. Across 102 papers, **only 8 touch real quantum
+hardware** — seven execute on a real QPU (ISC ×2, ICS ×2, ISCA, HPCA, MICRO) and
+one uses measured device data to drive a model. Everything else is software
+simulation, architectural or cycle simulation, RTL synthesis, or analytic
+projection. Notably **Pinball is RTL synthesis with cryo-recharacterized cells and
+place-and-route, not fabricated silicon**, and **gladiator is FPGA synthesis only**,
+not a running prototype — both are easy to read as hardware results.

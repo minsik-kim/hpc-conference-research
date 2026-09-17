@@ -77,3 +77,45 @@ See `../research/CANDIDATE_QUESTIONS.md` entries G3, G9, G10, C2.
 `ASPLOS_2024_2026_QUANTUM_HPC_CENSUS.md` §9 (crossover analysis, modular
 row) → `QUANTUM_HPC_ARCHITECTURE_LINEAGES.md` (MECH→COMPAS lineage
 paragraph) → `SC_2024_2025_QUANTUM_HPC_CENSUS.md` §4.4 (DQTetris entry).
+
+---
+
+## Phase-2 extension — six-venue census (2026-09-17)
+
+Source: `../corpus/multi-venue-census-2026/QUANTUM_HPC_MULTI_VENUE_SYNTHESIS.md`
+§5 Q9 and the HPCA/MICRO/ISCA censuses.
+
+**~9 papers across the six venues** (ISCA 2, HPCA 2, MICRO 2, QSW 2, ISC 1),
+which upgrades this branch from the Phase-1 "thin at both venues" reading — but
+the work is narrower than the branch name suggests.
+
+**What is actually being studied is interconnect and partitioning, not
+programming models:**
+
+- **SwitchQNet** (ISCA 2025, UCSD/Cisco) — switch-network topology for quantum
+  datacenters: switch fabrics vs direct links, contention, and a compiler mapping
+  circuits onto the fabric. The most literal "datacenter network topology" paper in
+  the domain. `PUBLIC_ARTIFACT`.
+- **Constant-Rate Entanglement Distillation** (ISCA 2025, Caltech/MIT/Harvard/
+  QuEra) — link rate vs fidelity vs buffering, i.e. interconnect engineering with a
+  fidelity dimension classical fabrics do not have.
+- **DC-MBQC** (HPCA 2026) — adaptive graph partitioning (METIS with
+  modularity-driven imbalance control) plus inter-QPU layer scheduling, proved
+  NP-hard by reduction from graph bandwidth. Evaluated at **4 and 8 QPUs only**.
+- **Cyclone** (HPCA 2026) — a ring QCCD topology with lockstep ancilla movement,
+  removing roadblocks that serialize qLDPC syndrome extraction; reports that
+  **DAC count stays constant** in the ring versus linear in trap count for grids.
+- **MUSS-TI** (MICRO 2025) — multi-QCCD trapped-ion scheduling framed explicitly
+  as **multi-level memory-hierarchy scheduling**, the authors' own words.
+- **Distributed-HISQ** (MICRO 2025) — distributed *control-plane* synchronization
+  across multiple controllers on real hardware, which is a different multi-QPU
+  problem from circuit partitioning and is easy to conflate with it.
+
+### How far the GPU-cluster analogy holds
+
+`[inference]`, from the corpus rather than from general knowledge: **the analogy
+holds well for partitioning and topology and poorly for everything else.** There
+is no analogue of a collective-communication library, no analogue of an MPI-like
+programming model, and the "network" carries a fidelity dimension with no classical
+counterpart — DC-MBQC's objective is *required photon lifetime*, not bandwidth.
+Recorded at `[inference]` level only, per the Phase-1 discipline on this analogy.

@@ -112,3 +112,68 @@ Q3 — all `CANDIDATE` status, none re-falsified during this import.
 per-paper analysis) → `ASPLOS_2024_2026_QUANTUM_HPC_CENSUS.md` §8 (tension
 table) and Appendix A (verification record) → original papers/repos cited
 there for implementation-level questions.
+
+---
+
+## Phase-2 extension — six-venue census (2026-09-17)
+
+Source: `../corpus/multi-venue-census-2026/DEEPDIVE_QEC_DECODING.md`, which
+cross-validated eight decoder papers against their code (four repositories cloned
+and read). **Descend to that file for any quantitative or mechanism claim** —
+this section is routing, not evidence
+(`governance/ANTI_HALLUCINATION_RULES.md`).
+
+**The branch is now ~20 papers across ISCA, MICRO, HPCA (plus the Phase-1 ASPLOS
+block), and it remains absent from HPC main tracks.** ISC contributes exactly one
+paper and it is a *resource-estimation* paper, not a decoder; ICS none.
+
+### What the six-venue evidence adds
+
+**Decoding latency budgets are now tabulated with their measurement context.**
+Representative: gladiator classifies leakage in **1 ns against a 100 ns budget**
+("roughly four CNOTs"); Vegapunk decodes qLDPC in **264–840 ns against a sub-µs
+target** on an Alveo U50 at 250 MHz; Pinball occupies **800 ns over nine pipeline
+stages** with 100 ns allocated to predecoding inside a 1 µs round; Triage models
+decoder latency as **volume^1.17** and fails when `τ_dec ≥ τ_gen`. **These numbers
+are not comparable to each other** — different codes, different silicon, different
+definitions of latency — and the deep dive classifies the mismatches as
+`DIFFERENT_METRIC` / `DIFFERENT_REGIME` rather than ranking them.
+
+**The qLDPC turn is real, partial, and simultaneously an algorithm-family turn.**
+Vegapunk (MICRO 2025) and BP-SF (HPCA 2026) are squarely qLDPC and both target
+**BP-family** algorithms rather than matching, because matching does not apply to
+general qLDPC codes. Surface-code work (SWIPER, Coset, Triage, Pinball) continues
+in parallel and concentrates on latency, scheduling and the cryogenic boundary.
+**The corpus is bimodal, not migrated.**
+
+**Two crossover mechanisms are now quantified, and they are different things.**
+(a) A **cryogenic power/bandwidth boundary** — Pinball's 1.5 W 4 K budget supports
+~2,668 logical qubits at d = 21, so the cryogenic tier saturates at a *logical-qubit
+count*, not a code distance. (b) A **decoder-pool throughput boundary** — Triage's
+`τ_dec < τ_gen` with super-linear α = 1.17. Conflating them is an error.
+
+**BP-SF is the corpus's best candidate for a genuinely distributable decoding
+workload**: its speculative post-processing replaces BP-OSD's sequential Gaussian
+elimination with ≤100 fully independent candidate decodes, per-candidate payload
+one syndrome vector, reduction an argmin — verified in code.
+
+### Corrections to earlier records in this domain
+
+- **Flag-Proxy Networks (MICRO 2024) is NOT "QLDPC decoding hardware."** Code
+  inspection found **zero HDL** and software-only MWPM/restriction decoders. It is
+  a **qubit connectivity architecture plus a syndrome-extraction scheduler**. The
+  Phase-1 venue map's characterization is wrong; see `CORRECTIONS_TO_PHASE1.md`.
+- **Pinball's headline numbers need their qualifiers**: 3780.72× bandwidth
+  reduction is at **d = 5, p = 10⁻⁴**; 32.58× LER vs Promatch is at **d = 11,
+  p = 5×10⁻⁴** under **SI1000** noise. Neither is at d = 21 or p = 10⁻³.
+- **SWIPER evaluates d ∈ {15, 21, 27}** in its system sweep (d = 21 alone for
+  reaction time); d = 13–31 is only the PyMatching latency characterization range.
+- **Coset Ensemble Decoder's FPGA claim is not reproducible from its artifact** —
+  `hardware_code/` contains only `.gitkeep`. Its modality is `CYCLE_SIMULATION`.
+
+### Open candidates raised here
+
+M1 (no absolute syndrome bandwidth anywhere in the corpus), M2 (no decoder paper
+models inter-decoder network latency), M3 (the cryogenic logical-qubit ceiling),
+M4 (BP-SF's parallelism untested beyond P = 8), M9 (the reinforced and sharpened
+`VENUE_GAP`). All `CANDIDATE`; see `../research/CANDIDATE_QUESTIONS.md` §5.

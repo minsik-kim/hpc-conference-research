@@ -105,3 +105,39 @@ VQE methods themselves (initialization, barren plateaus, gradient
 estimation): **not in this repository** — this is a `NOT_IN_REPOSITORY`
 question, per `governance/ANTI_HALLUCINATION_RULES.md`, not one this file
 can route further.
+
+---
+
+## Phase-2 note — six-venue census (2026-09-17)
+
+**Coverage status is unchanged: `PARTIAL_IN_SOURCE`.** The six-venue census
+(ISC, ISCA, ICS, HPCA, MICRO, QSW 2024–2026) is a systems/venue census like the
+Phase-1 corpus, and it did **not** survey VQE methods either. It adds a handful of
+variational papers *as census subjects*, not a literature review:
+
+- **Variational Quantum Algorithms in the era of Early Fault Tolerance**
+  (ISCA 2025, UChicago) — the corpus's one paper that explicitly **re-costs the
+  VQA workload class across the NISQ→early-FT transition**: under early fault
+  tolerance the cost model inverts, and shot budgets, optimizer iterations and the
+  classical/quantum work split all have to be re-derived. This is the closest thing
+  in the domain to a VQE-methods contribution, and it is a *cost-model* paper.
+- **Choco-Q** (HPCA 2025) and its successor **Rasengan** (MICRO 2025) — constrained
+  binary optimization via commute and transition Hamiltonians, with circuit-
+  complexity reduction as the systems contribution.
+- **Qoncord** (MICRO 2024) and **MILQ** (ISC 2024) — VQA/QAOA *scheduling* across
+  device fleets; the variational algorithm is the workload, not the subject.
+- **Hierarchical Multigrid Ansatz for VQAs** (ISC 2024, NMSU/LANL) — an ansatz
+  built from the classical multigrid V-cycle, accepted at an HPC venue because the
+  contribution is framed in classical numerical-methods vocabulary.
+- **Tetris** (ISCA 2024) — a Pauli-string IR and synthesis passes for VQA circuits.
+
+**What remains `NOT_COVERED` is unchanged**: classical-optimizer studies,
+initialization/warm-start methods, barren plateaus and trainability, gradient
+estimation, excited-state methods. The six-venue census contains **no** paper on
+any of them, which is expected — these are algorithm-methods topics and none of
+the six venues publishes them. That absence is `NOT_COVERED`, **not** a
+`VENUE_GAP` candidate and **not** evidence that the wider literature is thin
+(`governance/ANTI_HALLUCINATION_RULES.md`).
+
+The user's separate `hpc-quantum-warmstart-paper` project was **not** read,
+referenced or merged during this census either.

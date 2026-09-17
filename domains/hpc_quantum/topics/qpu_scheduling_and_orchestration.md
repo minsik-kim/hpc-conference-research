@@ -81,3 +81,60 @@ See `../research/CANDIDATE_QUESTIONS.md` entries G4, G6, G7, G8.
 (venue-gap table, rows on hybrid runtime, scheduling, programming models,
 HPC-centre integration) → `ASPLOS_2024_2026_QUANTUM_HPC_CENSUS.md` RESCQ
 entry.
+
+---
+
+## Phase-2 extension — six-venue census (2026-09-17)
+
+Source: `../corpus/multi-venue-census-2026/DEEPDIVE_SIMULATION_RUNTIME_COMPILATION.md`
+§C and Group 2. Descend there for quantitative claims.
+
+**The branch is thin everywhere and fragmenting rather than converging** — ~10
+papers across the six venues (12 including SC's Qonductor and ASPLOS's RESCQ),
+against 1,281 screened papers. Distribution: QSW 4, ISC 2, ISCA 2, ICS 1, MICRO 1,
+HPCA 0.
+
+### The three real schedulers share one abstraction and differ on where the queue lives
+
+Code-level comparison of **Qoncord** (MICRO 2024), **MILQ** (ISC 2024) and
+**Qonductor** (SC 2025) shows all three reduce a QPU fleet to a **job × backend
+cost matrix plus a per-backend capacity** — the classical *unrelated parallel
+machines* abstraction. They diverge on the queue and the objective:
+
+| | Qoncord | MILQ | Qonductor |
+|---|---|---|---|
+| QPU modelled as | a **single-server FIFO queue** with a stochastic fidelity draw | a **machine** with sequence-dependent setup and a qubit-capacity constraint permitting **co-residency** | a **machine with an explicit queue attached** (`waiting_times` as a first-class input) |
+| Objective | greedy two-phase policy (explore low-fidelity, fine-tune high-fidelity) | `LpMinimize` on makespan only | **bi-objective NSGA2** (time and fidelity, resolved by pseudo-weights) |
+| Solver | hand-coded policies | PuLP → Gurobi/CBC | pymoo NSGA2 |
+
+**A QPU is never modelled as a memory hierarchy in any of them.** MILQ's
+per-timestep qubit-capacity constraint is the closest thing to an occupancy model,
+and it is space-sharing, not hierarchy.
+
+### Two findings that bound how this branch can be used
+
+**No scheduler integrates with a real batch system.** Slurm appears in no
+scheduler's code or evaluation anywhere in the census. QSW 2026's **qScheduler** —
+a hybrid **reservation-plus-dispatch** design, i.e. the Slurm-shaped idea — is the
+closest thing to an HPC-centre batch scheduler in the corpus, **and its artifact
+URL 404s**. Recorded as `CANDIDATE` M7.
+
+**Evaluation is synthetic.** Qoncord's 17.4× is wall-clock including queue delays
+against a single-device high-fidelity baseline, over **10 synthetic devices with
+simulated noise models and no real QPU execution**, and no shipped script emits the
+headline. MILQ's 26% is against a **bin-packing** baseline on three 5-qubit Qiskit
+fake devices.
+
+### New in this corpus: runtime work that is not fleet scheduling
+
+- **Qtenon** (ISCA 2025) — host↔QPU integration latency: where the QPU sits in the
+  memory/IO hierarchy, driver overhead, offload granularity. The GPU-offload
+  question transplanted to a QPU.
+- **ARTERY** (ISCA 2025) — **branch prediction** imported into the real-time
+  control processor to hide classical feedback latency inside coherence.
+- **The ISC 2026 HPCQC observable-measurement runtime** — a hierarchical runtime
+  making shot distribution a load-balancing problem over classical workers, with
+  variance-aware balancing and a compilation cache. A genuinely new sub-branch.
+- **Distributed-HISQ** (MICRO 2025) — a control ISA plus a booking-based
+  synchronization protocol, evaluated on **real hardware driving a 66-qubit chip**:
+  the strongest evaluation anywhere in the census.

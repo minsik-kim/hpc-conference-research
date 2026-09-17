@@ -90,3 +90,55 @@ See `../research/CANDIDATE_QUESTIONS.md` entries G2, C3.
 `../corpus/quantum-hpc-survey/corpus/data/asplos/arch_sim_deepdive.md` →
 `SC_2024_2025_QUANTUM_HPC_CENSUS.md` §3.5–3.7 (Atlas, MPS, Sycamore
 entries) → original repositories listed in `../implementation/ARTIFACT_REGISTRY.md`.
+
+---
+
+## Phase-2 extension — six-venue census (2026-09-17)
+
+Source: `../corpus/multi-venue-census-2026/DEEPDIVE_SIMULATION_RUNTIME_COMPILATION.md`
+Group 1 and §A. Descend there for any quantitative claim.
+
+**~10 papers across ICS (4), QSW (3), ISCA (2) and HPCA (1). MICRO published no
+classical-simulation quantum paper in either censused year** — a real structural
+difference from ASPLOS, ISCA and ICS, verified by whole-volume scan.
+
+### The central finding: this branch is mostly *memory* work, not *communication* work
+
+Of the six simulation papers cross-validated against their code, **four attack the
+memory term on a single device** by four different routes — lossy compression
+(BMQSim: nvCOMP bitcomp plus a GPU log-transform, 42 qubits in 16 GB and 47 with
+SSD staging), representation change (quEStab: extended stabilizer tableau, peak
+memory down up to 10,126×, circuits to 30,000 qubits), dataflow and adaptive
+memory scheduling (the HPCA 2026 Schrödinger accelerator, >50× over a GPU Qiskit
+baseline), and structural elision (MQT identity-level stripping).
+
+**Only two attack communication, and they are precisely the two that run on
+multi-node supercomputers:** C-3PQ (closeness-centrality partitioning, MPI with
+GPU-aware cray-mpich collectives, weak-scaled 30→37 qubits on Perlmutter, Frontier
+and Fugaku) and the QSW 2024 decision-diagram ring simulator (bucket-relay ring
+replacing broadcast on 256 A64FX nodes of Wisteria-O).
+
+**BMQSim's "multi-GPU" mode has no inter-GPU communication at all** — each GPU
+processes partial state-vector groups locally — and caps at **2.3× on 4 GPUs**,
+PCIe-bound. This is worth holding onto: the vocabulary of multi-GPU simulation
+does not imply a communication term is being addressed.
+
+### The one measured negative crossover in the domain
+
+The DD ring simulator's **26×** is specifically **38-qubit Shor at 256 nodes vs
+single-node** (3,881 s → 147 s). The same paper reports **20-qubit QCBM peaking at
+32–64 nodes and getting *slower* at 128 and 256** — communication overhead
+overtaking the decision diagram's node sharing. **The crossover is data-dependent,
+not qubit-count-dependent**, and this is the corpus's only direct measurement of
+distributed scaling going the wrong way (`CANDIDATE` M6).
+
+### Artifact asymmetry worth noting
+
+**Every multi-node simulation paper in this branch has no public artifact** —
+C-3PQ, BMQSim, quEStab and the DD ring simulator alike; the QSW paper explicitly
+promised a URL after review that never appeared. The branch whose results are most
+reproducible-in-principle publishes the least code, the inverse of the QEC branch.
+
+Open candidate M5: whether compression (BMQSim) and inter-node partitioning
+(C-3PQ) **compose** is evaluated by no paper — each design forgoes what the other
+does. See `../research/CANDIDATE_QUESTIONS.md` §5.

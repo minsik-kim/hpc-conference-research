@@ -93,3 +93,73 @@ duplicated in the research/ index.
 `../corpus/quantum-hpc-survey/corpus/data/asplos/compilation_deepdive.md` →
 `ASPLOS_2024_2026_QUANTUM_HPC_CENSUS.md` §10.2 →
 `SC_2024_2025_QUANTUM_HPC_CENSUS.md` §7 (four acceptance pathways).
+
+---
+
+## Phase-2 extension — six-venue census (2026-09-17)
+
+Source: `../corpus/multi-venue-census-2026/DEEPDIVE_SIMULATION_RUNTIME_COMPILATION.md`
+§B and Group 3, plus every venue census. Descend there for quantitative claims.
+
+**Compilation is the largest branch in the six-venue corpus — ~40 of 102 papers —
+and the largest branch at every individual venue.** It is the one contribution
+shape legible everywhere: ISCA 15, QSW 10, HPCA 8, ISC 3, ICS 2, MICRO 2.
+
+### The compile-cost vs circuit-quality question, retested
+
+The Phase-1 finding — SC's three compilation papers made a compile-time-scalability
+argument 3-of-3, while only 2 of ASPLOS's ten did — was tested against six papers
+whose code was read (MIRAGE, ZAC, DC-MBQC, Genesis, MonteQ, TuniQ).
+
+**The weak form is supported; the strong form is refuted.**
+*Weak form — these venues put a quality metric in the headline:* **supported**,
+5 of 6 lead with fidelity, depth, gate count or cycles and relegate compile time
+to an evaluation subsection.
+*Strong form — compile-time scalability is not measured:* **refuted**. **All six
+report compile time**, and three expose it as a **tunable design parameter** rather
+than an incidental measurement — ZAC's SA on/off knob (<1 s without it, 63× vs
+NALAC), MonteQ's `stop_time` wall-clock budget as an API argument, and TuniQ's
+per-stage inference cost (<1% of transpilation).
+
+So the venue difference is **in what earns the abstract, not in whether the number
+exists**. This refines rather than contradicts the Phase-1 result.
+
+**What is genuinely thin across all six:** only ZAC states an asymptotic bound
+(O(g·n³)); **none reports compiler memory footprint**; and **none reports parallel
+or distributed compilation** — even where the cost is severe. Genesis takes
+**20.39 s for a 631-Pauli-string input and 1,152.00 s for 1,884 strings** — a ~3×
+input growth for a ~56× time growth — and still runs single-node. Recorded as
+`CANDIDATE` M8.
+
+### TuniQ (ICS 2026) is the corpus's clearest "compilation is the HPC bottleneck" paper
+
+An RL agent (MaskablePPO) selects passes per stage of Qiskit's six-stage pipeline.
+Reward, verbatim: `R_final = W·clip(log(ESP_rl/ESP_L3)) + φ(w₁·r_gates + w₂·r_depth)`
+— **W, w₁ and w₂ are never given numerically**, a real gap in an otherwise precise
+model. Results vs Qiskit Level 3: TVD +20% average, compile time −34% average, and
+at 30–50 qubits **−68% compile time, −27% gates, −25% depth**, on four IBM Heron
+QPUs. Training uses 8 parallel workers — but **training wall-clock is not
+reported**, which is the one number the argument most needs.
+
+### Three compilation sub-branches that did not exist in the Phase-1 taxonomy
+
+- **Autotuning** (TuniQ) — pass selection as a search problem over a
+  millions-wide space.
+- **Dynamic-circuit / classical-control compilation** (ISC 2026, QSW 2026) — the
+  compile-side counterpart of real-time QEC: mid-circuit measurement and feedforward
+  put the classical control path on the critical timing path, and these papers move
+  work to compile time to get it off the per-shot path.
+- **Distributed compilation** (DC-MBQC at HPCA 2026, DisMap at QSW 2026) —
+  partitioning and inter-QPU layer scheduling against a non-uniform, drifting
+  resource topology. DC-MBQC proves its layer-scheduling problem NP-hard by
+  reduction from graph bandwidth and reports the tightest paper↔code agreement in
+  the whole census.
+
+### Corrections
+
+- **ZAC's 22× is fidelity vs Enola** (with 13,350× vs Atomique) — not "zoned vs
+  monolithic". Its repo is `UCLA-VAST/ZAC`; `UCLAVAST/ZAC` 404s.
+- **MonteQ's reduction figures differ between abstract and body** (up to 53% /
+  mean 30% vs 51.6% max / 23.5% mean at one iteration); both recorded,
+  `INSUFFICIENT_EVIDENCE` on the intended reading. Its arXiv id is 2604.19029.
+- **DC-MBQC is Peking University + CUHK**, not ICT CAS.
