@@ -1,0 +1,612 @@
+papers:
+
+- id: VIRT-OSDI26-01
+  title: "JANUS: Cross-World, Cooperative Nested Virtualization for Secure Containers"
+  title_correction: null
+  authors: [Jiangshan Lai, Hang Huang, Quan Xu, Zhen Ren, Wenlong Hou, Wei Guo, Jia Rao, Hui Lu, Weidong Han, Jiesheng Wu, Jiang Liu, Naixuan Guan, Yibin Shen, Feng Yu, Xu Wang, Shiqiang Zhang, Zhiheng Tao, Yisheng Xie, Song Wu, Hai Jin]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi26/presentation/lai
+  fullpaper_source: https://www.usenix.org/system/files/osdi26-lai.pdf
+  classification: CORE
+  classification_note: "JANUS's entire contribution is a nested-virtualization architecture (VMFUNC-based EPTP switching, shadow-root page tables, in-guest #VE handling) that splits CPU-event virtualization from memory virtualization across hypervisor levels; the virtualization mechanism is the object of study, not incidental."
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary: [T5, T2]
+  physical_resource: CPU core
+  logical_abstraction: "A guest hypervisor (L1) that owns CPU-event world-switching for its L2 secure-container VM while ceding all GPA->HPA memory-translation authority to the host hypervisor (L0) -- cooperative rather than fully-nested virtualization."
+  problem: "Secure containers (e.g. Kata Containers) create nested virtualization (L0 host KVM, L1 guest hypervisor, L2 container VM); existing designs entangle CPU and memory virtualization across all three levels, forcing frequent L2->L1->L0 cross-world synchronization and severe overhead for memory-access-heavy workloads."
+  mechanism: "JANUS confines all L2 privileged-event handling to a lightweight in-L1 switcher using VMFUNC-based EPTP switching (trap-free), a shadow-root page-table mechanism letting L1 validate L2 page-table-root changes while allowing direct subordinate-table updates, and Intel #VE-based in-guest EPT-violation handling so L1 resolves most second-level faults with only one lightweight L0 hypercall (KVM_HC_JANUS_OPS)."
+  isolation_mechanism: "Shadow PGD entries are the only path by which L2 can alter the page-table root the hardware MMU trusts, preventing a malicious L2 from corrupting the switcher; L0 remains the sole owner of physical-memory mapping validity."
+  multiplexing_mechanism: "Nested EPT hierarchies (EPT0->1 for L1, EPT0->2 for L2) let L0 multiplex host physical memory across many L1/L2 pairs while L1 transparently multiplexes CPU-event handling for its own L2 without L0 involvement in the common case."
+  state_mechanism: "World-switch state (registers, event vectors) lives entirely in the L1 switcher's per-CPU area; GPA->HPA mapping state lives in L0-owned EPT tables updated via hypercalls triggered by #VE."
+  overhead_bottleneck: "Cross-world synchronization cost: legacy nested KVM needs a full L2->L0->L1->L0->L2 round trip per world switch (16,002 cycles measured) and re-walks EPT on every second-level fault (57,840 cycles), dominating memory-access-heavy container workloads."
+  primary_tradeoff: "Separating CPU-event handling (kept in L1) from memory translation (kept in L0) -> gains near-PVM world-switch latency and near-native container overhead, but costs added shadow-root bookkeeping and reliance on hardware VMFUNC/#VE support."
+  quantitative_claims:
+  - "world-switch latency: 2,700 cycles (Kata-JANUS) vs 2,681 (Kata-PVM) vs 16,002 (Kata-KVM), 1M hypercalls, Intel Xeon Platinum 8475B, 192 vCPU/384GB host"
+  - "mapping construction overhead: 26,960-28,100 cycles (JANUS) vs 19,266 (PVM) vs 57,840 (KVM)"
+  - "multi-process apps (Ebizzy, UnixBench, Kbuild): Kata-JANUS 339.7% faster than Kata-PVM on average, 51.8% faster than Kata-KVM at 8 vCPUs"
+  - "Redis throughput: Kata-JANUS 9.7% higher than Kata-PVM, 45.1% higher than Kata-KVM (2-12 clients)"
+  - "dirty-page tracking (PML): Kata-KVM shows 175.5% average overhead vs untracked; Kata-JANUS near-identical to untracked (1-8GB memory)"
+  - "production deployment (Alibaba Cloud Flink): PVM adds ~30% (C++)/~20% (Java) query-time overhead vs RunC; Kata-JANUS adds <5% overhead vs RunC"
+  why_useful_for_learning: "Shows the concrete mechanics (VMFUNC EPTP switching, shadow page tables, #VE) of why nested virtualization for secure containers is expensive, and how splitting CPU vs memory virtualization responsibility across levels removes most cross-world exits."
+  priority: P0
+  related: [VIRT-EUROSYS26-03]
+  relations:
+  - {type: LAYER_ABOVE, target: VIRT-EUROSYS26-03, basis: "JANUS is a cooperative nested-virtualization architecture built on the same hardware-assisted nested-virtualization primitives (VMCS/VMCB handling, EPT) that NecoFuzz fuzzes for correctness."}
+  - {type: ALTERNATIVE, target: "PVM (software-based nested virtualization, cited baseline)", basis: "JANUS is evaluated head-to-head against PVM and standard nested KVM as the two existing nested-virtualization approaches for Kata Containers."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Retrieved via WebSearch hit directly on usenix.org/conference/osdi26/presentation/lai and the official PDF osdi26-lai.pdf, resolving a prior agent's 'truncated technical-sessions page' access failure. No DOI is listed on the USENIX page (USENIX OSDI proceedings entries here carry ISBN 978-1-939133-55-7, pages 1015-1031, but not a per-paper DOI)."
+
+- id: VIRT-OSDI26-02
+  title: "M3U: Scalable Kernel Memory Management for Efficient Post-copy Live Migration of High-end Virtual Machines"
+  title_correction: null
+  authors: [Yizhe Xu, Yuan Tao, Zhibin Zhang, Kang Yan, Chao Zhang, Shuo Shi, Zongpu Zhang, Xu Huan, Yibin Shen, Xudong Zheng, Jiesheng Wu, Jian Li, Haibing Guan]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: "https://www.usenix.org/conference/osdi26/presentation/xu-yizhe (inferred: USENIX presentation-page slugs match PDF slugs for every other OSDI26 paper confirmed in this pass; not independently fetched)"
+  fullpaper_source: https://www.usenix.org/system/files/osdi26-xu-yizhe.pdf
+  classification: CORE
+  classification_note: "M3U's contribution is a kernel-MMU scalability mechanism purpose-built for post-copy live migration of large VMs (dirty-page tracking, page-table consistency, IOPF handling) -- live migration mechanism itself is the object of study."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T2, T3]
+  physical_resource: DRAM
+  logical_abstraction: "A guest-transparent post-copy live-migration substrate for high-end (>=64 vCPU, >=256GB) VMs whose kernel-side MMU operations (dirty-page tracking, page-table updates, IOPF handling) scale via parallel worker threads instead of serializing under global locks."
+  problem: "Post-copy live migration of high-end VMs is dominated by kernel MMU lock contention: dirty-page (un)map operations serialize on PMD/PUD locks (a 128GB working set triggers ~32M unmap ops), cross-table (HPT/EPT/IOPT) consistency locking limits paging efficiency to 9.2% of network bandwidth, and pass-through-device I/O page faults (IOPF) cost ~3x a vCPU page fault and stall I/O queues."
+  mechanism: "M3U replaces HPT map/unmap with lightweight Present-bit permission flagging over statically-allocated physical memory partitioned into lock-free 1GB regions (parallel dirty-page registration); decouples page-data copying from page-table consistency maintenance via a separate Post-copy Virtual Address space and a single dedicated page-table-update thread serving 6-8 parallel push streams (decoupled userfault pipeline); and proactively pre-installs VirtIO virtqueue state before VM resumption to eliminate descriptor IOPFs (device-state pre-installation)."
+  isolation_mechanism: "N/A (guest-transparent single-VM migration mechanism, not a multi-tenant isolation boundary)."
+  multiplexing_mechanism: "Multiple concurrent data-push streams (6-8) share the 100Gbps post-copy network allocation while a single page-table-update thread serializes only HPT/EPT/IOPT metadata writes, avoiding per-stream lock contention."
+  state_mechanism: "VM memory state moves via direct post-copy page pushing/demand paging over a DPU-backed 200Gbps link; device state (VirtIO virtqueues, <=671MB) is proactively transmitted (<=300ms at 100Gbps) before resume so guest I/O queues are already valid on the target."
+  overhead_bottleneck: "Kernel-side lock contention in dirty-page tracking and cross-page-table consistency maintenance, not raw network bandwidth (baseline achieves only 9.2% of available bandwidth)."
+  primary_tradeoff: "Parallelizing dirty-page registration and decoupling data-copy from page-table updates -> gains up to 89.6% shorter post-copy duration and 47.0% less downtime, but leaves a residual 1.5% of IOPFs that cannot be eliminated without violating guest transparency, and CPU-state migration overhead is unchanged (hardware-specific QEMU-KVM path)."
+  quantitative_claims:
+  - "downtime reduction: up to 47.0% vs community QEMU 8.2/Linux 4.19 baseline, 64 vCPU/256GB VM"
+  - "post-copy completion time reduction: 85.8-89.6% vs baseline; 33.4-55.6% with a single stream"
+  - "paging efficiency: 7.6-8.3x vs 4KB baseline with 6 streams; 2.6-3.6x higher than TDP MMU with 2MB pages"
+  - "IOPF reduction: 98.5%, down to 0.2-3.8 IOPFs per migration vs hundreds in baseline"
+  - "YCSB p99 latency: 1.8-4.9x lower than 2MB baseline, 8.3-14.5x lower than 4KB baseline"
+  - "hardware: dual-socket Intel Xeon 8369B, 512GB DDR4, DPU card 200Gbps, 100Gbps vNIC passthrough; default VM 64 vCPU/256GB"
+  why_useful_for_learning: "Concretely shows why post-copy live migration of large VMs is bottlenecked by kernel MMU lock scalability rather than network bandwidth, and how decoupling dirty-tracking, data-copy, and device-state transfer into independently parallel paths fixes it."
+  priority: P1
+  related: [VIRT-EUROSYS26-04]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-04, basis: "Both are 2026 live-migration papers; M3U addresses post-copy kernel-MMU scalability for large VMs, complementary to the EuroSys paper's cross-processor migration feasibility problem."}
+  - {type: CONTRASTS_WITH, target: VIRT-SOSP25-01, basis: "M3U migrates a paravirtual (VirtIO) device's I/O-fault-visible state via proactive virtqueue pre-installation; Device-Assisted Live Migration of RDMA Devices solves the harder case of migrating truly opaque hardware device state for RDMA passthrough."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Author list and page numbers (osdi26-contents.pdf) confirmed the paper is real; full text read from usenix.org/system/files/osdi26-xu-yizhe.pdf (this exact URL returned the paper's content, confirming the slug). The presentation-page URL was not independently fetched (inferred from the confirmed slug pattern)."
+
+- id: VIRT-OSDI26-03
+  title: "Compaction-Free Memory Defragmentation for Virtualization via Infinite Guest Physical Address Space"
+  title_correction: null
+  authors: [Peixin Zeng, Hao Huang, Yanqi Pan, Wen Xia, Darong Yang, Jiahao Chen, Nan Zhang]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi26/presentation/zeng
+  fullpaper_source: https://www.usenix.org/system/files/osdi26-zeng.pdf
+  classification: CORE
+  classification_note: "The paper's entire contribution is a guest-physical-address-space virtualization technique (decoupling GPA from HPA to make GPA space effectively infinite) that eliminates guest-visible memory compaction for hypervisor-managed VMs -- squarely T2 memory virtualization."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T1]
+  physical_resource: DRAM
+  logical_abstraction: "A guest physical address space treated as (nearly) infinite/sparse, so huge-page-friendly contiguity can always be manufactured by remapping GPA->HPA rather than by moving guest data (InfiniDefrag)."
+  problem: "Guest OSes reuse host-side compaction techniques that assume a small, fixed GPA space, so recovering huge pages under fragmentation requires expensive page relocation (up to 51% throughput drop, 102% latency increase in YCSB-Redis under extreme fragmentation); unmovable/pinned pages further cap what compaction can recover."
+  mechanism: "InfiniDefrag's Infinite Address Manager lets the guest trade fragmented base pages for freshly-mapped contiguous GPA blocks (via a VirtIO-communicated Memory Trade, a bitmap-based lock-free Fast Reclaim, and a memory-hotplug-based Guest Extender that pre-reserves 96GB at boot); the Host Memory Guard performs Self-Hosted Remap (direct page remapping bypassing the buddy allocator, ~1us vs ~270us for mremap) and Batch Unmapping for host huge pages; a Scalability Optimizer adds lock-free atomic bitmap updates and delayed TLB flushes for multi-thread/multi-VM scaling."
+  isolation_mechanism: "The Host Memory Guard enforces each VM's memory quota during remap so one VM's GPA expansion cannot claim another VM's host memory."
+  multiplexing_mechanism: "Host physical memory is multiplexed across VMs via per-VM GPA->HPA remapping rather than static allocation; a hybrid-paging mode keeps performance-critical expanded regions as host huge pages while cold fragments stay on host base pages."
+  state_mechanism: "Fragmentation-tracking state (2-bit-per-page bitmap, ~1.6% memory overhead) lives in guest kernel memory; GPA->HPA remap state lives in host KVM/QEMU EPT structures updated via a Page Dispatcher."
+  overhead_bottleneck: "Compaction bandwidth: Linux THP achieves only 0.91GB/s of contiguous-memory generation; InfiniDefrag's fast-reclaim+self-hosted-remap path reaches ~20GB/s (~19x)."
+  primary_tradeoff: "Treating GPA as infinite -> eliminates guest-side compaction and reaches near-fragmentation-free throughput, but costs page-metadata memory that grows linearly with GPA size and a (currently unbounded, ~100+-year-horizon) risk of exhausting the 57-bit address space; host-side compaction is still needed for host huge pages under multi-VM contention."
+  quantitative_claims:
+  - "throughput vs Linux THP under extreme fragmentation: 21-105% improvement (YCSB-Redis 21%, Graph500 105%), dual-socket Intel Xeon Gold 6330, QEMU 8.2.94/Linux 6.10.0 KVM host, 16 vCPU/64GB Ubuntu 20.04 guest"
+  - "defragmentation bandwidth: ~20GB/s (InfiniDefrag) vs 0.91GB/s (Linux THP compaction), ~19x"
+  - "page-table-walk cycles: 30-50% reduction vs Linux THP and competitors"
+  - "huge-page allocation coverage under extreme fragmentation: ~90-95% of ideal (InfiniDefrag) vs 0-40% (LLFREE/CBMM) vs 50-75% (Linux THP variants)"
+  - "CPU overhead: 4.0-4.2 cores (InfiniDefrag) vs 4.4-4.8 (Linux THP) vs 4.6-4.9 (LLFREE)"
+  - "baseline degradation without InfiniDefrag: up to 51% throughput drop / 102% latency rise, YCSB-Redis"
+  why_useful_for_learning: "Makes explicit how the guest-physical/host-physical address indirection that virtualization already provides can be exploited to sidestep a hard OS problem (memory compaction) entirely, rather than optimizing the compaction algorithm itself."
+  priority: P1
+  related: [VIRT-SOSP25-02]
+  relations:
+  - {type: CONTRASTS_WITH, target: VIRT-SOSP25-02, basis: "Demeter (SOSP25-02) delegates tiered-memory hot/cold page management fully into the guest at 2MB granularity; InfiniDefrag instead keeps defragmentation host-transparent by exploiting an oversized GPA space, a different point on the guest/host memory-management delegation spectrum."}
+  - {type: ALTERNATIVE, target: "vMitosis (NUMA-aware defragmentation, cited related work)", basis: "Paper positions vMitosis as orthogonal (page-table-locality-focused) and suggests its own memory-trade mechanism could itself be made NUMA-aware."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Retrieved via a direct WebSearch hit on usenix.org/conference/osdi26/presentation/zeng and the full PDF osdi26-zeng.pdf; internal system name is InfiniDefrag."
+
+- id: VIRT-OSDI26-04
+  title: "Inside Out: A Paradigm Shift In VM Introspection"
+  title_correction: null
+  authors: [Dufy Teguia, Louis Duval, Teo Pisenti, Kahina Lazri, Daniel Hagimont, Thomas Pasquier, Renaud Lachaize, Alain Tchana]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi26/presentation/teguia
+  fullpaper_source: https://www.usenix.org/system/files/osdi26-teguia.pdf
+  classification: CORE
+  classification_note: "VM introspection is an explicit CORE keyword; GOODKIT's contribution is a new hypervisor-adjacent introspection architecture (colocated observer VMs joining the target's kernel locking protocol) rather than an application that merely consumes VMI."
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary: [T7, T2]
+  physical_resource: CPU core
+  logical_abstraction: "An observer, itself a lightweight guest VM colocated with the target under the same VMM, granted native-speed read access to the target's live kernel memory/state through lock-aware coherence, without pausing the target or enlarging the hypervisor TCB (GOODKIT)."
+  problem: "Existing live VM introspection (LibVMI-style) needs heavy target-VM pausing to get a consistent view, causing 5.15x-37.6x slowdowns and poor scalability with monitoring frequency; alternatives either embed observers in the hypervisor (larger TCB, no multi-observer isolation), run them in separate VMs needing hypervisor changes, or run in-guest (forfeiting isolation)."
+  mechanism: "GOODKIT deploys observers as ordinary guest OSes under the same VMM instance as the target. A kernel module (GKMODULE) in each observer acquires the same lock (spinlock/RWlock/mutex, via MCS-queue impersonation of vCPU0/idle-thread context) that protects the target's kernel data structure before reading it, so concurrent target updates serialize naturally against observer reads instead of requiring a global pause. GKPROBE hooks VMM-side I/O/hypervisor events and streams them to observers via VirtIO virtqueues/hypercalls. Seven dedicated address-translation functions convert target-guest-virtual to observer-virtual addresses. A mutualizer observer centralizes and deduplicates redundant introspection work across multiple client observers."
+  isolation_mechanism: "Each observer is a full guest VM under standard hypervisor accounting/isolation, so a compromised or crashing observer cannot directly corrupt the target or other observers, unlike hypervisor-embedded VMI which enlarges the TCB."
+  multiplexing_mechanism: "Multiple observers can inspect the same target concurrently; a mutualizer observer performs shared introspection work once and redistributes results, reducing per-observer lock contention as observer count grows."
+  state_mechanism: "No target state is copied wholesale; observers read live target memory in place (translated via 7 address-translation functions) while holding the same lock the target's own writers would hold, maintaining consistency without snapshotting."
+  overhead_bottleneck: "Global VM-pause cost is the bottleneck in prior LibVMI-style systems; GOODKIT's own bottleneck is lock-acquisition/impersonation overhead per introspected event and boot-time cost scaling with colocated observer count (1.57x boot-time at 5 observers)."
+  primary_tradeoff: "Fine-grained lock-aware synchronization instead of global pausing -> gains up to 110x lower introspection latency and 99% capture rate at high modification rates, but costs a lock-based consistency model with no current RCU support, and a faulty observer can disrupt the target if it crashes while impersonating a held lock."
+  quantitative_claims:
+  - "single-observer overhead: at most 1.06x slowdown on OpenSSL vs 5.15x-37.6x for LibVMI (Phoronix workloads)"
+  - "introspection latency: up to 110x faster on microbenchmarks; 17x faster for lock acquisition vs pause/resume"
+  - "capture rate: 99% at 500 modifications/sec vs LibVMI dropping to 0.16% above 200 modifications/sec"
+  - "boot-time overhead: 1.08-1.11x with one observer, up to 1.57x with five observers"
+  - "ransomware detector (DefPunk, trained on RanSAP): F1 = 0.76"
+  - "hardware: 16-core Intel Xeon Silver 4215, 256GB RAM, Firecracker 1.5, Alpine Linux 5.10.198 guests, KVM/Ubuntu 20.04"
+  why_useful_for_learning: "Reframes VM introspection from a hypervisor-privileged snooping problem into a guest-to-guest, lock-respecting concurrency problem -- the key conceptual move needed to make live (non-paused) VMI practical without hypervisor modification."
+  priority: P1
+  related: []
+  relations:
+  - {type: ALTERNATIVE, target: "LibVMI (pause-based VMI, cited baseline)", basis: "GOODKIT is evaluated head-to-head against LibVMI across rootkit/ransomware/liveness workloads as the dominant prior live-VMI approach."}
+  - {type: CONTRASTS_WITH, target: "BlueGuard (SmartNIC-based VMI, cited related work)", basis: "Paper contrasts GOODKIT's hypervisor-colocated-VM approach against BlueGuard's specialized-SmartNIC-hardware approach to the same introspection problem."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Retrieved via a WebSearch hit on the UBC Security & Privacy Group publication page and the USENIX presentation page (usenix.org/conference/osdi26/presentation/teguia) plus the full PDF; internal system name is GOODKIT."
+
+- id: VIRT-OSDI26-05
+  title: "Blowfish: Elastic Virtual Machine Memory for Disaggregated Memory"
+  title_correction: null
+  authors: [Yulong Zhang, Yilong Luo, Diyu Zhou, Quan Chen, Quanxi Li, Mosong Zhou, Lei Zhu, Senbo Fu, Qian Peng, Huimin Cui, Xiaobing Feng, Tao Xie, Chenxi Wang]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi26/presentation/zhang-yulong
+  fullpaper_source: https://www.usenix.org/system/files/osdi26-zhang-yulong.pdf
+  classification: CORE
+  classification_note: "Blowfish builds a guest-elastic VM-memory abstraction over an RDMA-disaggregated far-memory backend (EPT-only reclaim/restore, no GPT/IOPT changes) -- exactly the brief's condition for CORE disaggregated-memory work: a virtual resource abstraction over the pool, not just pooling."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T9]
+  physical_resource: DRAM
+  logical_abstraction: "Elastic VM memory: the guest keeps its full memory footprint logically, while cold/free pages are transparently backed by RDMA-attached far memory and reclaimed/restored at microsecond granularity without the guest or its passthrough devices ever seeing a page-table change."
+  problem: "Cold-memory rebalancing under VM memory overcommitment breaks on Transparent Huge Pages: THP causes 'unfair hotness' (a 2MB page looks hot from one touched subpage) and 'hot bloat' (a few hot subpages block reclaiming an otherwise-cold huge page); prior systems also modify guest/IO page tables on every reclaim/restore, which is slow."
+  mechanism: "A guest-level hotness tracker built on Linux MGLRU adds Fair MGLRU (incremental, not jump-to-youngest, promotion for huge pages) and a Subpage Tracker (periodic PMD->PTE splitting of candidate huge pages for 100ms to sample subpage access bits, then re-coalescing) to accurately classify cold huge pages despite THP; the host-side backend then reclaims purely by invalidating the EPT entry, transferring the page to RDMA far memory, and encoding the far-memory address in unused EPT bits -- restoring on fault with a single RDMA read and one EPT update, touching neither guest page tables nor I/O page tables."
+  isolation_mechanism: "N/A directly (single-VM memory-elasticity mechanism); guest cooperation is validated against actual EPT mappings so a misbehaving/uncooperative guest falls back to host-driven swapping rather than corrupting state."
+  multiplexing_mechanism: "Host physical memory freed from one VM's cold pages is returned to a shared pool and reused by co-located VMs (multi-VM rebalancing), regulated by a free-memory watermark and PSI-based pressure throttling."
+  state_mechanism: "Reclaimed page content is transferred via RDMA to a remote memory server (Hermit-derived backend, <5us for a 4KB page over 100Gbps InfiniBand vs ~200MB/s disk); the far-memory address is stashed directly in unused EPT PTE bits so no separate metadata table or GPT/IOPT update is needed."
+  overhead_bottleneck: "EPT management dominates per-page reclaim/restore latency (41-57% of the total), ahead of the RDMA data transfer itself."
+  primary_tradeoff: "Decoupling guest-side hotness tracking from host-side data movement (vs Demeter's fully guest-delegated tiering) -> gains 53-60% lower per-operation latency and subpage-level precision, but costs a guest-cooperation assumption (with a correctness-preserving but slower uncooperative fallback) and empirically-tuned tracker parameters (100ms epoch, 32-page batch, 20% threshold)."
+  quantitative_claims:
+  - "reclaim/restore latency: 14.5us / 9.8us (Blowfish) vs 36us / 21us (HyperAlloc-4K-G), 53%/60% lower"
+  - "reclamation ratio at <=5% slowdown: 1.6x-6.1x higher than HyperAlloc variants across Memcached/Cassandra/GAPBS/GraphChi/Liblinear/KMeans/602.gcc_s workloads"
+  - "memory reclaimable at <5% degradation: 33-49% of application memory without THP, dropping to 16-25% with THP enabled"
+  - "multi-VM rebalancing degradation: 1.06x-1.25x (Blowfish) vs substantially larger for baselines, six workload pairs"
+  - "hardware: two servers, dual Intel Xeon Gold 6342, 256GB each, 100Gbps Mellanox ConnectX-5 InfiniBand"
+  - "code: ~6000 LoC added to Linux 6.1 (host), ~1700 LoC to QEMU 8.2.1 (guest)"
+  why_useful_for_learning: "Shows concretely how VM memory-overcommitment mechanisms (ballooning-style guest cooperation, EPT manipulation) extend onto RDMA-disaggregated far memory, and why THP forces a rethink of hotness tracking at subpage granularity."
+  priority: P1
+  related: [VIRT-SOSP25-02, VIRT-EUROSYS26-08]
+  relations:
+  - {type: CONTRASTS_WITH, target: VIRT-SOSP25-02, basis: "Demeter delegates the full tiering pipeline (including data migration) to the guest at 2MB granularity requiring GPT/IOPT updates; Blowfish keeps only hotness tracking in the guest and does all data movement/EPT-only reclamation on the host at subpage granularity."}
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-08, basis: "Both address memory tiering/partitioning for multi-tenant clouds; MTTM partitions fast-tier capacity across tenants while Blowfish reclaims/restores cold pages to a far-memory tier for a single VM -- complementary layers of the same CXL/RDMA-disaggregated-memory stack."}
+  - {type: USES_MECHANISM_FROM, target: "Hermit (RDMA far-memory backend, cited)", basis: "Blowfish explicitly builds its RDMA data-transfer path on Hermit's paging backend, adding VM-specific EPT-only reclamation and guest hotness tracking on top."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web, code]
+  confidence: HIGH
+  notes: "Presentation slug found via the paper's own GitHub repo (github.com/ICTPLSys/blowfish), whose description linked to usenix.org/conference/osdi26/presentation/zhang-yulong; full author/affiliation list confirmed from osdi26-contents.pdf."
+
+- id: VIRT-OSDI26-07
+  title: "μShell: A Microkernel-based FPGA Shell Architecture"
+  title_correction: null
+  authors: [Jiyang Chen, Anubhav Panda, Harshavardhan Unnibhavi, Atsushi Koshiba, Pramod Bhatotia]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi26/presentation/chen-jiyang
+  fullpaper_source: https://www.usenix.org/system/files/osdi26-chen-jiyang.pdf
+  classification: CORE
+  classification_note: "uShell's contribution is literally an FPGA virtualization architecture (vFPGAs, capability-enforced isolation between hardware modules, component-aware scheduling) -- FPGA virtualization is an explicit CORE keyword."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T5]
+  physical_resource: FPGA
+  logical_abstraction: "A vFPGA: a capability-isolated hardware-module slot that can be dynamically composed with other vFPGAs via a host-mediated dataflow graph, so an accelerator pipeline is built by chaining shareable modules instead of synthesizing one monolithic bitstream."
+  problem: "Traditional cloud FPGA shells are monolithic (one fixed accelerator per shell instance/vFPGA), which clashes with modern applications naturally composed of multiple reusable hardware modules (FFT, RSA, AES, ...) that different tenants want to share and chain flexibly."
+  mechanism: "Each hardware module sits in its own vFPGA guarded by a Capability Enforcement Unit (CEU: send/receive/memory gateways with validators), interconnected by an AXI4-Stream Switch (up to 15 vFPGAs) and an I/O Wrapper for unified shell interfaces. The uShell OS (capability spaces, per-application address spaces, a component-aware scheduler) dynamically establishes IPC routes between vFPGAs to build an application's dataflow graph at runtime via a C++ API (create_task/create_buffer/dataflow::connect), rather than at synthesis time."
+  isolation_mechanism: "Capability-based access control: a CEU's validator checks a capability (address range + read/write permission) before allowing any cross-vFPGA data/memory transfer, and unauthorized requests are safely drained without affecting other components; capability create/delegate/revoke follows a hierarchical tree structure that prevents privilege escalation."
+  multiplexing_mechanism: "Stateless accelerator modules can be shared across applications (waiting for the current execution to finish, then relying on HLS reset to clear residual state); a component-aware, non-preemptive scheduler prioritizes requests whose needed modules are already programmed on a vFPGA, minimizing partial reconfiguration."
+  state_mechanism: "Component (module) state lives entirely on-chip in the assigned vFPGA's logic; when a vFPGA is reprogrammed (partial reconfiguration), prior state is cleared via HLS reset, so no cross-invocation state persists for shared stateless components -- stateful components must externalize state to on/off-chip memory (acknowledged limitation)."
+  overhead_bottleneck: "Partial-reconfiguration latency: Coyote v2's constant ~58ms reconfiguration penalty per swap, vs uShell's 2-3us-per-capability-update cost when components are pre-loaded and only routing/capabilities change."
+  primary_tradeoff: "Composable, capability-isolated vFPGAs -> gain dynamic multi-tenant module sharing and up to 79% fewer reconfiguration operations, but cost 3.3% throughput overhead from CEU validation/routing and 1.4%-6.6% FPGA resource overhead that scales quadratically with vFPGA count."
+  quantitative_claims:
+  - "throughput overhead vs monolithic Coyote v2: 3.3% average (2.8-4.2% per application), AMD Alveo U280 FPGA, AMD EPYC 7413 host"
+  - "reconfiguration-operation reduction: up to 79% vs Coyote v2 FIFO scheduling"
+  - "end-to-end latency reduction: 24-35%; tail (p95) response-time reduction: 28-39%; deadline misses reduced 46-64%"
+  - "deployment overhead for pre-loaded components: 2-3us per capability update vs Coyote v2's constant ~58ms reconfiguration penalty"
+  - "resource overhead: 1.4% LUTs / 0.9% registers for 3 vFPGAs, up to 6.6% total for 8 vFPGAs"
+  - "application code complexity: cyclomatic complexity reduced 25.0-51.2%"
+  why_useful_for_learning: "The clearest available CORE example of applying microkernel isolation principles (capabilities, IPC) to accelerator virtualization -- directly analogous to CPU-side microkernel/hypervisor isolation but for FPGA logic."
+  priority: P1
+  related: []
+  relations:
+  - {type: CONTRASTS_WITH, target: "Coyote v2 / AmorphOS / Harmonia (monolithic FPGA shells, cited baselines)", basis: "uShell is evaluated head-to-head against Coyote v2 and positioned against AmorphOS/Harmonia as combining dynamic composability with fine-grained inter-component isolation that those monolithic shells lack."}
+  - {type: USES_MECHANISM_FROM, target: "seL4 / M3 (CPU microkernels, cited related work)", basis: "Paper explicitly adapts capability delegation and hierarchical privilege structures from CPU microkernels to a hardware task context where context switches are infeasible."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web, code]
+  confidence: HIGH
+  notes: "Presentation slug found via WebSearch. GitHub repo (TUM-DSE/microShell) confirms the project exists but its own citation block was still a placeholder at fetch time; the full USENIX PDF (not the repo) is the source for this record. USENIX page notes 'Distinguished Artifact Award Winner'."
+
+- id: VIRT-OSDI26-08
+  title: "Virtualizing eBPF with Late-Binding"
+  title_correction: null
+  authors: [Jing Zhang, Xiaguannan Song, Dong Du, Yubin Xia, Binyu Zang, Haibo Chen]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi26/presentation/zhang-jing
+  fullpaper_source: https://www.usenix.org/system/files/osdi26-zhang-jing.pdf
+  classification: CORE
+  classification_note: "vBPF creates eBPF namespaces -- a genuine multi-tenant virtualization boundary for a kernel-extension mechanism (late-bound program-to-hook attachment plus compiler-assisted per-tenant state isolation) -- analogous to the syscall-interposition isolation boundaries the brief marks CORE, not merely a scheduling or filtering policy over existing eBPF."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "An eBPF namespace: a per-tenant virtualized view of a shared kernel hook (interrupt, syscall, XDP, struct_ops) with its own program set and privately-instantiated copies of any kernel global state the program touches, resolved to the physical hook only at run time (late binding)."
+  problem: "eBPF's static-binding model rigidly couples logical eBPF programs to physical kernel hooks and assumes a single trust domain, so when multiple mutually-distrusting tenants attach programs to the same hook they get O(N) linear dispatch overhead, no state isolation for eBPF-touched kernel globals, and no clean way to attribute interrupt-driven events (e.g. XDP packets) to the tenant that owns them."
+  mechanism: "The Sniffer attributes interrupt-driven events to tenants (recording resource-to-namespace mappings during process-context operations, then looking them up context-free during interrupts, via network/request/task sniffer variants). The Dispatcher replaces linear program traversal with O(1) hash-indexed per-namespace lookup plus a path-flattening compile-time optimization. A compiler-assisted state-isolation framework statically flags (default-deny) any eBPF helper touching global kernel state, then either instantiates it per-namespace (declarative API) or maintains copy-on-write per-tenant overlay patches applied atomically on namespace context switch (using BTF metadata). eBPF namespaces are first-class, hierarchical, and bound to Linux namespaces (clone/unshare/setns)."
+  isolation_mechanism: "Per-namespace program dispatch (no cross-tenant program execution by construction) plus per-tenant state instances/overlays for any kernel global an eBPF program can mutate, enforced by a static default-deny analyzer at compile/verification time."
+  multiplexing_mechanism: "Many tenants' eBPF programs share the same physical kernel hook; the Dispatcher's O(1) namespace-keyed lookup means adding tenants does not degrade any other tenant's dispatch latency (flat vs native eBPF's O(N) degradation)."
+  state_mechanism: "Kernel-global state touched by eBPF helpers is represented either as per-namespace instances (declarative API) or as short-lived copy-on-write overlay patches captured/applied/restored around each namespace's execution window; overlays are reclaimed once the underlying kernel object (e.g. sk_buff) is freed."
+  overhead_bottleneck: "Native eBPF's linear program-array traversal under multi-tenant contention (O(N) degradation with attached-program count) is the bottleneck vBPF removes; vBPF's own overhead is dominated by Sniffer resolution + namespace/program lookup (~2.1% of total execution time for a co-located tcx program)."
+  primary_tradeoff: "Late-binding namespace dispatch and per-tenant state isolation -> gains O(1) cross-tenant dispatch (54x speedup over native eBPF at 160 attached programs) and eliminates cross-tenant interference (1.4x-3.9x lower same-hook latency), at a cost of 2.5-5.2% co-located overhead vs native eBPF and growing (but reclaimable) per-tenant state-overlay memory."
+  quantitative_claims:
+  - "co-located overhead vs native eBPF: 2.51-5.18% (lmbench syscall/select/fork/network), Intel Xeon Gold 6330, Linux 6.12"
+  - "cross-tenant isolation gains vs native eBPF sharing one namespace: 1.4x-3.9x lower latency depending on operation"
+  - "multi-program contention at 160 attached programs: vBPF cross-tenant O(1) throughput, 54x speedup vs native eBPF's O(N) degradation"
+  - "PostgreSQL with background eBPF monitoring: 29% higher throughput, 23.6% lower latency vs native eBPF"
+  - "Apache httpd with netobserv-ebpf-agent monitoring: up to 2.8x throughput speedup vs native eBPF"
+  - "state-overlay optimization: 31.4x lower overhead vs a naive full-object-copy baseline"
+  why_useful_for_learning: "A clean, non-CPU/non-memory example of the same virtualization pattern (multiplex one physical mechanism among mutually-distrusting tenants via a mediating namespace layer) applied to a kernel-extension technology rather than a machine resource."
+  priority: P2
+  related: []
+  relations:
+  - {type: CONTRASTS_WITH, target: "cgroup-eBPF / KrakenGuard (cited related work)", basis: "Paper's own comparison table shows cgroup-eBPF and KrakenGuard provide load-time admission control or partial isolation but neither combines enforced dispatch isolation with per-tenant state isolation the way vBPF does."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web, artifact]
+  confidence: HIGH
+  notes: "Artifact evaluated (per USENIX page). A third-party repo at sr.ht/~runxiyu/vbpf/ found during search reuses the name 'vbpf' for an unrelated project and was NOT used as a source for this record."
+
+- id: VIRT-OSDI26-09
+  title: "vBOIDs: Taming Chaos via Coarse-grained Scheduling Abstraction for Containers"
+  title_correction: null
+  authors: [Kaesi Manakkal, Nathan Daughety, Yu Sun, Marcus Pendleton, Hui Lu]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi26/presentation/manakkal
+  fullpaper_source: https://www.usenix.org/system/files/osdi26-manakkal.pdf
+  classification: CORE
+  classification_note: "BOID is explicitly a container-level virtual-CPU-like abstraction (a scheduling unit on which 'at most one [thread] may execute on a physical core', bounding concurrency the way a hypervisor bounds a VM to its vCPU count), and the paper explicitly positions it as an alternative to full virtualization for getting vCPU-like scheduling stability -- a resource-virtualization abstraction, not merely a scheduler policy tweak. This is a borderline call against the brief's CPU-scheduling-is-usually-SUPPORT default; recorded as CORE because of the explicit vCPU-abstraction framing, but a reviewer could reasonably prefer SUPPORT."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T9, T1]
+  physical_resource: CPU core
+  logical_abstraction: "A BOID: a migratable, serially-executing scheduling unit that consolidates many of a container's kernel threads, giving the container a fixed number N of vCPU-like concurrency slots instead of exposing every individual thread to the Linux scheduler."
+  problem: "High-density container deployments let the kernel scheduler make fine-grained per-thread placement/migration decisions across hundreds of threads, causing scheduling thrashing and unpredictable performance -- while cgroup CPU quotas bound time but not concurrent core occupancy (a container with a 2.0-CPU quota can legally burst across 100 cores for 20ms), and manual thread pinning fixes this but sacrifices flexibility."
+  mechanism: "vBOIDs groups a container's threads into a small number of BOIDs (at most one thread per BOID may run on a core at a time). A two-level balancer runs inter-core BOID migration (treating BOIDs, not threads, as the atomic unit -- collapsing the search space from O(threads) to O(BOIDs), using cache-hotness checks and lock-free CAS on boid->new_cpu) and, when a BOID becomes an unmigratable 'elephant', delegates to intra-container task balancing that redistributes threads among that container's own BOIDs."
+  isolation_mechanism: "Spatial concurrency bounding: a container with N BOIDs can never occupy more than N physical cores simultaneously, giving pinning-like isolation from co-located containers without the throttling bursts cgroup quotas allow."
+  multiplexing_mechanism: "BOIDs (not raw threads) are the granularity at which the global CFS-style load balancer distributes container CPU demand across cores, cutting the balancer's per-decision search space and resulting migration rate."
+  state_mechanism: "Scheduling state (BOID membership, current core assignment) lives in kernel scheduler structures (~2000 LoC added to fair.c/pelt.c/cgroup.c in Linux 6.15); no VM-level state migration is involved since threads stay in the same kernel."
+  overhead_bottleneck: "Inter-core thread-migration churn from per-thread scheduling decisions (e.g. 315-731 migrations/sec/core in default unconstrained containers) is what vBOIDs removes, cutting it to 16-104/sec/core."
+  primary_tradeoff: "Consolidating threads into vCPU-like BOIDs -> gains pinning-level cache locality and throughput (up to 3x) without pinning's manual, static configuration, but costs upfront BOID-count provisioning (like vCPU sizing) and reduced benefit for extremely short-lived, highly parallel bursts that cannot amortize placement/cache-warming."
+  quantitative_claims:
+  - "Hotel Reservation (DeathStarBench, 1k RPS): throughput up to 3x vs default containers; inter-core migrations 16.85/sec/core (vBOIDs) vs 315.47 (default) vs 117.13 (manually pinned)"
+  - "Social Network (1k RPS): inter-core migrations 34.22/sec/core (vBOIDs) vs 233.44 (default) vs 243.14 (Firecracker default); throughput at SLO ~5k RPS (vBOIDs) vs ~2k (default) vs ~3k (Firecracker default)"
+  - "Kubernetes Online Boutique: scheduler-visible units reduced 359 threads -> 31 BOIDs; p95 latency <500ms (vBOIDs, matching pinned) vs >4000ms (default containers)"
+  - "hardware: two-socket Intel Xeon Gold 6430, 64 cores, 64GB DDR5, Ubuntu 22.04 / Linux 6.15.0"
+  why_useful_for_learning: "A concrete case study in how far vCPU-like scheduling determinism for containers can go without a hypervisor (contrast directly with Firecracker microVMs in its own evaluation), clarifying what full virtualization's vCPU abstraction buys beyond scheduling stability alone (i.e. kernel isolation)."
+  priority: P2
+  related: []
+  relations:
+  - {type: TRADEOFF_PAIR, target: "Firecracker microVMs (cited baseline)", basis: "Paper's own evaluation shows vBOIDs matches or beats Firecracker's scheduling stability/throughput without hypervisor overhead, but explicitly trades away Firecracker's guest-kernel isolation."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "USENIX page credits KAUST-sponsored open access. Classification is a judgment call -- see classification_note."
+
+- id: VIRT-OSDI26-11
+  title: "Rethinking Process Snapshots for Near-Warm Serverless Cold Starts"
+  title_correction: null
+  authors: [Ben Holmes, Baltasar Dinis, Lana Honcharuk, Adam Belay, Joshua Fried]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi26/presentation/holmes
+  fullpaper_source: https://www.usenix.org/system/files/osdi26-holmes.pdf
+  classification: SUPPORT
+  classification_note: "Spice is a process-boundary (not VM-boundary) snapshot/restore mechanism for serverless cold starts. Per the brief's serverless rule, snapshot/restore mechanisms that make isolation cheap can be CORE or SUPPORT; because Spice operates below the VM/container boundary (a LibOS plus a new kernel VMA primitive) rather than virtualizing a machine resource, and is evaluated explicitly as an alternative to VM-boundary snapshot systems, it is classified SUPPORT: it explains the cost structure those CORE VM-snapshot systems pay, without itself being a virtualization abstraction."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T8]
+  physical_resource: DRAM
+  logical_abstraction: "A disk-resident process image (SHELF file) that the kernel can lazily and out-of-order splice into a fresh process's address space via a single spliceVMA mapping per region, so 'restore' means faulting pages in from arbitrary snapshot-file offsets rather than replaying syscalls or reconstructing many small VMAs."
+  problem: "Serverless platforms cannot economically keep every function warm (81% of functions invoked at most once per minute, per cited Microsoft data), so cold starts from disk-resident images must be fast; existing options are process-boundary CRIU (thousands of syscalls to rebuild the address space, plus I/O-hungry tiny VMAs to preserve page ordering) or VM-boundary snapshot systems (REAP, FaaSnap) that capture 1.2-3.4x more state than needed and suffer a guest-scheduler 'deferred housekeeping storm' (22-79% of response time) when the guest's virtual clock jumps on resume."
+  mechanism: "The SHELF (Snapshot Hybrid ELF) format stores working-set pages contiguously in access order plus a page-granular interval-tree index (pre-balanced B+ tree) mapping virtual addresses to snapshot-file offsets, decoupling on-disk layout from virtual-memory layout. The spliceVMA kernel primitive is a single VMA whose pages may come from the snapshot file, an underlying file-backed mapping, or be zero-filled, resolved per-page on fault via the (immutable) interval tree -- so a sparse, reordered snapshot presents to the kernel as a handful of contiguous VMAs instead of CRIU's thousands. An asynchronous prefetcher uses a recorded access trace to warm pages ahead of use, and shared file-backed pages (libc, interpreters) are served from the normal page cache rather than duplicated in the snapshot."
+  isolation_mechanism: "N/A directly (a checkpoint/restore mechanism for one function instance, not a multi-tenant isolation boundary); the paper explicitly excludes container namespace/cgroup isolation setup from its measurements."
+  multiplexing_mechanism: "N/A (single-process restore path), though 25-concurrent-restore scaling reaches 76% of ideal throughput, i.e. the mechanism scales to serve many tenants' cold starts from a shared disk-I/O and page-cache-sharing budget."
+  state_mechanism: "Process/runtime state is serialized once into a SHELF file (working-set pages in access order + interval-tree index + serialized LibOS/OS metadata); restoration reconstructs metadata directly (0.9-7.5ms) and lazily faults in pages via spliceVMA, with prefetching overlapping most remaining I/O."
+  overhead_bottleneck: "In prior systems, syscall-replay volume (CRIU) or guest-OS deferred housekeeping after a virtual-clock jump (VM-boundary systems) dominates restore latency; Spice's own remaining cost is storage-device read latency, mostly hidden by its asynchronous prefetcher."
+  primary_tradeoff: "Process-boundary snapshotting with a kernel-level sparse-splice primitive -> gains 7.5x lower latency than CRIU and 9.5x lower than VM-boundary systems (REAP/FaaSnap), but costs an assumption of stable file-backed-mapping pathnames across restores and a LibOS (Junction) prototype rather than a full in-kernel Linux process-metadata restore path."
+  quantitative_claims:
+  - "end-to-end warm-invocation latency: 0.6-18ms (Spice) vs 3.6-1197ms (CRIU/REAP/FaaSnap), Python/Node.js/Java functions"
+  - "average latency improvement: 7.5x vs CRIU, 9.5x vs VM-boundary systems (FaaSnap/REAP)"
+  - "metadata restoration: 0.9-7.5ms (Spice) vs 2.6-749ms (CRIU), a 63-99% reduction"
+  - "interval-tree lookup: ~284 cycles vs ~1110 cycles for Linux maple trees at 1000 intervals (cold cache)"
+  - "prefetch throughput: 5.2M pages/sec (private), 0.6M pages/sec (shared)"
+  - "concurrency: 76% of ideal throughput at 25 concurrent restores; hardware: Intel Xeon Gold 5420+, 28 cores, 128GB RAM, Crucial T705 NVMe (13.6GB/s sequential read)"
+  why_useful_for_learning: "A precise account of exactly which costs are specific to the VM boundary (guest scheduler housekeeping after a clock jump, 1.2-3.4x excess captured state) versus the process boundary (syscall-replay volume) -- useful for calibrating whether a CORE VM/container-snapshot paper's overhead is fundamental or boundary-specific."
+  priority: P2
+  related: []
+  relations:
+  - {type: CONTRASTS_WITH, target: "REAP / FaaSnap (VM-boundary snapshot restore, cited baselines)", basis: "Spice is evaluated head-to-head against these VM-boundary snapshot systems and attributes part of their overhead specifically to guest-OS virtual-clock-jump housekeeping, a VM-virtualization-specific cost a process-boundary mechanism avoids."}
+  - {type: ALTERNATIVE, target: "CRIU (process-boundary checkpoint/restore, cited baseline)", basis: "Both operate at the process boundary; Spice replaces CRIU's syscall-replay reconstruction with a single kernel-level sparse-mapping primitive."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: null
+
+- id: VIRT-OSDI26-13
+  title: "DVLA: Dynamic VM Lifetime Aware Scheduling for Drifting Lifetime Distributions and Long-Lived VM Placement Debt"
+  title_correction: null
+  authors: [Zhengtong Zhang, Zihan Xu, Zhidong Hu, Yanbo Shan, Fei Peng, Suhong Chen, Kaiyuan Shen, Xiangyun Kong, Handu Ding, Bing He, Binda Ma]
+  venue: OSDI
+  year: 2026
+  publication_type: OPERATIONAL_REFERENCE
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi26/presentation/zhang-zhengtong
+  fullpaper_source: https://www.usenix.org/system/files/osdi26-zhang-zhengtong.pdf
+  classification: SUPPORT
+  classification_note: "DVLA is a VM-placement/scheduling policy driven by predicted VM lifetime; it treats live migration purely as an already-available operational lever (a 'migration budget') and never touches virtualization mechanism itself, matching the brief's VMR2L-style precedent for VM placement/rescheduling work landing as SUPPORT."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T1, T4]
+  physical_resource: CPU core
+  logical_abstraction: "A VM-to-physical-machine placement policy that groups VMs by predicted lifetime class and scores candidate machines to avoid stranding long-lived, resource-dominant VMs on machines that will otherwise empty out."
+  problem: "Static VM-lifetime-aware placement policies degrade as lifetime distributions drift over time and across clusters, and heterogeneous placement policies that scatter long-lived VMs across many machines for load-balancing accumulate 'placement debt': machines that can never fully empty because a few long-lived VMs remain, permanently reducing achievable packing density."
+  mechanism: "A hierarchical prediction model gives a fast initial lifetime class at VM creation (static features) and a more accurate offline remaining-lifetime estimate later; Dynamic Affinity Grouping continuously re-derives lifetime-class thresholds via a warmup/stable/observation/cooldown state machine driven by a cosine-distance drift score; a Debt-Aware Placement Policy scores machines by a core-weighted-average lifetime index and applies an asymmetric penalty for placing long-lived VMs onto short-lived-leaning machines; an offline Placement Debt Rectification Engine identifies already-stranded long-lived VMs and migrates them (within production migration budgets) to consolidate them."
+  isolation_mechanism: "N/A (a scheduling/placement policy); a VM Risk Aggregation Ratio side metric bounds how many customer VMs a single fault-isolation domain accumulates, as a monitored constraint rather than a new isolation mechanism."
+  multiplexing_mechanism: "Physical machine core capacity is packed according to predicted VM lifetime class rather than only current resource demand, so machines are more likely to empty out together."
+  state_mechanism: "VM state itself is unaffected; the paper treats live migration as an existing black-box operational primitive used by the rectification engine (averaging 810 VM migrations/day in production) rather than a mechanism it modifies."
+  overhead_bottleneck: "Stranded machines -- 25.3% of non-empty machines hosting isolated long-lived VMs before DVLA, reduced to 21.3% after -- are the binding constraint on packing density, not scheduling compute cost (inference is cached at a 90% hit rate, 5ms p99 on miss)."
+  primary_tradeoff: "Proactive debt-aware placement plus reactive offline rectification -> gains 0.6-2.0 percentage points of packing density (DVLA's realistic-prediction result already beats prior-state-of-the-art LAVA's oracle upper bound), at the cost of a 0.3pp increase in VM Risk Aggregation Ratio and a hard ceiling because ~40% of VMs are structurally non-migratable."
+  quantitative_claims:
+  - "packing density improvement: 1.5pp (DVLA, realistic predictions) vs 0.9pp (LAVA) vs 0.6pp (LA-Binary); DVLA's realistic result (1.5pp) exceeds LAVA's oracle upper bound (1.4pp)"
+  - "long-lived-VM packing density (PDL): 0.9pp (DVLA) vs 0.4pp (LAVA) vs 0.1pp (LA-Binary)"
+  - "production deployment (Alibaba Cloud, 7 months): 1.19pp average PDL gain; stranded machines reduced from 25.3% to 21.3%"
+  - "evaluation scale: 23 production clusters, 200-2200 machines each, 12k-800k VM events per cluster, two months of trace data"
+  - "robustness: even at 40% recall for long-lived-VM detection, DVLA still achieves 1.02pp PD improvement"
+  - "PD-sensitivity improvement: 7.1pp (robustness to demand fluctuation)"
+  why_useful_for_learning: "Illustrates, at production Alibaba-Cloud scale, why VM live migration is budgeted as a scarce operational resource ('migration budget', 'net-positive gain requirement') rather than used freely -- direct operational context for why CORE migration-cost papers like M3U (this pass) matter."
+  priority: P2
+  related: [VIRT-EUROSYS25-02]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS25-02, basis: "Both are VM placement/rescheduling papers that treat live migration as a budgeted operational primitive rather than a mechanism under study; VMR2L (EuroSys25) optimizes migration destination choice for CPU defragmentation, DVLA (OSDI26) optimizes initial+corrective placement by predicted VM lifetime -- complementary levers on the same VM-fleet-packing problem."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "USENIX page labels this an Operational Systems Paper (production Alibaba Cloud deployment); publication_type set to OPERATIONAL_REFERENCE accordingly and should be excluded from regular-research-paper counts per the classification brief."
+
+- id: VIRT-SOSP25-01
+  title: "Device-Assisted Live Migration of RDMA Devices"
+  title_correction: null
+  authors: [Artem Y. Polyakov, Gal Shalom, Asaf Schwartz, Aviad Yehezkel, Omri Ben David, Omri Kahalon, Ariel Shahar, Liran Liss]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764795
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3731569.3764795
+  classification: CORE
+  classification_note: "The retrieved abstract fragment states the paper's goal is a device-assisted mechanism specifically to make RDMA passthrough devices live-migratable despite device passthrough breaking the guest/hardware decoupling live migration depends on -- exactly the CORE 'device passthrough' + 'live migration' intersection, and its hardest open sub-problem (opaque in-device state)."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T3, T1]
+  physical_resource: NIC
+  logical_abstraction: "UNKNOWN in mechanism detail beyond the abstract: a live-migratable RDMA device presented to the guest with help from the device itself rather than pure software emulation."
+  problem: "Device passthrough (used for RDMA to get HPC/AI-grade performance in the cloud) exposes hardware state directly to the guest, breaking the guest-OS/hardware decoupling that software-only live migration relies on; the retrieved abstract states this 'makes Live Migration extremely challenging' for RDMA devices specifically."
+  mechanism: "UNKNOWN at ABSTRACT depth -- the retrieved text names the problem and that the approach is 'device-assisted' (the RDMA NIC itself participates in migration, rather than the hypervisor alone reconstructing device state from outside), but the concrete technique (state-extraction protocol, queue-pair/memory-region re-establishment on the target, dirty-QP tracking, etc.) could not be read."
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: "UNKNOWN in detail; presumed (from the problem statement only, not confirmed) to involve extracting/transferring in-device RDMA state (queue pairs, memory registrations) with device cooperation -- structurally similar in spirit to NVIDIA's shipped DOCA SR-IOV Live Migration product feature, but that documentation is NOT evidence for this paper's actual mechanism and is noted only as context."
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If read in full, this is very likely the field's reference point for the hardest unsolved problem in device passthrough: migrating opaque, hardware-resident device state (RDMA queue pairs/memory registrations) that the hypervisor cannot see or reconstruct from outside the device."
+  priority: P1
+  related: [VIRT-OSDI26-02, VIRT-SOSP25-02]
+  relations:
+  - {type: CONTRASTS_WITH, target: VIRT-OSDI26-02, basis: "M3U pre-installs paravirtual (VirtIO) device state before migration, which is possible because VirtIO state is host/software-visible; this paper tackles the strictly harder case where the passthrough device's state is opaque to the hypervisor by construction, requiring the device's own cooperation."}
+  - {type: SAME_BRANCH, target: "Oasis and other SOSP25 device/CXL I/O-migration papers (existing corpus)", basis: "A prior pass's note recorded this paper grouped in the SOSP 2025 program alongside other device-state-migration-by-a-different-route papers (e.g. Oasis, which sidesteps in-device state by keeping I/O state in shared CXL memory); both attack the same underlying problem of moving state the OS cannot see because the device bypasses it."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Upgraded from TITLE_ONLY: OpenAlex's abstract_inverted_index (api.openalex.org/works/doi:10.1145/3731569.3764795) yields a real, if partial, reconstructed abstract confirming the paper's problem statement and device-assisted approach. Full text remains unreachable this pass: dl.acm.org DOI/PDF/fullHtml pages all return 403 to automated fetches; ResearchGate publication 396442798 returns 429; NVIDIA's own research-publications site (research.nvidia.com/publications, /labs/livlab/publications) does not surface it in the pages fetched; api.unpaywall.org confirms Gold OA/CC-BY but has no direct PDF URL indexed; no arXiv preprint exists. Classification (CORE) and taxonomy are decided from the confirmed real abstract text; mechanism/isolation/multiplexing/state/overhead/tradeoff/quantitative fields remain UNKNOWN pending an actual full-text read -- do not treat this record as DESIGN-level evidence despite the CORE label."
+
+- id: VIRT-EUROSYS26-07
+  title: "BASK: Batch And SmartNIC-offloaded KSM"
+  title_correction: null
+  authors: [Chanshin Kwak, Jaehyeon Lee, Minkyu Jung, Changjun Lee, Youngjin Kwon]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769372
+  official_url: https://dl.acm.org/doi/10.1145/3767295.3769372
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title/authors: no abstract or full text was retrievable from any accessible source despite extensive additional attempts this pass, so per hard rule 2 this stays CONTEXT/LOW rather than the SUPPORT/CORE the title (SmartNIC-offloaded KSM, a VM memory-deduplication mechanism, T2/T3 CORE-adjacent territory) would otherwise suggest."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T3]
+  physical_resource: DRAM
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: "UNKNOWN at the evidence depth reached; title plus confirmed venue/authors indicate offloading Kernel Samepage Merging (KSM) page-scanning/merging work, batched, onto a SmartNIC -- consistent with the KAIST CASYS lab's stated research area (cloud VM/memory efficiency), which also produced the sibling papers CofferOS and MTTM referenced in this corpus."
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, would show how a background VM memory-deduplication task (KSM) that normally costs host CPU cycles can instead be offloaded to a SmartNIC's compute, complementing Blowfish and Demeter (this pass/corpus) as another point on the guest/host/offload-device division of labour for VM memory management."
+  priority: P2
+  related: [VIRT-EUROSYS26-01, VIRT-EUROSYS26-08, VIRT-OSDI26-05]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-01, basis: "Overlapping KAIST CASYS-lab authors (Kwak, Jung, Kwon) with CofferOS and MTTM (this corpus), a shared research program on cloud VM memory/isolation efficiency."}
+  - {type: SAME_BRANCH, target: VIRT-OSDI26-05, basis: "Both reportedly address VM memory-management efficiency by offloading work away from the host CPU's main execution path (Blowfish to RDMA far memory + guest tracker, BASK to a SmartNIC for KSM); the relation is topical only since BASK's actual mechanism is unconfirmed."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [official-web, program-only]
+  confidence: LOW
+  notes: "ACCESS FAILURE (extensive, this pass): tried (1) dl.acm.org/doi/10.1145/3767295.3769372 -> 403; (2) dl.acm.org/doi/pdf/10.1145/3767295.3769372 -> 403; (3) api.openalex.org/works/doi:10.1145/3767295.3769372 -> confirms title/authors/DOI/page range (1928-1944) but abstract_inverted_index is null; (4) EuroSys 2026 official papers page (2026.eurosys.org/papers.html) -> lists title/authors only, no abstract, no PDF link; (5) KAIST CASYS lab publications page and international-conference listing -> citation only; (6) Youngjin Kwon's personal Google Sites page -> title only; (7) Semantic Scholar search page and API -> robots-disallowed / 429 rate-limited; (8) archive.org Wayback of the ACM DL page -> blocked by site policy. No arXiv preprint exists. The paper is confirmed real and Gold OA/CC-BY per OpenAlex, so the ACM DL 403 looks like bot-blocking rather than a paywall; a differently-configured fetch (or a human) would likely succeed where this session could not. Author name spelling is inconsistent across sources: 'Chanshin Gwak' (KAIST CASYS lab pages) vs 'Chanshin Kwak' (EuroSys/OpenAlex); recorded here as Kwak per the venue's own listing."
+
+- id: VIRT-EUROSYS26-13
+  title: "Not A DPU in Name Only! Unleashing RDMA-capable DPUs in Multi-Tenant Serverless Clouds with NADINO"
+  title_correction: null
+  authors: [Shixiong Qi, Songyu Zhang, K. K. Ramakrishnan, Diman Z. Tootaghaj, Hardik Soni, Puneet Sharma]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769386
+  official_url: https://dl.acm.org/doi/10.1145/3767295.3769386
+  fullpaper_source: https://shixiongqi.uky.edu/sites/default/files/2025-10/nadino-eurosys26.pdf
+  classification: CORE
+  classification_note: "NADINO's DPU Network Engine mediates and isolates access to a shared physical RDMA NIC among mutually-untrusting serverless tenants -- exactly the CORE T3 pattern (SmartNIC/DPU-mediated device virtualization), not merely a scheduler over or a consumer of existing RDMA."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T8, T9]
+  physical_resource: NIC
+  logical_abstraction: "A per-tenant virtual RDMA data plane: each serverless function gets isolated, zero-copy RDMA send/receive access mediated by an off-path DPU-resident network engine, without directly touching physical RDMA queue pairs itself."
+  problem: "Serverless platforms cannot let untrusted tenant functions directly own RDMA queue pairs (no isolation); on-path DPU processing adds up to 1.54x data-movement overhead moving data between DPU and host; separate inter-/intra-node memory pools force copies while unified pools need expensive synchronization; and terminating external HTTP/TCP at every node while also speaking RDMA internally duplicates protocol processing (up to 11.4x degradation)."
+  mechanism: "A DPU Network Engine (DNE) runs off-path on the DPU and operates RDMA queue pairs on behalf of tenant functions, enforcing per-tenant isolation so tenants never touch the NIC directly; cross-processor shared memory pools live on the host but are mapped into the DPU so the DNE only manages transfers while the RNIC performs the actual DMA; two-sided (send/receive) RDMA plus lock-free token-passing avoids the 'receiver-oblivious' problem of one-sided RDMA without distributed locks or duplicated pools; a DPDK/F-stack-based cluster ingress gateway terminates HTTP/TCP once at the cluster edge and converts to RDMA internally, eliminating redundant protocol processing inside the cluster."
+  isolation_mechanism: "Physical separation of trust: tenant functions never hold RDMA queue pairs directly (only the DPU-resident, physically separate DNE does), plus per-tenant isolated memory pools via DPDK file-prefix mechanisms -- isolation enforced by hardware placement (DPU) rather than software checks alone."
+  multiplexing_mechanism: "The DNE multiplexes one physical RDMA NIC's queue pairs and bandwidth across many tenant functions, with measured precise bandwidth division matching configured tenant weight ratios."
+  state_mechanism: "N/A (a live data-plane mediation mechanism, not a migration/checkpoint mechanism); RDMA memory registrations and queue-pair state are held on the DPU/host and never exposed to guest/function code."
+  overhead_bottleneck: "On-path DPU data movement (host<->DPU copy) is the single largest source of avoidable overhead the design removes (up to 1.54x), followed by duplicated ingress protocol processing (up to 11.4x) and one-sided-RDMA synchronization overhead."
+  primary_tradeoff: "Off-path DPU-resident mediation of RDMA -> gains hardware-enforced multi-tenant isolation and 20.9x throughput / 21x latency improvement while freeing 7 host CPU cores (at a cost of only 2 DPU cores), but costs tight coupling to NVIDIA DOCA APIs (Comch/mmap) and fixed-size memory pools that limit dynamic buffer resizing."
+  quantitative_claims:
+  - "end-to-end (Online Boutique): 20.9x RPS improvement vs NightCore (single-node baseline); 2.1x-4.1x vs FUYAO-F (one-sided RDMA); 2.4x-4.1x vs SPRIGHT (shared-memory baseline); 21x latency reduction in optimal configuration"
+  - "CPU savings: 7 host cores freed, consuming only 2 DPU cores"
+  - "cross-processor shared memory vs on-path mode: 30% RPS improvement, 20%+ latency reduction"
+  - "two-sided vs one-sided RDMA: 2.0x-2.8x latency reduction, 2.1x-2.7x throughput improvement"
+  - "ingress optimization vs kernel TCP/IP stack: 11.4x RPS gain, 3.4x latency reduction"
+  - "testbed: 4 nodes, dual 40-core Intel Xeon Gold 6148, 500GB RAM, 2 worker nodes with NVIDIA BlueField-2 DPUs, ConnectX-6 RNICs, 200Gbps switches"
+  why_useful_for_learning: "A concrete, current (2026) example of I/O-device virtualization moving from hardware SR-IOV toward software-defined DPU-mediated isolation, extending the classic passthrough-vs-mediation trade-off (a small DPU-core tax for tenant isolation and host-CPU savings) into the RDMA/serverless setting."
+  priority: P1
+  related: []
+  relations:
+  - {type: CONTRASTS_WITH, target: "SPRIGHT / NightCore (intra-node shared-memory serverless data planes, cited baselines)", basis: "Both prior systems rely exclusively on intra-node shared memory and cannot extend across nodes; NADINO's DPU-mediated RDMA plane is evaluated as a distributed extension of the same zero-copy goal."}
+  - {type: ALTERNATIVE, target: "FUYAO-F / RMMap (one-sided RDMA serverless data planes, cited baselines)", basis: "These use one-sided RDMA and incur synchronization/copy overhead from the 'receiver-oblivious' problem that NADINO avoids by choosing two-sided RDMA."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: "Full paper read from the author's institutional preprint (shixiongqi.uky.edu/sites/default/files/2025-10/nadino-eurosys26.pdf), also mirrored at github.com/ucr-serverless/NADINO; the ACM DL DOI page itself was not fetched (not needed given the preprint matches the official title/venue)."
+
+- id: VIRT-ASPLOS26-07
+  title: "Fault Escaping: Improving Robustness of DPU Enhanced Platform with Mutual Assisted VM Recovery"
+  title_correction: null
+  authors: [Chao Zhang, Tao Xu, Junming Liu, Pai Liu, Zhilang Xu, Kang Yan, Shuo Shi, Jintao Li, Jinhu Li, Chen Liang, Wenhui Kevin, FeiFei Fan, Yibin Shen, Hang Yang, Jianming Song, Xudong Zheng, Jiesheng Wu, Jian Li]
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.asplos-conference.org/asplos2026/program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not obtain the abstract or full text after extensive additional access attempts this pass; per hard rule 2 stays CONTEXT/LOW rather than the CORE the title (DPU-assisted VM fault recovery) would otherwise suggest."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T1, T3]
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: "UNKNOWN in detail; title indicates a fault-recovery mechanism for DPU-enhanced virtualization platforms where a DPU and its host VM(s) mutually assist each other's recovery after a fault, i.e. the DPU is itself part of the platform's fault domain rather than a passive accelerator."
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "UNKNOWN pending access; if confirmed as titled, would extend the corpus's DPU/SmartNIC-offload thread (Blowfish, NADINO, this pass) into the fault-tolerance dimension: what happens to VM state and correctness when the DPU itself (not just the host) can fail."
+  priority: P3
+  related: [VIRT-OSDI26-02]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-OSDI26-02, basis: "Shares at least six co-authors (Chao Zhang, Shuo Shi, Yibin Shen, Xudong Zheng, Jiesheng Wu, Jian Li) with M3U, all Alibaba Cloud Computing / Shanghai Jiao Tong University -- almost certainly the same production VM-infrastructure research group, suggesting Fault Escaping addresses fault-recovery for the same DPU-accelerated live-migration/VM platform M3U optimizes."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: "ACCESS FAILURE (extensive, this pass, building on a prior pass's failure): confirmed the full 18-author list and exact session ('9C: Reliability & Fault Tolerance', Thu 26 Mar 3:30-5:10pm EDT, Ohio & Monongahela room) from the official ASPLOS 2026 program page, but no abstract or PDF link is present there; dblp.org/db/conf/asplos/asplos2026.html is robots-disallowed to automated fetch; the RealZST/csconf-papers ASPLOS-2026 abstract-collection repo (checked by a prior pass) has abstracts for 6 other ASPLOS26 titles but not this one; dl.acm.org proceedings table-of-contents returns 403; no arXiv preprint found. This session's WebSearch quota (200/200) was exhausted before an author-by-author arXiv check could be completed for all 18 authors -- a follow-up pass with search budget remaining should specifically check arxiv.org author pages for Jiesheng Wu and Xudong Zheng, the two most distinctively-named Alibaba co-authors shared with M3U."
+
+rescue_report:
+  retrieved: 12
+  still_failed: [VIRT-EUROSYS26-07, VIRT-ASPLOS26-07]
+  reclassifications:
+  - {id: VIRT-OSDI26-01, from: CONTEXT, to: CORE, why: "Full paper (JANUS) retrieved from USENIX; confirmed nested-virtualization architecture (VMFUNC EPTP switching, shadow-root page tables, in-guest #VE) is the paper's entire contribution."}
+  - {id: VIRT-OSDI26-02, from: CONTEXT, to: CORE, why: "Full paper (M3U) retrieved; confirmed kernel-MMU scalability mechanism purpose-built for post-copy live migration of high-end VMs."}
+  - {id: VIRT-OSDI26-03, from: CONTEXT, to: CORE, why: "Full paper (InfiniDefrag) retrieved; confirmed guest-physical-address-space virtualization technique eliminating guest-visible compaction."}
+  - {id: VIRT-OSDI26-04, from: CONTEXT, to: CORE, why: "Full paper (GOODKIT) retrieved; confirmed a new hypervisor-adjacent VM-introspection architecture, not an application consuming VMI."}
+  - {id: VIRT-OSDI26-05, from: CONTEXT, to: CORE, why: "Full paper (Blowfish) retrieved; confirmed an elastic guest-physical-memory abstraction over RDMA-disaggregated far memory, meeting the brief's disaggregated-memory CORE bar."}
+  - {id: VIRT-OSDI26-07, from: CONTEXT, to: CORE, why: "Full paper (uShell) retrieved; confirmed an FPGA virtualization architecture (vFPGAs, capability isolation) -- an explicit CORE keyword."}
+  - {id: VIRT-OSDI26-08, from: CONTEXT, to: CORE, why: "Full paper (vBPF) retrieved; confirmed a multi-tenant virtualization boundary (eBPF namespaces, late-binding dispatch, per-tenant state isolation) for a kernel-extension mechanism."}
+  - {id: VIRT-OSDI26-09, from: CONTEXT, to: CORE, why: "Full paper (vBOIDs) retrieved; BOID is an explicit container-level virtual-CPU-like abstraction, positioned by the authors as an alternative to full virtualization -- recorded as a borderline CORE call, see the record's classification_note."}
+  - {id: VIRT-OSDI26-11, from: CONTEXT, to: SUPPORT, why: "Full paper (Spice) retrieved; it is a process-boundary snapshot/restore mechanism, not a machine-resource virtualization abstraction, so it lands as SUPPORT (explains VM-boundary snapshot systems' cost structure) rather than CORE."}
+  - {id: VIRT-OSDI26-13, from: CONTEXT, to: SUPPORT, why: "Full paper (DVLA) retrieved; it is a VM-lifetime-aware placement/scheduling policy that treats live migration as a black-box operational lever, matching the corpus's existing VMR2L SUPPORT precedent."}
+  - {id: VIRT-SOSP25-01, from: CONTEXT, to: CORE, why: "A real (partial) abstract was recovered via OpenAlex, confirming the paper is a device-assisted RDMA-passthrough live-migration mechanism -- CORE by problem statement even though full-text mechanism/eval detail is still unread (evidence_depth ABSTRACT, confidence MEDIUM, not full DESIGN_EVAL confidence)."}
+  - {id: VIRT-EUROSYS26-13, from: CONTEXT, to: CORE, why: "Full paper (NADINO) retrieved from an author-hosted preprint; confirmed a DPU-resident network engine that mediates/isolates shared RDMA-NIC access among untrusted serverless tenants -- explicit T3 SmartNIC/DPU device-virtualization territory."}
+  notes: "VIRT-EUROSYS26-07 (BASK) and VIRT-ASPLOS26-07 (Fault Escaping) remain genuinely unretrievable in this environment despite substantially more effort than the prior pass (both now have confirmed DOI/author/venue/page-range/session metadata that the prior pass lacked, but no abstract or body text). BASK's ACM DL page is Gold OA/CC-BY per OpenAlex yet still 403s to every automated fetch route tried (direct DOI page, /doi/pdf/, WebFetch, archive.org mirror), which looks like bot-blocking rather than a genuine access restriction -- worth a manual-browser retry. Fault Escaping has no abstract anywhere in the official ASPLOS 2026 program, dblp is robots-disallowed, and this session's WebSearch quota (200/200) was exhausted before an exhaustive per-author arXiv check could be completed; a follow-up pass with search budget remaining, focused on arXiv author pages for the shared Alibaba/M3U co-authors, is the most promising next step for both papers. All 8 papers the task brief specifically flagged for careful reading were retrieved to at least DESIGN_EVAL depth except Device-Assisted Live Migration of RDMA Devices (ABSTRACT depth only, ACM DL blocks every automated route despite confirmed Gold OA) and BASK (still TITLE_ONLY, access genuinely exhausted). The dominant successful retrieval strategy for OSDI 2026 was: WebSearch for the exact title -> land directly on usenix.org/conference/osdi26/presentation/<slug> or the PDF at usenix.org/system/files/osdi26-<slug>.pdf; once one slug pattern was confirmed (lastname, or lastname-firstname on a surname collision), guessing the same pattern for other authors succeeded even when WebSearch was unavailable. For EuroSys/SOSP/ASPLOS, author-hosted preprints (personal or lab web pages) and GitHub artifact repos were the highest-yield non-ACM route; OpenAlex's abstract_inverted_index reconstruction was a useful last resort for a partial abstract when ACM DL 403'd."

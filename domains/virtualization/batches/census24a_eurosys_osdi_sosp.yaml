@@ -1,0 +1,1405 @@
+papers:
+
+# ============================== EUROSYS 2024 ==============================
+
+- id: VIRT-EUROSYS24-01
+  title: "HD-IOV: SW-HW Co-designed I/O Virtualization with Scalability and Flexibility for Hyper-Density Cloud"
+  title_correction: null
+  authors: [Zongpu Zhang, Jiangtao Chen, Banghao Ying, "et al."]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://2024.eurosys.org/accepted-papers.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Title and author affiliations (Intel + Haibing Guan/SJTU) indicate a hardware-software co-designed I/O virtualization scheme, but the paper could not be retrieved from any accessible source, so no design/mechanism evidence was actually read; per hard rule 2 this is recorded as CONTEXT rather than the CORE the title suggests."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: "Title states the paper addresses scalability/flexibility limits of existing I/O virtualization (likely SR-IOV-style) for hyper-density (high VM-density) cloud hosts; not verified by reading."
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If accessed, would likely explain a production I/O-virtualization co-design point between SR-IOV-style hardware sharing and software flexibility; unconfirmed."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: "Access failure: EuroSys accepted-papers.html and program.html list only title/authors/session (Session I, Hardware-SW co-design, Thu 9:00-10:30), no abstract; ACM DL (dl.acm.org) returns 403 through the environment's egress proxy; author-affiliation homepage guesses (SJTU IPADS publication list, Microsoft Research) did not contain this paper; web/dblp search tools were blocked (robots.txt / rate-limited) for this venue. Flagged in access_failures and possible_omissions for a follow-up batch with ACM DL or institutional-repository access."
+
+- id: VIRT-EUROSYS24-02
+  title: "Hoda: a High-performance Open vSwitch Dataplane with Multiple Specialized Data Paths"
+  title_correction: null
+  authors: [Heng Pan, Peng He, Zhenyu Li, "et al."]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://2024.eurosys.org/accepted-papers.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Title indicates a new Open vSwitch (virtual switch) dataplane with multiple specialized paths, a core T3 device-virtualization topic, but the paper text could not be retrieved from any accessible source, so classification is conservatively CONTEXT per hard rule 2 rather than the CORE/SUPPORT the title suggests."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: []
+  physical_resource: NIC
+  logical_abstraction: UNKNOWN
+  problem: "Title implies existing single-datapath OVS implementations (kernel, DPDK, AF_XDP) underperform for mixed traffic patterns; not verified by reading."
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If accessed, would likely explain vSwitch dataplane design trade-offs (kernel vs. DPDK vs. specialized paths) central to virtual networking for VMs/containers; unconfirmed."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: "Access failure: same constraints as HD-IOV (ACM DL 403, EuroSys pages abstract-less, ICT-CAS author homepage guess for Zhenyu Li failed DNS resolution, search tools blocked). Logged in access_failures."
+
+- id: VIRT-EUROSYS24-03
+  title: "Orion: Interference-aware, Fine-grained GPU Sharing for ML Applications"
+  title_correction: null
+  authors: [Foteini Strati, Xianzhe Ma, Ana Klimovic]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3627703.3629578
+  official_url: https://2024.eurosys.org/accepted-papers.html
+  fullpaper_source: https://anakli.inf.ethz.ch/papers/orion_eurosys24.pdf
+  classification: SUPPORT
+  classification_note: "Orion is an operator-granularity GPU kernel scheduler layered over an existing, unmodified GPU (CUDA streams + priorities); it improves fine-grained sharing/interference control but does not create a new virtual-GPU partition abstraction, matching the brief's explicit rule that GPU sharing is SUPPORT unless the contribution is the virtual GPU abstraction itself."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T9]
+  physical_resource: GPU
+  logical_abstraction: "A priority-tiered execution stream per client sharing one physical GPU, where best-effort kernels opportunistically fill idle compute/memory-bandwidth left by a high-priority client's kernels"
+  problem: "DNN workloads underutilize GPU compute/memory bandwidth at the level of individual short-lived operators, but coarse-grained sharing techniques (temporal sharing, MPS) cannot exploit these microsecond-scale idle windows without hurting high-priority latency."
+  mechanism: "Orion intercepts CUDA kernel launches from multiple co-located DNN clients; a scheduler classifies each kernel offline as compute- or memory-bound and by SM footprint, dispatches high-priority kernels immediately to a priority stream, and admits a best-effort kernel only when no high-priority kernel is running or when the best-effort kernel is small and of opposite resource intensity, throttling by tracked outstanding-kernel duration."
+  isolation_mechanism: "Only performance isolation, not security isolation: GPU stream priorities plus size/duration-based admission control bound interference on high-priority p99 latency; the authors explicitly state Orion assumes clients share a trust domain and does not guard against malicious co-tenants, and GPU caches are shared without explicit interference modeling."
+  multiplexing_mechanism: "Temporal and resource-profile-aware multiplexing of one physical GPU's SMs/memory bandwidth across kernels from multiple DNN clients, exploiting brief per-operator underutilization windows rather than coarse process- or MPS-level partitioning."
+  state_mechanism: N/A
+  overhead_bottleneck: "Lack of true hardware preemption on GPUs (kernels cannot be preempted after submission), so isolation relies on heuristic duration/size throttling rather than guaranteed bounds."
+  primary_tradeoff: "Fine-grained operator-level collocation -> gains up to 7.3x aggregate throughput and 1.49x cost savings while keeping high-priority p99 latency within ~15% of dedicated execution, but costs no security isolation, no cache-interference modeling, and requires offline hardware-specific kernel profiling that does not generalize across GPU architectures."
+  quantitative_claims:
+  - "inference-inference collocation: up to 7.3x throughput improvement over dedicated execution, p99 latency within 15% of ideal on average (V100-16GB, Poisson arrivals)"
+  - "inference-training collocation: aggregate throughput up to 2.3x vs. high-priority job alone; cost savings 1.26-1.49x (V100)"
+  - "training-training collocation: high-priority throughput within 16% of ideal vs. 1.7x degradation for NVIDIA MPS"
+  - "multi-client generalization (5 clients, A100): p99 latency within 9% of ideal vs. 21% for REEF-N and 120% for MPS"
+  - "profiling/interception overhead: <1% on dedicated execution; Nsight Systems profiling adds ~5% iteration overhead"
+  why_useful_for_learning: "Shows the concrete mechanics and limits of software-only fine-grained GPU sharing (kernel-level scheduling, stream priorities, no preemption) that motivate hardware virtual-GPU abstractions like MIG/MPS."
+  priority: P1
+  related: []
+  relations:
+  - type: CONTRASTS_WITH
+    target: "NVIDIA MIG (hardware GPU partitioning)"
+    basis: "Orion achieves sharing purely in software at kernel granularity with no security isolation, the opposite trade-off point from hardware-partitioned MIG instances."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the author-hosted PDF (anakli.inf.ethz.ch), which matches the EuroSys 2024 accepted-papers/dblp title and author list exactly."
+
+- id: VIRT-EUROSYS24-04
+  title: "SmartNIC Security Isolation in the Cloud with S-NIC"
+  title_correction: null
+  authors: [Yang Zhou, Mark Wilkening, James Mickens, Minlan Yu]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://2024.eurosys.org/accepted-papers.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Title directly names a SmartNIC security-isolation mechanism (T3/T7), but the paper could not be retrieved through any accessible route, so classification is conservatively CONTEXT rather than the likely CORE/SUPPORT per hard rule 2."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T7]
+  physical_resource: NIC
+  logical_abstraction: UNKNOWN
+  problem: "Title implies multi-tenant SmartNIC deployments lack strong isolation between tenant offloaded functions; not verified by reading."
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If accessed, would likely explain SmartNIC/DPU multi-tenant isolation trade-offs directly relevant to device-virtualization CORE papers (e.g. VPRI, vSoC, BurstCBS in this batch)."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: "Access failure: ACM DL 403; Minlan Yu's Harvard homepage variants (minlanyu.seas.harvard.edu, eecs.harvard.edu/~minlanyu) returned 404s; James Mickens' Harvard page returned 404; web search tools blocked/exhausted. Logged in access_failures."
+
+- id: VIRT-EUROSYS24-05
+  title: "Pronghorn: Effective Checkpoint Orchestration for Serverless Hot-Starts"
+  title_correction: null
+  authors: [Sumer Kohli, Shreyas Kharbanda, Rodrigo Bruno, João Carreira, Pedro Fonseca]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3627703.3629584
+  official_url: https://2024.eurosys.org/accepted-papers.html
+  fullpaper_source: https://www.cs.purdue.edu/homes/pfonseca/papers/eurosys24-pronghorn.pdf
+  classification: SUPPORT
+  classification_note: "Pronghorn is a policy layer that decides when to checkpoint and which of several CRIU snapshots to restore for a serverless function; it reuses an existing checkpoint/restore engine rather than building a new virtualization boundary, matching the brief's SUPPORT category for checkpoint/restore mechanisms that make isolation/startup cheap."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T8]
+  physical_resource: DRAM
+  logical_abstraction: "A pool of CRIU process snapshots per serverless function, each representing a different degree of JIT warm-up, from which a new worker probabilistically restores the best available state instead of cold- or single-point-starting"
+  problem: "JIT-compiled language runtimes (Java, Python, JS) need hundreds to thousands of invocations to reach optimized code, but serverless platforms discard this state on eviction and existing checkpoint-restore schemes snapshot too early (after init or first invocation), wasting most of the achievable warm-up."
+  mechanism: "Pronghorn is checkpoint-engine-agnostic (built on CRIU): it samples checkpoint timing from a latency-weighted probability distribution over a request window, maintains a fixed-size pool of snapshots pruned to keep top performers plus a random exploration fraction, and has new workers pick a pool snapshot via softmax weighting on EWMA-tracked per-snapshot latency."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: "Process-level runtime state (compiled code, JIT profiling metadata, heap) captured via CRIU checkpoint/restore; state moves from a retiring worker's snapshot pool entry to a newly spawned container instance rather than between machines."
+  overhead_bottleneck: "Storage overhead during exploration (up to 12x baseline) and ~2x network bandwidth while the snapshot pool is still being explored, plus checkpoint/restore latency itself (60-105ms / 30-80ms)."
+  primary_tradeoff: "Automatic, request-driven checkpoint/restore-point selection -> gains 37.2% median latency improvement (up to 58%) over checkpoint-after-first-invocation, but costs exploration storage/bandwidth overhead and requires accurate worker-lifetime estimation to avoid premature or missed-window checkpointing."
+  quantitative_claims:
+  - "37.2% median latency improvement across 9 of 13 benchmarks vs. state-of-the-art checkpoint-after-1st-invocation (range 20-58%)"
+  - "improvement scales with eviction frequency: 37.2% at 1 request/worker, 22.5% at 4, 13.5% at 20"
+  - "checkpoint time 60-105ms, restore time 30-80ms, comparable to the state-of-the-art baseline"
+  - "outperforms alternatives in 6/9 Azure production-trace scenarios with varying function popularity"
+  why_useful_for_learning: "Concretely shows what a serverless snapshot pool's cost/benefit curve looks like (storage/bandwidth vs. cold-start latency), the same trade-off structure that motivates MicroVM-level snapshot work like Sabre."
+  priority: P2
+  related: [VIRT-OSDI24-01]
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-OSDI24-01
+    basis: "Both optimize serverless cold/hot start via snapshot management (Pronghorn: which/when to checkpoint a CRIU process snapshot; Sabre: how to compress/restore a Firecracker microVM snapshot faster) at different layers of the isolation stack (process checkpoint vs. VM snapshot)."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the author-hosted PDF from Pedro Fonseca's Purdue page; title/authors match the EuroSys 2024 accepted list exactly."
+
+- id: VIRT-EUROSYS24-06
+  title: "Characterization and Reclamation of Frozen Garbage in Managed FaaS Workloads"
+  title_correction: null
+  authors: [Ziming Zhao, Mingyu Wu, Haibo Chen, Binyu Zang]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://2024.eurosys.org/accepted-papers.html
+  fullpaper_source: https://ipads.sjtu.edu.cn/_media/publications/zhao-eurosys24.pdf
+  classification: SUPPORT
+  classification_note: "Desiccant reclaims memory inside frozen (paused) FaaS container instances by force-triggering managed-runtime GC and returning pages to the OS; this is a memory-reclamation mechanism that improves serverless instance-caching economics, matching the brief's SUPPORT category (serverless runtime isolation / memory reclamation), not a new virtualization boundary itself."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T2]
+  physical_resource: DRAM
+  logical_abstraction: "A frozen (Docker-paused) FaaS container instance whose dead-object memory is proactively reclaimed and returned to the host so more instances can be cached per host"
+  problem: "FaaS platforms pause idle instances to save CPU, but managed-runtime GC (HotSpot JVM, V8) never runs during the frozen state, so dead objects ('frozen garbage') accumulate, memory is not returned to the OS, and platforms are forced into more frequent instance eviction and cold boots."
+  mechanism: "Desiccant activates only above a dynamic memory-pressure threshold, profiles instances for reclamation throughput (memory freed per CPU-time), selects the highest-throughput candidates, and invokes runtime-specific interfaces to force GC, resize the heap, and mmap-return free pages to the OS, with only 69 LOC changes to HotSpot and 170 LOC to V8."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "Reclaimed host memory is returned to a shared pool from which more concurrently-cached (but frozen) FaaS instances can be retained, increasing effective instance density per host."
+  state_mechanism: N/A
+  overhead_bottleneck: "CPU cost of forced GC/reclamation cycles (measured 6.2% overhead) and post-reclamation execution slowdown (avg. 8.3%) when an instance resumes."
+  primary_tradeoff: "Proactive frozen-instance reclamation -> gains up to 6.72x peak memory reduction and up to 4.49x fewer cold boots on production traces, but costs a per-cycle CPU tax and a small resumed-execution slowdown, and only works for runtimes that expose GC/heap-resize hooks."
+  quantitative_claims:
+  - "peak memory reduction: up to 6.72x per function; average 2.78x (Java) / 1.93x (JavaScript) vs. no reclamation"
+  - "Azure production trace replay: cold-boot frequency reduced up to 4.49x, p99 latency improved up to 37.5%, throughput +17.4%"
+  - "reclamation CPU overhead: 6.2%; post-reclamation resumed-execution slowdown: avg. 8.3%"
+  - "AWS Lambda validation: 2.08x (Java) / 2.76x (JavaScript) memory-reduction improvement"
+  why_useful_for_learning: "Illustrates a concrete serverless memory-reclamation mechanism and its CPU/latency cost, directly relevant to explaining why serverless platforms trade instance density against per-invocation overhead."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the author-hosted PDF via SJTU IPADS publication listing; title/authors match the EuroSys 2024 accepted list exactly."
+
+- id: VIRT-EUROSYS24-07
+  title: "Serialization/Deserialization-free State Transfer in Serverless Workflows"
+  title_correction: null
+  authors: [Fangming Lu, Xingda Wei, Zhuobin Huang, Rong Chen, Mingyu Wu, Haibo Chen]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://2024.eurosys.org/accepted-papers.html
+  fullpaper_source: https://ipads.sjtu.edu.cn/_media/publications/lu-eurosys24.pdf
+  classification: SUPPORT
+  classification_note: "RMMAP adds new OS primitives (register_mem/rmap) that let one serverless function's memory be RDMA-mapped directly into another's address space across container boundaries, avoiding (de)serialization; this modifies the memory-sharing boundary between isolated serverless containers, which is SUPPORT-level (explains container/serverless isolation trade-offs) rather than a new virtualization abstraction in itself."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T5]
+  physical_resource: DRAM
+  logical_abstraction: "A remotely-mapped, copy-on-write virtual memory region that lets a consumer serverless function directly page-fault-read a producer function's object state over RDMA instead of receiving a serialized copy"
+  problem: "Serverless workflow steps pass state via message-passing or object storage, both requiring serialization/deserialization that the paper measures at 42-98% (messaging) and 17-97% (storage) of total transfer time; this cost cannot be amortized because most functions run under 20ms."
+  mechanism: "RMMAP co-designs RDMA networking, OS kernel (register_mem marks producer memory copy-on-write; rmap maps it into the consumer's address space with RDMA-backed page faulting, ~3.7us/4KB page), pre-planned non-overlapping virtual address ranges per workflow function, extended Python/Java runtimes with coarse-grained remote-object GC, and semantic-aware prefetching that batches an object's pages into one RDMA request."
+  isolation_mechanism: "Each function/container keeps its own address space; sharing is opt-in and scoped to the specific registered memory region rather than opening the whole address space, and the platform statically assigns disjoint virtual ranges to avoid producer/consumer address collisions."
+  multiplexing_mechanism: N/A
+  state_mechanism: "Producer-side state stays resident in the producer's (still-alive, cached) container; the consumer container maps it in and lazily pulls pages over RDMA on fault rather than the platform physically copying/moving the state."
+  overhead_bottleneck: "RPC/registration startup cost dominates for very small objects (<1KB payloads are 9.2x slower than messaging); cross-language workflows are unsupported due to incompatible object layouts."
+  primary_tradeoff: "Serialization-free RDMA memory mapping across serverless containers -> gains 14-97.8% lower workflow latency and 64.3-86.3% resource-utilization improvement, but costs extra copy-on-write memory pages, no encryption in current RDMA stacks, and no benefit (net overhead) for small/trivial objects."
+  quantitative_claims:
+  - "workflow execution latency reduced 14-97.8% across tested workflows; 24.6-68% specifically vs. optimized RDMA-KV storage"
+  - "microbenchmarks: 54.1-99.2% faster than messaging/storage baselines for various Python data types"
+  - "resource utilization under fixed load: 64.3-86.3% pod utilization vs. 100% for competitors"
+  - "small payloads (<1KB): 9.2x slower than messaging due to RPC/registration startup cost"
+  why_useful_for_learning: "Shows a concrete RDMA-based cross-container shared-memory primitive and where its copy-on-write/page-fault mechanism breaks down, useful background for VM/container memory-sharing and disaggregated-memory CORE papers."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Internal project name RMMAP; read the author-hosted PDF via SJTU IPADS publication listing, title/authors match the EuroSys 2024 accepted list exactly."
+
+- id: VIRT-EUROSYS24-08
+  title: "Just-In-Time Checkpointing: Low Cost Error Recovery from Deep Learning Training Failures"
+  title_correction: null
+  authors: [Tanmaey Gupta, Sanjeev Krishnan, Rituraj Kumar, "et al."]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3627703.3650085
+  official_url: https://2024.eurosys.org/accepted-papers.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "This is an in-memory, replay-based checkpointing scheme for distributed DNN training-job fault tolerance; it checkpoints application/job state (model weights, minibatch progress), not any virtualization- or container-boundary state, so it lands as CONTEXT (real-world use of checkpoint/restore ideas for a non-virtualization purpose) rather than SUPPORT."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T4]
+  physical_resource: GPU
+  logical_abstraction: "A DNN training job that can resume from the last minibatch boundary across many GPUs after a hardware/software failure, without a periodic full checkpoint"
+  problem: "Multi-week/-month DNN training jobs on many GPUs lose all progress on failure unless periodically checkpointed, but periodic checkpointing has an unclear optimal frequency and non-trivial overhead."
+  mechanism: "Replays a single minibatch iteration across all GPUs to reconstruct lost in-memory training state on failure, avoiding both frequent disk checkpoints and large recovery windows."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: "Training state (model/optimizer state) is reconstructed from the last consistent point via minibatch replay rather than restored from a serialized on-disk checkpoint image."
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: "Replay-based recovery -> reduces recovery cost from minutes to seconds per GPU with near-zero steady-state overhead, at the cost of application-level integration with the training loop rather than being a general-purpose mechanism."
+  quantitative_claims:
+  - "error-recovery cost reduced from several minutes to a few seconds per GPU (reported in abstract; not independently verified against full paper)"
+  why_useful_for_learning: "A contrasting point for VM/container checkpoint-restore mechanisms: shows an application-level, replay-based alternative to full state snapshotting for fast recovery."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, program-only]
+  confidence: MEDIUM
+  notes: "Only the Microsoft Research publication abstract page was retrieved (ACM DL 403'd on the DOI); full PDF not located within budget, so evaluation setup/limitations are UNKNOWN rather than fabricated."
+
+- id: VIRT-EUROSYS24-09
+  title: "Validating Database System Isolation Level Implementations with Version Certificate Recovery"
+  title_correction: null
+  authors: [Jack Clark, Alastair F. Donaldson, John Wickerson, Manuel Rigger]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://2024.eurosys.org/accepted-papers.html
+  fullpaper_source: UNKNOWN
+  classification: DROP
+  classification_note: "'Isolation level' here is the standard database transaction-isolation (ACID/snapshot-isolation) terminology being validated for DBMS correctness, with no relation to VM/container/hypervisor isolation or any virtualization mechanism; a clean keyword false positive on 'isolation'."
+  drop_reason: keyword_false_positive
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: N/A
+  problem: "Testing whether database systems correctly implement their advertised transaction isolation levels."
+  mechanism: N/A
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: N/A
+  primary_tradeoff: N/A
+  quantitative_claims: []
+  why_useful_for_learning: N/A
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: MEDIUM
+  notes: "Excluded at screening time on well-established domain knowledge (database ACID isolation-level testing) rather than a full read; flagged here for transparency rather than silently omitted."
+
+# ============================== OSDI 2024 ==============================
+
+- id: VIRT-OSDI24-01
+  title: "Sabre: Hardware-Accelerated Snapshot Compression for Serverless MicroVMs"
+  title_correction: null
+  authors: [Nikita Lazarev, Varun Gohil, James Tsai, Andy Anderson, Bhushan Chitlur, Zhiru Zhang, Christina Delimitrou]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/lazarev
+  fullpaper_source: https://www.usenix.org/system/files/osdi24-lazarev_1.pdf
+  classification: CORE
+  classification_note: "The paper's contribution is a hardware-accelerated compression mechanism integrated directly into the Firecracker microVM snapshot/restore path, i.e. it modifies the VM snapshot mechanism itself, not merely an application that consumes it -- squarely CORE T4 (VM snapshot/restore) with T8 as the deployment context."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T8, T1]
+  physical_resource: DRAM
+  logical_abstraction: "A compressed microVM memory snapshot file that restores guest-physical memory pages on demand using near-memory hardware (de)compression instead of software codecs"
+  problem: "Firecracker microVM snapshotting reduces serverless cold starts by restoring guest memory from a saved snapshot, but restoring large snapshots is I/O- and CPU-bound; software (de)compression to shrink snapshots is too CPU-expensive to use on the restore hot path."
+  mechanism: "Sabre integrates with Firecracker's snapshot/restore pipeline and offloads (de)compression to near-memory analytics accelerators present in modern datacenter CPUs, compressing guest-physical memory pages losslessly on snapshot and decompressing them inline on page-fault-driven restore."
+  isolation_mechanism: N/A (memory-content transform on top of existing Firecracker/KVM VM isolation boundary)
+  multiplexing_mechanism: N/A
+  state_mechanism: "Guest-physical memory state is serialized into a compressed snapshot file at pause time and lazily decompressed page-by-page (or bulk) into a restored microVM's guest-physical address space at resume time."
+  overhead_bottleneck: "Decompression latency on the restore critical path, which Sabre targets by using hardware accelerators to make it 'nearly negligible' compared to software decompression."
+  primary_tradeoff: "Hardware-accelerated snapshot compression -> gains up to 4.5x smaller snapshots and up to 55% faster memory restoration, at the cost of depending on specific near-memory accelerator hardware being present in the host CPU."
+  quantitative_claims:
+  - "snapshot compression ratio: up to 4.5x, with nearly negligible decompression cost (production Firecracker microVMs, diverse serverless applications)"
+  - "memory-restoration speedup: up to 55% versus uncompressed/software-compressed restore"
+  why_useful_for_learning: "A concrete example of how the VM live-migration/snapshot data-movement bottleneck (also central to Pronghorn and to classic live-migration work) is attacked with hardware offload rather than algorithmic change."
+  priority: P1
+  related: [VIRT-EUROSYS24-05]
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS24-05
+    basis: "Both target serverless cold/hot-start cost via snapshot mechanisms, one at the VM layer (Sabre/Firecracker) and one at the process/CRIU layer (Pronghorn)."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read via the USENIX open-access presentation page and PDF; abstract and headline numbers confirmed directly from the paper's own text."
+
+- id: VIRT-OSDI24-02
+  title: "Managing Memory Tiers with CXL in Virtualized Environments"
+  title_correction: null
+  authors: [Yuhong Zhong, Daniel S. Berger, Carl Waldspurger, Ryan Wee, Ishwar Agarwal, Rajat Agarwal, Frank Hady, Karthik Kumar, Mark D. Hill, Mosharaf Chowdhury, Asaf Cidon]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/technical-sessions
+  fullpaper_source: https://www.usenix.org/system/files/osdi24-zhong-yuhong.pdf
+  classification: CORE
+  classification_note: "The paper introduces Intel Flat Memory Mode (hardware-managed CXL tiering) plus Memstrata, a hypervisor-level multi-tenant memory allocator that uses page coloring to eliminate inter-VM local-DRAM contention -- an explicit, VM-granularity memory-virtualization mechanism, which is CORE T2 by definition."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T9]
+  physical_resource: DRAM
+  logical_abstraction: "A flat guest-physical address space transparently backed by a mix of local DRAM and CXL memory at 64B cache-line granularity, with per-VM page-colored local-DRAM allocation to bound cross-VM interference"
+  problem: "Cloud providers want CXL memory to expand capacity/cut cost, but CXL access is ~2x higher latency than local DRAM; software page-granularity tiering has high CPU overhead and lacks virtualization support, while naive hardware tiering lets VMs contend for the same local-memory cache lines, causing up to 480% tail-latency blowups for 'noisy neighbors'."
+  mechanism: "Intel Flat Memory Mode maps each 64B physical line to one of two locations (local DRAM or CXL) via a direct-mapped, modulo-based scheme inside the memory controller, promoting/demoting on miss; Memstrata layers page coloring on top so that pages mapping to the same local-memory 'line' are restricted to a single VM (eliminating inter-VM conflicts by construction), and uses a random-forest outlier detector (proxy metric: L3-miss latency of demand loads, r^2=0.87 with local-memory miss ratio) to dynamically migrate extra dedicated local-DRAM pages to VMs at risk of exceeding a 5% slowdown budget."
+  isolation_mechanism: "Page coloring at the hypervisor level guarantees a VM can only ever locally-memory-conflict with itself, closing an inter-VM performance side-channel that the paper explicitly identifies (noisy-neighbor local-memory contention causing up to 480% latency degradation without it)."
+  multiplexing_mechanism: "Host DRAM+CXL capacity is multiplexed across co-resident VMs at cache-line granularity by hardware, with the software allocator additionally partitioning which local-memory 'colors' (and thus lines) each VM may use, plus a 'mixed mode' that dedicates some local DRAM pages (exposed as a separate NUMA node) outside hardware tiering."
+  state_mechanism: "Tiering/placement state lives in the memory controller's cache-line mapping tables (hardware) and in the Memstrata allocator's per-VM color assignment and outlier classifier (software); dynamic reallocation migrates dedicated local pages between VMs at runtime, capped at 10% of a VM's allocation per 10s round."
+  overhead_bottleneck: "Cross-VM local-DRAM cache-line conflicts are the dominant source of tail slowdown (larger than LLC-partitioning interference), which is why page coloring rather than pure hardware tiering is needed."
+  primary_tradeoff: "Hardware cache-line tiering + software page-coloring isolation -> gains near-DRAM performance for the large majority of workloads (>=82% within 5% of full-DRAM) with <1% per-VM CPU overhead, but costs a fixed 1:1 local:CXL capacity ratio, single-socket/six-VM-scale validation only, and a hardcoded 5% slowdown threshold that needs retraining to change."
+  quantitative_claims:
+  - "single-VM: mixed mode with 33% dedicated local DRAM keeps 82% of 115 workloads within 5% slowdown, 95% within 10% (vs. 73%/86% for hardware tiering alone)"
+  - "six-VM multi-tenant: worst-case slowdown reduced from 35% to <6% with Memstrata; CPU overhead <=4% of a single core across all VMs (<1% per VM)"
+  - "noisy-neighbor experiment without page coloring: 73% of workloads see >10% slowdown from cross-VM local-memory conflicts; worst case (Redis p95) 480% slowdown"
+  - "vs. software tiering (TPP): TPP thrashes on 17% of workloads with >50% degradation under memory pressure"
+  - "outlier classifier: 88% validation accuracy (random forest on L3-miss-latency proxy)"
+  why_useful_for_learning: "A rare fully-quantified example of a hypervisor-mediated memory-virtualization mechanism (page coloring for inter-VM isolation) paired with a concrete hardware CXL-tiering substrate, directly explaining how memory virtualization and CXL disaggregation interact in production-style multi-tenant hosts."
+  priority: P0
+  related: [VIRT-OSDI24-06]
+  relations:
+  - type: LAYER_ABOVE
+    target: VIRT-OSDI24-06
+    basis: "Both concern tiered/CXL memory management; Nomad addresses OS-level page migration mechanics for a single host, while this paper adds the multi-tenant/VM isolation layer (page coloring) on top of a similar tiering substrate."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the full USENIX open-access PDF; internal system names are Intel Flat Memory Mode (hardware) and Memstrata (software allocator)."
+
+- id: VIRT-OSDI24-03
+  title: "Microkernel Goes General: Performance and Compatibility in the HongMeng Production Microkernel"
+  title_correction: null
+  authors: [Haibo Chen, Xie Miao, Ning Jia, Nan Wang, Yu Li, Nian Liu, "et al."]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/chen-haibo
+  fullpaper_source: https://www.usenix.org/system/files/osdi24-chen-haibo.pdf
+  classification: CORE
+  classification_note: "HongMeng is a production microkernel whose entire contribution is a new isolation-boundary architecture (differentiated isolation classes IC0/IC1/IC2, address-token access control, policy-free kernel paging) trading isolation strength for performance -- the brief explicitly lists microkernel/split-kernel isolation architecture as CORE under T5, independent of whether hardware VMs are involved."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T10]
+  physical_resource: CPU core
+  logical_abstraction: "OS services (drivers, filesystem, memory manager) as isolated-by-default components whose isolation strength (IC0 shared-kernel-space / IC1 mechanism-enforced kernel-space / IC2 full userspace) is chosen per-deployment rather than fixed, while still exposing a Linux-compatible API/ABI"
+  problem: "Classical microkernels are secure but too slow and Linux-incompatible for general-purpose devices (phones, vehicles, routers): rewriting 700+ Linux drivers would cost >5,000 person-years, IPC frequency is up to 70x higher on phones than routers, and capability-based access control adds hundreds of cycles per kernel-object access."
+  mechanism: "HongMeng offers three differentiated isolation classes so services can be placed at the isolation/performance point a deployment needs (IC0 verified core services share kernel space with function-call-speed IPC; IC1 uses hardware watchpoints/PKS and CFI for ~50% faster IPC than userspace; IC2 is ordinary userspace isolation for untrusted code like Linux drivers), supports flexible composition (co-locating or separating services, e.g. filesystem+memory-manager, to eliminate double page-cache bookkeeping), replaces capability-slot indirection with address-token-based access control (kernel objects mapped as pages directly into service address spaces, ~6 cycles vs. 526+ for capabilities), and does policy-free kernel paging (kernel handles page faults synchronously within memory-manager-communicated valid ranges, no IPC round-trip)."
+  isolation_mechanism: "Three-tier isolation classes (IC0/IC1/IC2) let the same OS trade off isolation strength against performance per service; IC1 specifically substitutes hardware-assisted intra-kernel-space isolation (ARM watchpoints / Intel PKS + CFI) for full address-space isolation."
+  multiplexing_mechanism: N/A (OS-service isolation architecture, not resource multiplexing across tenants)
+  state_mechanism: "Kernel object state is exposed to services as directly-mapped pages (address tokens) rather than hidden behind capability handles, letting services read/write shared state without repeated privilege transitions; a Linux driver container (LDC) reuses drivers without VM-style nested translation."
+  overhead_bottleneck: "IPC frequency and capability-indirection cost are the dominant traditional microkernel overheads that HongMeng's IC1/address-token mechanisms target directly."
+  primary_tradeoff: "Differentiated isolation + address-token access control -> gains 17% faster app startup, 32% faster context switches, and 72-75% lower anonymous-page-fault latency than Linux, but costs 2.5-4.8x slower fork() in microbenchmarks, no capability-chain revocation, and only semi-formal verification of critical components."
+  quantitative_claims:
+  - "app startup time: 17% faster than Linux (geometric mean, smartphone)"
+  - "context switching: 32% faster than Linux"
+  - "anonymous page-fault latency: 72-75% reduction vs. userspace paging (Raspberry Pi 4b)"
+  - "vehicle boot time: 60% reduction (1.5s to 0.6s); cross-domain IPC latency: 60% reduction (250us to 100us)"
+  - "router memory footprint: 30% reduction, 30% more concurrent client connections"
+  - "fork()/clone() microbenchmarks: 2.5-4.8x slower than Linux due to inter-service IPC"
+  why_useful_for_learning: "A production-scale counterpoint to hypervisor-based virtualization: shows how far pure OS-level isolation-architecture redesign (rather than hardware VM boundaries) can go, and exactly what it gives up (capability revocation, full formal verification, fork performance) to get there."
+  priority: P1
+  related: []
+  relations:
+  - type: CONTRASTS_WITH
+    target: "Type-1 hypervisor VM isolation (e.g. KVM/Xen)"
+    basis: "Paper explicitly contrasts its OS-service isolation classes and shared-memory co-management with the 'double memory management'/'double thread scheduling' overhead and nested-page-table costs that hypervisor-based VM isolation incurs."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the full USENIX open-access PDF; deployed at production scale (tens of millions of devices) per the paper's own claims."
+
+- id: VIRT-OSDI24-04
+  title: "VeriSMo: A Verified Security Module for Confidential VMs"
+  title_correction: null
+  authors: [Ziqiao Zhou, Anjali, Weiteng Chen, Sishuai Gong, Chris Hawblitzel, Weidong Cui]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/zhou
+  fullpaper_source: https://www.usenix.org/system/files/osdi24-zhou.pdf
+  classification: CORE
+  classification_note: "VeriSMo is a formally-verified privileged security module running inside an AMD SEV-SNP confidential VM, proving VM confidentiality/integrity/information-flow properties against an untrusted hypervisor -- this is virtualization/isolation itself as the contribution, textbook CORE T7."
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T1]
+  physical_resource: DRAM
+  logical_abstraction: "A confidential VM whose in-guest privileged security module (running at VMPL0) is formally proven to preserve memory confidentiality/integrity and correct address translation even though the hypervisor at a lower trust level can interrupt it and modify hardware state at arbitrary times"
+  problem: "Confidential-VM architectures (AMD SEV-SNP, Intel TDX, Arm CCA) remove the hypervisor from the guest's trust boundary but require an in-guest privileged security module to replace hypervisor-provided services; Rust implementations still contain unsafe blocks, and formally verifying such a module is hard because an untrusted hypervisor can interrupt execution and tamper with hardware state at any point, breaking standard sequential verification techniques."
+  mechanism: "VeriSMo splits verification into a machine-model layer (an abstract hardware model of registers/memory/page tables/RMP whose state transitions are proven to preserve VM confidentiality, VMPL isolation, and correct address translation even under adversarial hypervisor interference) and an implementation layer (Rust ownership + Verus permission tracking to handle VeriSMo's own multi-CPU concurrency), verified with the Verus tool atop Rust and a 90-LOC-trusted verified HACL crypto library."
+  isolation_mechanism: "Runs at the highest VM privilege level (VMPL0) versus the guest OS at VMPL3, using the hardware Reverse Map Table (RMP) to enforce per-VMPL memory access permissions across three memory classes (VMPL0-private, VMPL3-private, hypervisor-shared), and a restricted-interrupt mode that limits the untrusted hypervisor to controlled #HV notifications rather than arbitrary interrupt injection."
+  multiplexing_mechanism: N/A
+  state_mechanism: "Confidential-VM security state (page ownership/validation, measurement, secrets) is tracked and enforced entirely within the verified module; the untrusted hypervisor is modeled as able to modify hardware state at any time, and the proofs must hold regardless."
+  overhead_bottleneck: "None significant in the reported measurements; the paper reports near-zero UnixBench overhead versus baseline Linux."
+  primary_tradeoff: "Full formal verification of the confidential-VM security module -> gains proven confidentiality/integrity/information-flow properties and only 32 unsafe Rust blocks (vs. 150-235 in AMD/COCONUT SVSM), at the cost of ~2x proof/spec code relative to executable code and 6 minutes of Verus/Z3 verification time on a 32-core machine, plus a narrower modeled scope (no #VC exceptions, no side-channel or physical-attack modeling)."
+  quantitative_claims:
+  - "TCB: 32 unsafe Rust blocks (mostly 31 LOC total) vs. 150-235 unsafe blocks in AMD/COCONUT SVSM"
+  - "implementation size: ~10,000 lines executable code, with proof+spec code roughly double that"
+  - "verification time: ~6 minutes on a 32-core machine using Verus with the Z3 solver"
+  - "performance: context switch 34 cycles, ExtendPCR 37 cycles, SetPagePrivate 82 cycles, LockKernel (8GB) 1.52s; UnixBench overhead near-zero vs. baseline Linux, vs. 40% slowdown for Hecate"
+  - "verification caught a subtle page-state-transition security requirement overlooked by AMD SVSM"
+  why_useful_for_learning: "The clearest example in this batch of what 'confidential VM' actually requires at the verification level (hypervisor-adversarial two-layer proof structure), foundational background for any SEV-SNP/TDX/CCA CORE paper."
+  priority: P0
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the full USENIX open-access PDF."
+
+- id: VIRT-OSDI24-05
+  title: "Burstable Cloud Block Storage with Data Processing Units"
+  title_correction: null
+  authors: [Junyi Shu, Kun Qian, Ennan Zhai, Xuanzhe Liu, Xin Jin]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/shu
+  fullpaper_source: https://www.usenix.org/system/files/osdi24-shu.pdf
+  classification: SUPPORT
+  classification_note: "BurstCBS is an I/O scheduler and cost estimator running on the DPU storage agent that connects VMs to backend cloud block storage; it manages tenant interference/QoS at an existing device-virtualization boundary rather than proposing the virtual-disk abstraction itself, so it is SUPPORT (T3/T9) rather than CORE, per the brief's device-virtualization vs. scheduling-over-a-device distinction."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T9]
+  physical_resource: NVMe
+  logical_abstraction: "A per-VM burstable block-storage volume whose base-level IOPS/bandwidth SLO is protected even while other co-located VMs' volumes burst, mediated by a DPU-resident storage agent"
+  problem: "Alibaba Cloud's burstable block-storage product (up to 1M IOPS / 4GB/s bursts) shifts the bottleneck from an under-utilized, well-balanced storage backend to the DPU storage agent (SA) on the compute node, where static per-vCPU thread mappings let bursting tenants congest shared SA resources and violate other tenants' base-level SLOs."
+  mechanism: "BurstCBS combines (1) FPGA-based queue scaling that maps one ingress queue to many egress queues for near-perfect load balancing across SA control threads without inter-thread messaging, (2) a burstable I/O scheduler (BIOS) that reserves base-level allocation with power-of-two-choices reclamation from bursting tenants and weighted-round-robin harvesting of idle base-level capacity for bursts, and (3) a vectorized I/O cost estimator (4-D: CPU time, ingress BW, egress BW, rate-limiter consumption) with delay-based cost adjustment, replacing a scalar cost model."
+  isolation_mechanism: "Per-tenant resource-allocation limits enforced by BIOS bound how much of the shared DPU control-thread capacity a bursting tenant can take, with a small reserved pool guaranteeing fast recovery when an idle base-level tenant suddenly resumes I/O."
+  multiplexing_mechanism: "DPU control-thread and queue capacity is time-multiplexed across VMs' block-storage I/O requests via the vectorized-cost-aware, weighted-round-robin BIOS scheduler, run independently per control thread in linear time in the number of tenants."
+  state_mechanism: N/A
+  overhead_bottleneck: "Wimpy DPU-core compute budget: the scheduler must run in linear time per tenant (<100us for 1024 VMs) to avoid becoming the bottleneck it is trying to remove."
+  primary_tradeoff: "Vectorized, hardware-assisted per-tenant I/O scheduling on the DPU -> gains up to 85% base-level latency reduction and 5x throughput for congested base-level tenants (up to 83% query-latency reduction on real RDS workloads), at the cost of only 5-8% lost aggregate burst throughput from the reserved recovery pool, and tight coupling to Alibaba's xDPU FPGA datapath that may not generalize to other DPU vendors."
+  quantitative_claims:
+  - "base-level tenant latency reduction vs. WildCBS (production baseline): 68-85% (BPS-intensive burst background), 40-66% (IOPS-intensive burst background)"
+  - "base-level throughput: WildCBS fails 7 of 8 test cases (as low as 4k IOPS) vs. BurstCBS consistently hitting the 20k IOPS provisioned target"
+  - "burst utilization loss vs. WildCBS: only 5-8%, due to a 5% reserved resource pool"
+  - "database workloads: ~60% latency reduction (MySQL/RocksDB writes); YCSB/RocksDB throughput 1.7-2.5x vs. BaseCBS; real RDS trace up to 83% query-latency reduction"
+  - "scheduler scalability: <100us for 1024 VMs, <5us with idle-VM optimization"
+  why_useful_for_learning: "A production, quantified example of QoS/interference management at the DPU storage-virtualization layer connecting VMs to backend storage, directly relevant to understanding multi-tenant device-virtualization trade-offs alongside VPRI and vSoC."
+  priority: P2
+  related: [VIRT-SOSP24-02]
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-SOSP24-02
+    basis: "Both are Alibaba/production-scale device-virtualization papers addressing per-tenant resource control at a DPU/IOMMU-mediated I/O boundary for passthrough-style VM storage/NIC access."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the full USENIX open-access PDF; internal system name BurstCBS."
+
+- id: VIRT-OSDI24-06
+  title: "Nomad: Non-Exclusive Memory Tiering via Transactional Page Migration"
+  title_correction: null
+  authors: [Lingfeng Xiang, Zhen Lin, Weishu Deng, Hui Lu, Jia Rao, Yifan Yuan, Ren Wang]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/xiang
+  fullpaper_source: https://www.usenix.org/system/files/osdi24-xiang.pdf
+  classification: SUPPORT
+  classification_note: "Nomad is a general Linux OS mechanism for tiered (CXL/persistent/storage-class) memory page migration; it is not itself a virtual-resource abstraction for guests/tenants, but it is the kind of host-level tiering primitive that CORE VM-memory-tiering papers (e.g. Managing Memory Tiers with CXL) build on, matching the brief's default SUPPORT classification for disaggregated/tiered-memory mechanisms."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: DRAM
+  logical_abstraction: "A page that can transiently exist in both fast and slow memory tiers during migration (non-exclusive), removing migration from the application's critical path"
+  problem: "Exclusive memory tiering (a page lives in exactly one tier) is the de facto Linux approach (e.g. transparent page placement, TPP), but the paper shows this degrades performance sharply once fast-memory capacity is constrained, because synchronous exclusive migration sits on the execution critical path."
+  mechanism: "NOMAD introduces transactional page migration and page shadowing so a page's old and new copies can coexist briefly, letting migration proceed asynchronously off the critical path while consistency is maintained transactionally."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "Host-wide fast/slow memory capacity is time-multiplexed across pages via asynchronous migration rather than a synchronous, one-tier-at-a-time exclusive model."
+  state_mechanism: "Page state briefly duplicated across tiers during a migration transaction (page shadowing) rather than atomically moved, then reconciled."
+  overhead_bottleneck: "Synchronous critical-path migration stalls under memory pressure in the exclusive-tiering baseline (TPP); Nomad's async design targets exactly this stall."
+  primary_tradeoff: "Non-exclusive (transactional) tiering -> gains up to 6x performance over TPP under memory pressure, at the cost of transient duplicate-copy memory overhead during in-flight migrations."
+  quantitative_claims:
+  - "up to 6x performance improvement over transparent page placement (TPP) in Linux under memory pressure"
+  why_useful_for_learning: "Explains the OS page-migration mechanics that underlie hypervisor-level CXL/tiered-memory virtualization papers in this batch."
+  priority: P2
+  related: [VIRT-OSDI24-02]
+  relations:
+  - type: LAYER_BELOW
+    target: VIRT-OSDI24-02
+    basis: "Nomad's transactional page migration is a host-OS-level tiering mechanism of the same kind that a hypervisor-level, multi-tenant tiering system (Managing Memory Tiers with CXL) would need to build on or extend for a VM setting."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Classified from the USENIX presentation-page abstract only; full PDF not read within this batch's time budget, so design/eval details beyond the abstract are not claimed."
+
+- id: VIRT-OSDI24-07
+  title: "A Tale of Two Paths: Toward a Hybrid Data Plane for Efficient Far-Memory Applications"
+  title_correction: null
+  authors: [Lei Chen, Shi Liu, Chenxi Wang, Haoran Ma, Yifan Qiao, "et al."]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/chen-lei
+  fullpaper_source: https://www.usenix.org/system/files/osdi24-chen-lei.pdf
+  classification: SUPPORT
+  classification_note: "Atlas (this paper's internal name) is an application-facing far-memory data plane combining page-granularity and object-granularity remote-memory access; it is disaggregated-memory infrastructure, not a virtual-resource abstraction handed to a guest/tenant, matching the brief's default SUPPORT treatment of far-memory/disaggregation work."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T10]
+  physical_resource: DRAM
+  logical_abstraction: "A single far-memory access path that dynamically behaves like page-granularity paging for applications with good locality and like object-granularity fetching for applications without it"
+  problem: "Far-memory systems use either kernel paging (transparent, page-granularity, but resource-cheap) or object-level fetching (fine-grained, better for poor locality, but compute-expensive for LRU/eviction); neither dominates across real workloads."
+  mechanism: "Atlas is a runtime-kernel co-design that continuously profiles page locality; workloads with good locality use paging, while those without use object fetching, which relocates temporally-close objects into contiguous local space so execution becomes progressively more amenable to (cheaper) paging over time."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "Compute/network resources for remote-memory access are allocated dynamically between the paging and object-fetching data paths based on measured locality, rather than a static per-application choice."
+  state_mechanism: "Application memory state may live in local memory, be paged in/out via the kernel path, or be object-fetched and relocated into contiguous local space by the object path, with the profiler steering which mechanism is used over time."
+  overhead_bottleneck: "Object-level LRU/eviction bookkeeping compute cost is the paper's identified downside of the pure object-fetching approach that motivates hybridizing with paging."
+  primary_tradeoff: "Hybrid page/object data plane -> gains 1.5-3.2x throughput and one-to-two-orders-of-magnitude lower tail latency over the best single-approach baselines (AIFM, Fastswap), at the cost of runtime-kernel co-design complexity and continuous locality profiling overhead."
+  quantitative_claims:
+  - "throughput improvement: e.g. 1.5x and 3.2x over AIFM and Fastswap respectively (workload-dependent)"
+  - "tail latency reduction: one to two orders of magnitude versus AIFM/Fastswap"
+  why_useful_for_learning: "A clear articulation of the page-vs-object trade-off in far-memory/disaggregated-memory systems, background for CXL-based VM-memory CORE papers."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Classified from the USENIX presentation-page abstract only; the paper's internal system name is Atlas (distinct from the unrelated EuroSys 2024 paper also titled 'Atlas: Hybrid Cloud Migration Advisor for Interactive Microservices' -- a naming collision to flag for the orchestrator)."
+
+- id: VIRT-OSDI24-08
+  title: "ServerlessLLM: Low-Latency Serverless Inference for Large Language Models"
+  title_correction: null
+  authors: [Yao Fu, Leyang Xue, Yeqi Huang, Andrei-Octavian Brabete, Dmitrii Ustiugov, Yuvraj Patel, Luo Mai]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/fu
+  fullpaper_source: UNKNOWN
+  classification: SUPPORT
+  classification_note: "The paper's own stated contributions include an efficient live-migration mechanism for LLM checkpoints/execution across GPU servers and optimized multi-tier checkpoint loading -- state-migration and checkpoint mechanisms are SUPPORT-level per the brief, even though the object being migrated (LLM weights) is application state rather than VM/container state."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T4]
+  physical_resource: GPU
+  logical_abstraction: "A serverless LLM-inference instance whose model checkpoint can be loaded from a multi-tier local store or live-migrated between GPU servers for locality-aware scheduling"
+  problem: "Generic serverless platforms are not designed for LLM inference's large model checkpoints and GPU-locality requirements, causing high cold-start latency when relying on standard storage/network paths."
+  mechanism: "ServerlessLLM introduces a new checkpoint format and multi-tier (GPU/host-memory/local-storage) loading pipeline, an efficient live-migration mechanism for relocating in-progress inference execution/state, and a scheduler that prioritizes checkpoint locality when placing requests."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: "Model checkpoint state is cached across a multi-tier local hierarchy per GPU server and can be live-migrated to another server to follow scheduling decisions, analogous in structure to VM live migration but for model weights rather than full VM memory."
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: "Multi-tier checkpoint loading + live migration -> gains 10-200x latency improvement over existing serverless systems across various LLM inference scenarios (per abstract), at the cost of GPU-server-local storage capacity for cached checkpoints; full cost/limitation detail not verified beyond the abstract."
+  quantitative_claims:
+  - "10-200x performance improvement over existing serverless systems across various LLM inference scenarios (as stated in the paper's abstract; not independently re-derived from full-paper figures)"
+  why_useful_for_learning: "A modern example of applying VM-style live-migration and snapshot-loading concepts to a non-VM resource (LLM model state), useful for contrasting mechanism reuse across virtualization boundaries."
+  priority: P2
+  related: [VIRT-OSDI24-01]
+  relations:
+  - type: USES_MECHANISM_FROM
+    target: VIRT-OSDI24-01
+    basis: "Both apply snapshot/checkpoint-loading and migration ideas from the VM/serverless world to speed up cold starts, one for Firecracker microVMs (Sabre) and one for LLM model checkpoints (ServerlessLLM)."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Classified from the USENIX presentation-page abstract only; full PDF not fetched within this batch's time budget."
+
+- id: VIRT-OSDI24-09
+  title: "High-throughput and Flexible Host Networking for Accelerated Computing"
+  title_correction: null
+  authors: [Athinagoras Skiadopoulos, Zhiqiang Xie, Mark Zhao, Qizhe Cai, Saksham Agarwal, "et al."]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/skiadopoulos
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "ZeroNIC (this paper's internal name) redesigns the host network data/control-plane split for high-throughput accelerator (GPU/FPGA) traffic; it is host-networking infrastructure that accelerated/virtualized workloads use, but the abstract gives no explicit multi-tenant sharing, SR-IOV-style device virtualization, or vSwitch/vNIC abstraction, so it lands as CONTEXT (real infrastructure enabling accelerated/cloud workloads) rather than SUPPORT/CORE."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: []
+  physical_resource: NIC
+  logical_abstraction: "A zero-copy network data path usable transparently regardless of where the application/accelerator (CPU, GPU, FPGA) is placed, decoupled from a flexible, customizable control-plane protocol stack"
+  problem: "Existing host network stacks force a trade-off between raw throughput matching modern NIC bandwidth and flexibility to select/customize network protocols for applications like GPU-accelerated AI."
+  mechanism: "ZeroNIC separates the data path from the control path via co-designed NIC hardware and software, giving a high-performance zero-copy data path independent of application placement while allowing flexible protocol logic to run in software."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: "CPU cost of maintaining robust transport-protocol semantics (e.g. TCP-like reliability) at high line rates without hardware offload of the full protocol."
+  primary_tradeoff: "Zero-copy data path decoupled from a flexible control path -> gains RDMA-like throughput while keeping TCP-like protocol robustness (single TCP flow saturating 100Gbps using only 17% of one CPU core), at a cost not fully detailed in the abstract alone."
+  quantitative_claims:
+  - "single TCP flow saturates a 100Gbps link using only 17% of one CPU core"
+  - "NCCL throughput improved 2.66x and Redis throughput improved 3.71x versus standard Linux TCP"
+  why_useful_for_learning: "Background on host-networking data/control-plane separation, relevant to understanding SR-IOV/vSwitch/DPU device-virtualization designs elsewhere in this batch even though this paper itself is not framed as multi-tenant virtualization."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Classified from the USENIX presentation-page abstract only; internal system name ZeroNIC."
+
+- id: VIRT-OSDI24-10
+  title: "Optimizing Resource Allocation in Hyperscale Datacenters: Scalability, Usability, and Experiences"
+  title_correction: null
+  authors: [Neeraj Kumar, Pol Mauri Ruiz, Vijay Menon, Igor Kabiljo, "et al."]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/kumar
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Rebalancer (this paper's internal name) is a generic optimization-framework (expression graphs + high-level specification language) applied across many unrelated resource-allocation problems (hardware placement, ML training/inference placement, traffic routing, database/container migration, serverless-function grouping); it is a scheduling/optimization tool that happens to be applied to virtualized resources among many other things, the textbook CONTEXT case per the brief."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: "An expression-graph-based optimization abstraction letting practitioners specify large-scale NP-hard allocation policies (including, among others, container/VM migration for load balancing) in a high-level language"
+  problem: "Meta's private cloud needs to solve many NP-hard resource-allocation problems at hyperscale, but practitioners struggle to translate real-world policies into mathematical formulations, and commercial solvers do not scale to the problem sizes involved."
+  mechanism: "Rebalancer provides a high-level specification language that compiles to an expression graph, which an optimization algorithm executes more efficiently than prior approaches; it has been deployed across dozens of large-scale use cases over seven years."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: N/A
+  primary_tradeoff: N/A
+  quantitative_claims: []
+  why_useful_for_learning: "Illustrates that container/VM migration is treated as just one instance among many generic optimization use-cases at hyperscale, useful context for how real infrastructure operationalizes migration decisions."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Classified from the USENIX presentation-page abstract only; internal system name Rebalancer."
+
+- id: VIRT-OSDI24-11
+  title: "ACCL+: an FPGA-Based Collective Engine for Distributed Applications"
+  title_correction: null
+  authors: [Zhenhao He, Dario Korolija, Yu Zhu, Benjamin Ramhorst, Tristan Laan, Lucian Petrica, Michaela Blott, Gustavo Alonso]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/he
+  fullpaper_source: UNKNOWN
+  classification: DROP
+  classification_note: "ACCL+ is an open-source FPGA-based collective-communication library (an MPI-like collective engine for FPGA clusters), not an FPGA virtualization or sharing mechanism -- a keyword false positive on 'FPGA'."
+  drop_reason: keyword_false_positive
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: FPGA
+  logical_abstraction: N/A
+  problem: "Distributed applications using FPGAs as SmartNICs/accelerators lack an easy way to perform collective communication operations (as in MPI) directly between FPGAs."
+  mechanism: "A user-extensible, open-source collective-communication library supporting UDP/TCP/RDMA and direct FPGA-to-FPGA communication, usable as a CPU-application collective-offload engine too."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: N/A
+  primary_tradeoff: N/A
+  quantitative_claims: []
+  why_useful_for_learning: N/A
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: HIGH
+  notes: "Abstract read via the USENIX presentation page; confirms the paper is a communication library, not an FPGA virtualization/sharing mechanism."
+
+- id: VIRT-OSDI24-12
+  title: "Beaver: Practical Partial Snapshots for Distributed Cloud Services"
+  title_correction: null
+  authors: [Liangcheng Yu, Xiao Zhang, Haoran Zhang, John Sonchack, Dan Ports, Vincent Liu]
+  venue: OSDI
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi24/presentation/yu
+  fullpaper_source: UNKNOWN
+  classification: DROP
+  classification_note: "Beaver's 'snapshot' is a Chandy-Lamport-style distributed causally-consistent state snapshot across microservice processes, not a VM/container memory snapshot -- a keyword false positive on 'snapshot'."
+  drop_reason: keyword_false_positive
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: N/A
+  problem: "Classic distributed-snapshot protocols require instrumenting and coordinating every process in an isolated universe, which does not match real cloud services that interact with the external world and cannot all be instrumented."
+  mechanism: "Exploits the placement and communication pattern of software load balancers in public clouds to take a causally-consistent partial snapshot without blocking or instrumenting every process."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: N/A
+  primary_tradeoff: N/A
+  quantitative_claims: []
+  why_useful_for_learning: N/A
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: HIGH
+  notes: "Abstract read via the USENIX presentation page; confirms a distributed-systems causal-consistency snapshot, not a VM/container snapshot."
+
+# ============================== SOSP 2024 ==============================
+
+- id: VIRT-SOSP24-01
+  title: "vSoC: Efficient Virtual System-on-Chip on Heterogeneous Hardware"
+  title_correction: null
+  authors: [Jiaxing Qiu, Zijie Zhou, Yang Li, Zhenhua Li, Feng Qian, Hao Lin, Di Gao, Haitao Su, Xin Miao, Yunhao Liu, Tianyin Xu]
+  venue: SOSP
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://sigops.org/s/conferences/sosp/2024/accepted.html
+  fullpaper_source: https://tianyin.github.io/pub/vsoc.pdf
+  classification: CORE
+  classification_note: "vSoC virtualizes a mobile System-on-Chip's set of heterogeneous devices as a unified shared-virtual-memory framework atop QEMU/virtio paravirtualization -- an explicit new device/machine-virtualization abstraction and mechanism, the definition of CORE T3/T1."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T1, T6]
+  physical_resource: UNKNOWN
+  logical_abstraction: "A virtual mobile SoC exposing paravirtualized virtual devices (GPU, camera, video codec, etc.) that share data through IDs into a host-side unified shared-virtual-memory (SVM) space instead of copying across the virtualization boundary per device"
+  problem: "Mobile emulators run emerging high-throughput multi-device apps (UHD video, AR/VR) poorly because mobile SoCs are unified-memory architectures (all devices share one physical memory) while PC/server virtualization hardware is modular (isolated devices with dedicated memory over a bus), forcing emulators into inefficient shared-virtual-memory architectures with frequent guest-host data copies and coherence-maintenance bottlenecks."
+  mechanism: "vSoC's SVM Manager assigns 64-bit IDs to shared-memory regions and keeps host-side metadata so virtual devices reference regions by ID instead of copying; a 'twin hypergraph' structure tracks data-flow dependencies between virtual and physical devices; an adaptive prefetch engine predicts the next SVM access from historical data flows and fetches during OS-level 'slack intervals' (avg. 17ms), falling back to guest-driver blocking when slack is insufficient; a virtual command fence mechanism (host/guest fence tables shared via MMIO) enforces cross-device operation ordering without frequent guest-host synchronization."
+  isolation_mechanism: "None against adversarial guests: the design assumes cooperative virtual devices and system services and explicitly does not address a malicious-guest threat model -- guest drivers retain locks for guest-side protection and host-side fences enforce physical-device ordering, but there is no security isolation boundary between virtual devices."
+  multiplexing_mechanism: "Multiple virtual devices multiplex a unified physical memory region via ID-based reference rather than per-device copies, with the MIMD flow-control algorithm (from prior work Trinity) pacing guest-host command-queue throughput."
+  state_mechanism: "SVM region metadata and resource handles live in a host-side hashtable; virtual/physical fence tables track cross-device ordering state, mirrored between host and guest kernel via MMIO."
+  overhead_bottleneck: "Coherence-maintenance latency for cross-device shared virtual memory is the dominant bottleneck the paper targets, historically causing frame drops/latency spikes in prior emulators."
+  primary_tradeoff: "Unified SVM virtualization + prefetch/fence coherence -> gains 12-49% higher frame rates on popular apps and 1.8-9.0x frame rates with 35-62% lower motion-to-photon latency on emerging multi-device apps versus state-of-the-art emulators, at the cost of no adversarial-guest isolation, ARM-host unsupported, and 26% of measured cases where predicted slack intervals are insufficient (forcing guest-side blocking)."
+  quantitative_claims:
+  - "emerging apps (high-end host): ~57 FPS (vSoC) vs. 31 (Google Android Emulator), 19 (QEMU-KVM), 9 (LDPlayer/Bluestacks), 7 (Trinity)"
+  - "motion-to-photon latency: 35-62% lower than competitors on camera/AR/livestream apps"
+  - "SVM coherence maintenance: 68% faster than GAE, 62% faster than QEMU-KVM; throughput 163% higher than GAE, 264% higher than QEMU-KVM"
+  - "popular (top-25 Play Store) apps: 12-49% higher FPS than competitors"
+  - "ablations: disabling prefetch cuts FPS by 30% (66% for video); disabling fences cuts FPS by 11%"
+  - "user study: 83% of 90 developers perceived smoother performance, 91% perceived lower latency"
+  why_useful_for_learning: "A concrete, fully-quantified example of unified-memory device virtualization (vs. the modular per-device virtualization assumed by most PC/server virtualization work), directly illuminating the guest-host coherence trade-off central to any paravirtualized I/O design."
+  priority: P0
+  related: [VIRT-OSDI24-05, VIRT-SOSP24-02]
+  relations:
+  - type: CONTRASTS_WITH
+    target: "Modular per-device virtio/SR-IOV device virtualization"
+    basis: "vSoC explicitly breaks from the modular isolated-virtual-device architecture used on PC/server hardware because mobile SoCs are unified-memory, requiring a fundamentally different (shared-virtual-memory) device-virtualization design."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the author-hosted PDF from Tianyin Xu's UIUC page; title/authors match the SOSP 2024 dblp listing exactly."
+
+- id: VIRT-SOSP24-02
+  title: "VPRI: Efficient I/O Page Fault Handling via Software-Hardware Co-Design for IaaS Clouds"
+  title_correction: 'sigops.org accepted-papers list gave: "VPRI: Optimized I/O Page Fault in Public IaaS"; official/dblp title used here is more complete.'
+  authors: [Kaijie Guo, Dingji Li, Ben Luo, Yibin Shen, Kaihuan Peng, Ning Luo, "et al.", Xiantao Zhang, Zeyu Mi]
+  venue: SOSP
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://sigops.org/s/conferences/sosp/2024/accepted.html
+  fullpaper_source: https://ipads.sjtu.edu.cn/_media/publications/li-sosp24.pdf
+  classification: CORE
+  classification_note: "VPRI is a new I/O-page-fault (IOPF) mechanism enabling on-demand paging for passthrough devices in production IaaS, directly attacking static-pinning memory waste from device passthrough -- a core I/O/memory-virtualization mechanism, CORE T3/T2."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T2]
+  physical_resource: DRAM
+  logical_abstraction: "VM memory backing a passthrough NIC/block device that can be safely paged out and faulted back in on demand, instead of being permanently pinned for the VM's lifetime"
+  problem: "Device passthrough requires statically pinning all VM memory to avoid I/O page faults, wasting up to 50% of DRAM in production (45% of pages cold within 2 minutes, 30% of servers >50% cold daily); the standard hardware fix (IOMMU ATS+PRI) needs features unsupported by >90% of production CPUs and imposes IOPF delivery latencies up to 3 orders of magnitude longer than CPU page faults, with a single 5ms IOPF triggering ~300ms of NIC network interruption."
+  mechanism: "VPRI decouples pre-DMA page-presence checking from full address translation using a PA-BITMAP (2 bits/4KB page: present + R/W) that the I/O engine checks via a single ~50-100ns local DRAM access before DMA, avoiding any IOMMU ATS dependency; a dedicated DPU PCI function exposes a shared page-fault queue (PFQ) as a sideband IOPF-reporting path instead of relying on IOMMU PRI; an Adaptive DMA Protector (ADP) uses a device-type-aware dual-LRU policy (separate active/inactive blocks, tuned per NIC vs. block-device access patterns) to cut IOPF frequency by selectively pinning far fewer pages than naive per-device LRU; vCPU-affined IOPF scheduling runs each VM's fault handling only on that VM's own physical cores for both scalability and tenant isolation."
+  isolation_mechanism: "vCPU-affined IOPF scheduling confines a tenant's fault-handling work to its own allocated physical cores, preventing one VM's fault storm from starving another's IOPF service (measured: serialized scheduling gives 10.4x higher latency at 16 VMs vs. VPRI's stable ~5000us); per-device protection domains keep separate LRU sets per device so a high-footprint block device cannot evict a low-footprint NIC's pinned pages."
+  multiplexing_mechanism: "Physical DRAM is time-multiplexed across a VM's passthrough devices via per-device demand paging instead of static full pinning, with the ADP dual-LRU policy deciding how much of each device's footprint stays pinned versus pageable."
+  state_mechanism: "PA-BITMAP entries mirror IOPT mapping state and are invalidated by the hypervisor before any IOPT unmap so a device can never DMA into reclaimed memory; a virtio-ring-based IO Page Access Logging (IO-PAL) channel provides lossy, hardware-assisted DMA access tracking to guide (not enforce) reclamation decisions."
+  overhead_bottleneck: "IOPF delivery/handling latency (tens to hundreds of microseconds, vs. CPU page faults) and, for block devices specifically, weak temporal locality (>83% of pages accessed <10 times in 30 minutes) limiting how much IOPF reduction pinning-based heuristics can achieve."
+  primary_tradeoff: "Sideband, ATS-independent IOPF + adaptive pinning -> gains >99% average IOPF reduction and up to 15% DRAM cost savings on 5000 production Alibaba Cloud VMs with 10-15% memory overcommit, at the cost of much weaker gains on block devices (36-49% IOPF reduction vs. 95-97% for NICs) and no support yet for nested vIOMMU / multi-level virtualization scenarios."
+  quantitative_claims:
+  - "production (5000 VMs, 10-15% overcommit): NIC IOPF reduced >99% on average (38/day baseline to 0.28/day); block-device IOPF reduced 51% on average (66/day to 32/day); up to 15% DRAM cost savings"
+  - "ADP vs. simple per-device LRU: 6.28x better resident-page ratio on NICs, 10.56x better on block devices, at 4.3% average pinned memory"
+  - "vCPU-affined scheduling: stable ~5000us IOPF latency across 1-16 VMs at up to 10 IOPFs/sec, vs. 10.4x latency increase for serialized scheduling"
+  - "PA-BITMAP: 50-100ns lookup, ~2us update, <0.1% baseline I/O throughput impact across 50-200Gbps devices"
+  - "unmitigated IOPF impact: a single 5ms IOPF causes ~300ms NIC network interruption; 10 IOPFs/sec burst causes 70% instantaneous throughput reduction"
+  why_useful_for_learning: "A production-validated, fully quantified account of the passthrough-vs-overcommit tension that motivates virtio/SR-IOV design choices, and a concrete alternative to IOMMU ATS+PRI for IOPF."
+  priority: P0
+  related: [VIRT-SOSP24-03, VIRT-OSDI24-05]
+  relations:
+  - type: TRADEOFF_PAIR
+    target: VIRT-SOSP24-03
+    basis: "Both solve device-passthrough memory-safety/overcommit costs at the IOMMU/DMA boundary -- F&S cuts the cost of strict per-DMA IOTLB invalidation for a fixed pinned memory footprint, while VPRI removes the need for static pinning at all via software-managed IOPF; together they cover complementary corners of the passthrough safety/performance/memory-elasticity trade-off space."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the author-hosted PDF via SJTU IPADS publication listing; sigops.org's accepted-papers wording ('Optimized I/O Page Fault in Public IaaS') differs slightly from the dblp/paper title used here."
+
+- id: VIRT-SOSP24-03
+  title: "Fast & Safe IO Memory Protection"
+  title_correction: null
+  authors: [Benny Rubin, Saksham Agarwal, Qizhe Cai, Rachit Agarwal]
+  venue: SOSP
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://sigops.org/s/conferences/sosp/2024/accepted.html
+  fullpaper_source: http://www.cs.cornell.edu/~ragarwal/pubs/fands.pdf
+  classification: CORE
+  classification_note: "F&S modifies the IOMMU/IOTLB memory-protection mechanism used to safely isolate DMA-capable passthrough devices from unauthorized host memory access -- the IOMMU is the canonical device-virtualization/passthrough isolation primitive, so this is CORE T3."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: []
+  physical_resource: NIC
+  logical_abstraction: "A passthrough-device DMA target address space (IOVA space) that remains strictly protected (a device cannot access memory after its IOVA mapping is unmapped) at close to zero performance cost"
+  problem: "IOMMUs prevent malicious/buggy passthrough devices from accessing unauthorized memory, but strict protection (unmap IOVA + invalidate IOTLB after every DMA) causes 20-65% throughput degradation and orders-of-magnitude tail-latency inflation, because each unmap forces at least one IOTLB miss and a multi-level (4-level) IO page-table walk; prior work traded off either safety or required hardware/OS redesign."
+  mechanism: "F&S needs no hardware changes and only 630 LOC of OS changes: it allocates IOVAs in contiguous 256KB ranges mapped to consecutive physical pages (rather than isolated 4KB IOVAs), improving IO-page-table-cache locality (cutting PTcache-L3 misses from up to 64 per descriptor to at most 2); it selectively preserves page-table caches on IOVA unmap, invalidating only when a page-table page is actually reclaimed (observed to be extremely rare for networking workloads) instead of Linux's default of invalidating on every unmap; and it batches multiple 4KB unmaps within a contiguous IOVA range into single invalidation-queue entries."
+  isolation_mechanism: "Strict-mode safety is preserved: a malicious/faulty device can no longer access physical memory behind an IOVA once that IOVA is unmapped, enforced by immediate IOTLB invalidation on DMA completion and selective (not blanket) page-table-cache invalidation only on true page-table reclamation."
+  multiplexing_mechanism: N/A
+  state_mechanism: "IO page-table state (4-level hierarchy) and IOTLB/page-table-cache entries are the protected state; F&S changes only when/how aggressively that cached state is invalidated, not its content or ownership."
+  overhead_bottleneck: "IOTLB miss cost (multi-level page-table walk, up to 4 memory accesses) after every mandatory unmap-and-invalidate cycle is the paper's identified root cause of strict-mode overhead; F&S reduces the cost per miss rather than the miss rate itself."
+  primary_tradeoff: "Contiguous IOVA allocation + selective cache invalidation -> gains near-IOMMU-off throughput and packet-loss elimination while preserving strict safety, at the cost of no direct reduction in IOTLB miss rate (so very small objects / single-page-descriptor devices see smaller gains), and reliance on estimated (not vendor-published) IO-page-table cache sizes."
+  quantitative_claims:
+  - "throughput restored from 20-65% degradation (strict IOMMU baseline) to near-identical to IOMMU-disabled performance across most scenarios"
+  - "Nginx: baseline 65-70% throughput reduction eliminated; Redis: baseline 38-70% degradation eliminated; SPDK: throughput restored from ~60Gbps to full 100Gbps saturation"
+  - "PTcache-L3 misses: 0.045-0.054 per page with F&S vs. 0.36-0.90 baseline"
+  - "packet drops: up to 4% under default strict protection, eliminated (matching IOMMU-off) with F&S"
+  - "tail latency: within 1.17x of IOMMU-off at P50-P99.9, ~1.42x at P99.99"
+  - "under heavy bidirectional Rx/Tx interference: 80% throughput degradation without F&S, near-baseline performance with it"
+  why_useful_for_learning: "The clearest mechanistic account in this batch of why IOMMU-based DMA isolation is expensive and exactly which cache-locality/invalidation choices fix it, directly complementary to VPRI's page-fault-based approach to the same passthrough-memory-safety problem."
+  priority: P0
+  related: [VIRT-SOSP24-02]
+  relations:
+  - type: TRADEOFF_PAIR
+    target: VIRT-SOSP24-02
+    basis: "F&S makes strict per-DMA IOMMU protection cheap for a statically-pinned passthrough memory footprint, while VPRI removes the need for static pinning via software-managed IOPF; both attack the passthrough safety/performance/memory-cost triangle from different corners."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Internal system name F&S; read the author-hosted PDF from Rachit Agarwal's Cornell page, listed there explicitly as [SOSP'24]."
+
+- id: VIRT-SOSP24-04
+  title: "Unifying serverless and microservice workloads with SigmaOS"
+  title_correction: null
+  authors: [Ariel Szekely, Adam Belay, Robert Morris, M. Frans Kaashoek]
+  venue: SOSP
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://sigops.org/s/conferences/sosp/2024/accepted.html
+  fullpaper_source: https://pdos.csail.mit.edu/papers/sigmaos:sosp24.pdf
+  classification: CORE
+  classification_note: "SigmaOS proposes a new lightweight isolation/execution unit (procs in sigma-containers) with a purpose-built tenant-isolation mechanism (sigma-EP tenant-scoped connection tokens replacing IP networking, seccomp/AppArmor-restricted syscall surface) rather than consuming an existing container runtime -- a new container-isolation-architecture contribution, CORE T5 per the brief's explicit criterion."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T8, T9]
+  physical_resource: CPU core
+  logical_abstraction: "A 'proc' -- a unit that can be long-running/stateful or short-lived/parallel, started in a sigma-container in ~2ms, that communicates over tenant-scoped sigma-EP tokens instead of IP sockets and is confined to 67 allowed syscalls (vs. 352 for Docker) via seccomp+AppArmor"
+  problem: "Serverless functions start fast but cannot act as long-lived stateful servers with peer communication, while container orchestration (Kubernetes) supports long-lived stateful services but is too slow to start for burst parallelism; no single platform serves both workload styles."
+  mechanism: "SigmaOS's sigma-containers skip network-namespace and overlay-filesystem setup (replaced by sigma-EPs and cloud-native S3/etcd APIs), share generic read-only root filesystems across procs, demand-page proc binaries via FUSE from local cache or S3, and restrict the syscall surface to 67 calls via seccomp with AppArmor capability dropping; sigma-EPs are opaque, tenant-scoped connection tokens enabling direct proc-to-proc communication within a tenant 'realm' while structurally preventing cross-tenant network access; a two-tier scheduler (centralized lcsched for latency-critical procs, sharded besched for best-effort) lets best-effort procs opportunistically use idle latency-critical-reserved resources."
+  isolation_mechanism: "Tenant isolation is enforced structurally by sigma-EPs (a proc cannot address another tenant's realm because it only ever holds opaque, realm-scoped connection tokens, never raw IPs) plus a restricted syscall surface (67 vs. 352 for Docker) via seccomp/AppArmor, rather than by traditional network-namespace/overlay-network isolation."
+  multiplexing_mechanism: "CPU/memory is shared between latency-critical (LC, reserved) and best-effort (BE, elastic) procs via the two-tier scheduler, letting BE procs use LC-reserved idle capacity while guaranteeing LC procs their reservation."
+  state_mechanism: N/A
+  overhead_bottleneck: "Linux mount-namespace creation is a per-machine lock-serialized bottleneck limiting single-machine container-creation throughput to 1,590 procs/second even though the cluster aggregate reaches much higher."
+  primary_tradeoff: "Purpose-built lightweight isolation (sigma-containers + sigma-EPs) -> gains 7.7ms cold starts and 36,650 procs/sec cluster-wide throughput with lower tail latency and higher throughput than Kubernetes on real microservice benchmarks, at the cost of requiring applications to be ported to the sigmaOS API (no out-of-the-box Linux-syscall compatibility) and lacking GPU resource management and rich authorization policy."
+  multiplexing_mechanism_note: null
+  quantitative_claims:
+  - "cold-start: 7.7ms (SigmaOS) vs. 1,290ms (AWS Lambda), 2,671ms (Docker), 1,143ms (Kubernetes); Mitosis (RDMA-dependent) 3.1ms"
+  - "warm-start: 2.0ms (SigmaOS) vs. 46ms (Lambda), 469ms (Docker), 217ms (Kubernetes)"
+  - "cluster aggregate proc-creation throughput: 36,650 procs/sec across 24 machines, median spawn latency 5.8ms"
+  - "sigma-EP networking: 53us per-packet latency and 8.96Gb/s vs. 85us/7.84Gb/s (Docker) and 60us/5.12Gb/s (K8s); connection setup 413us"
+  - "Hotel microservice benchmark: 42% lower p99 latency, 1.68x higher peak throughput vs. Kubernetes; Social Network: 47% lower tail latency, 3.01x higher peak throughput"
+  - "single-machine container-creation throughput capped at 1,590 procs/sec by mount-namespace lock contention"
+  why_useful_for_learning: "A modern, fully-quantified example of building a bespoke lightweight isolation boundary (rather than reusing Docker/Kubernetes namespaces) specifically to unify serverless and microservice execution models."
+  priority: P1
+  related: [VIRT-SOSP24-07]
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-SOSP24-07
+    basis: "Both are new OS-level isolation mechanisms (SigmaOS's sigma-containers vs. KFlex's kernel-extension safety split) built specifically to reduce the cost of an existing isolation boundary rather than to consume one."
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the author-hosted PDF from MIT PDOS's paper listing; title/authors match the SOSP 2024 dblp listing exactly."
+
+- id: VIRT-SOSP24-05
+  title: "Dirigent: Lightweight Serverless Orchestration"
+  title_correction: null
+  authors: [Lazar Cvetkovic, François Costa, Mihajlo Djokic, Michal Friedman, Ana Klimovic]
+  venue: SOSP
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://sigops.org/s/conferences/sosp/2024/accepted.html
+  fullpaper_source: https://anakli.inf.ethz.ch/papers/dirigent_sosp24.pdf
+  classification: CONTEXT
+  classification_note: "Dirigent explicitly does not alter container/sandbox provisioning or isolation; it redesigns only the Kubernetes-style cluster-manager scheduling/control-plane architecture around an existing, unmodified sandbox runtime -- a pure consumer of virtualization/sandboxing, the brief's textbook CONTEXT case for serverless orchestration."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T8]
+  physical_resource: CPU core
+  logical_abstraction: "A cluster-manager control plane with four abstractions (Function, Sandbox, DataPlane, WorkerNode) instead of Kubernetes' layered objects, that can schedule/create sandboxes fast enough to keep up with FaaS-scale churn"
+  problem: "FaaS cluster managers built on Kubernetes add ~2s of scheduling latency for 100 concurrent sandbox creations despite the underlying containers themselves initializing in 10-100ms, because Kubernetes' hierarchical abstractions, mandatory persistent-state writes, and microservice control-plane RPCs are designed for long-lived applications, not high sandbox churn (production bursts up to 8000 sandbox creations/sec)."
+  mechanism: "Dirigent compresses per-sandbox state from Kubernetes' ~17KB to 16 bytes across four simplified abstractions, removes persistent database writes from the invocation critical path (keeping only in-memory, re-creatable/re-inferable state), and consolidates scheduling logic into a single monolithic control-plane process using in-memory channels instead of inter-microservice RPCs; it explicitly does not change how sandboxes themselves (Firecracker or containerd) are created."
+  isolation_mechanism: N/A (unchanged from the underlying Firecracker/containerd sandbox runtime; Dirigent only schedules it faster)
+  multiplexing_mechanism: N/A
+  state_mechanism: "Only recoverable state stays in memory during execution (sandboxes can be re-created elsewhere, metrics re-inferred); control-plane state recovers from a leader failure in 10ms vs. Knative's several seconds."
+  overhead_bottleneck: "Kubernetes-inherited persistent-state writes and layered-object overhead on the invocation critical path is the bottleneck Dirigent's redesign targets."
+  primary_tradeoff: "Simplified, persistence-free, monolithic control plane -> gains 2500 sandbox creations/sec (1250x Knative) and 2.79x lower p99 scheduling latency than AWS Lambda, at the cost of losing Kubernetes-style function versioning/traffic steering, request-level fault tolerance for synchronous calls, and general-purpose cluster-management features."
+  quantitative_claims:
+  - "peak sandbox-creation throughput: 2500/sec (Firecracker) / 1750/sec (containerd), vs. Knative/OpenWhisk saturating below 2/sec -- 1250x improvement"
+  - "p99 scheduling latency (Azure 500-function trace): 2.79x lower than AWS Lambda, 403x lower than Knative"
+  - "control-plane failover recovery: 10ms vs. Knative's ~seconds; data-plane recovery: 2s vs. Knative's 15s"
+  - "warm-start throughput: 4000 invocations/sec at p99 2.5ms, vs. Knative's 1200/sec at p99 ~7ms"
+  why_useful_for_learning: "A clean illustration of the brief's serverless CONTEXT/SUPPORT distinction: it is explicit textual evidence that a serverless orchestration paper can leave the sandbox/isolation mechanism untouched and still deliver large end-to-end gains purely from control-plane redesign."
+  priority: P3
+  related: [VIRT-EUROSYS24-05, VIRT-OSDI24-01]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the author-hosted PDF (anakli.inf.ethz.ch); title/authors match the SOSP 2024 dblp listing exactly."
+
+- id: VIRT-SOSP24-06
+  title: "Fast, Flexible, and Practical Kernel Extensions"
+  title_correction: null
+  authors: [Kumar Kartikeya Dwivedi, Rishabh R. Iyer, Sanidhya Kashyap]
+  venue: SOSP
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://sigops.org/s/conferences/sosp/2024/accepted.html
+  fullpaper_source: https://rs3lab.github.io/assets/papers/2024/dwivedi:kflex.pdf
+  classification: SUPPORT
+  classification_note: "KFlex is a new kernel-extension isolation mechanism (splitting eBPF-verifier kernel-interface compliance from software-fault-isolation-based extension-heap correctness) that lets extensions safely do more than plain eBPF permits; it is a general OS-extensibility/isolation-boundary contribution rather than a virtualization abstraction for tenants/guests, so it lands as SUPPORT (explains an alternative lightweight isolation technique relevant to sandboxing/CORE isolation-architecture papers)."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: "A kernel extension whose access to kernel-owned resources is verified statically (eBPF verifier) while its access to its own private heap is guarded at runtime via software fault isolation, permitting loops and custom data structures that a pure eBPF verifier would reject"
+  problem: "No existing kernel-extension framework provides safety, flexibility, performance, and practicality simultaneously: type-safe-language approaches require new languages, pure runtime-check approaches are too slow, and pure verification (eBPF) rejects loops/custom data structures needed by many real extensions."
+  mechanism: "KFlex splits kernel safety into kernel-interface compliance (still enforced by the eBPF bytecode verifier, which also confirms invariants on kernel data structures) and extension-heap correctness (enforced at runtime by address-masking software fault isolation, with the verifier eliding masking instructions -- 76% average reduction -- when a pointer is provably in-bounds); an 'extension cancellations' mechanism uses statically-computed object tables at cancellation points to safely release any held kernel locks/references if an extension times out or accesses unmapped heap memory before it is aborted."
+  isolation_mechanism: "Address-masking SFI isolates an extension's own heap (dedicated, size-aligned virtual address regions) from the rest of kernel memory at near-zero cost for provably-safe accesses, while the eBPF verifier remains the isolation boundary for kernel-owned resources; this is presented explicitly as an alternative isolation point to full eBPF verification or full userspace isolation, not a new address-space/VM boundary."
+  multiplexing_mechanism: N/A
+  state_mechanism: "On a cancellation event, KFlex uses statically-computed per-program-point 'object tables' to identify and release all kernel resources (locks, references) the extension holds via their destructors before aborting, avoiding kernel-state leaks from a killed extension."
+  overhead_bottleneck: "eBPF ISA constraints (register pressure, no SIMD) reduce extension efficiency, especially on ARM64; heap size-alignment requirements also fragment virtual address space, limiting practicality to GB-scale heaps."
+  primary_tradeoff: "Split verifier+SFI safety -> gains 1.23-2.83x memcached throughput and 1.61-2.14x Redis throughput over eBPF/user-space baselines with much lower tail latency, at the cost of restricting extensions to loops that provably release kernel resources within the same iteration, 4GB (extendable to 16GB) heap limits, and no support for file I/O or blocking operations inside an extension."
+  quantitative_claims:
+  - "Memcached: 1.23-2.83x throughput vs. eBPF baseline (BMC); 2.33-3.01x vs. user-space; p99 latency 1.41-1.95x lower than BMC, 1.95-9.35x lower than user-space"
+  - "Redis: 1.61-2.14x throughput vs. KeyDB; ZADD (previously unsupported in-kernel) gives 1.65x throughput over user-space"
+  - "guard-instruction elision via verifier range analysis: 76% average reduction, up to 100% for some operations"
+  - "single-threaded data-structure overhead vs. kernel modules: 9% throughput, 31.7% latency"
+  why_useful_for_learning: "A concrete alternative isolation technique (verifier + SFI split) to contrast against hardware-VM-based and syscall/container-based isolation boundaries discussed elsewhere in this batch."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Internal system name KFlex; read the author-hosted PDF via the RS3 Lab (EPFL) publications page."
+
+- id: VIRT-SOSP24-07
+  title: "TrEnv: Transparently Share Serverless Execution Environments Across Different Functions and Nodes"
+  title_correction: null
+  authors: [Jialiang Huang, Mingxing Zhang, Teng Ma, Zheng Liu, Sixing Lin, "et al."]
+  venue: SOSP
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://sigops.org/s/conferences/sosp/2024/accepted.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Title indicates a mechanism for transparently sharing serverless sandbox/execution-environment state across functions and nodes (T5/T8), but the paper could not be retrieved from any accessible source, so classification is conservatively CONTEXT rather than the likely SUPPORT/CORE per hard rule 2."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T5]
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: "Title implies serverless platforms today rebuild an execution environment per function/node rather than reusing a warm one across functions or nodes; not verified by reading."
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If accessed, would likely bear directly on the same sandbox/snapshot-reuse trade-offs as Pronghorn, Sabre, and SigmaOS in this batch."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: "Access failure: ACM DL 403; Tsinghua MADSys lab pages (madsys.cs.tsinghua.edu.cn/publications/, /~zhangmxx/, /publication.html) all 404; SJTU IPADS publication listing (a Haibo Chen-adjacent lab that hosted several other SOSP/EuroSys 2024 PDFs used in this batch) does not include this paper; search tools blocked/exhausted. Logged in access_failures."
+
+- id: VIRT-SOSP24-08
+  title: "Sesame: Practical End-to-End Privacy Compliance with Policy Containers and Privacy Regions"
+  title_correction: null
+  authors: [Kinan Dak Albab, Artem Agvanian, Allen Aby, Corinn Tiffany, Alexander Portland, Sarah Ridley, Malte Schwarzkopf]
+  venue: SOSP
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://sigops.org/s/conferences/sosp/2024/accepted.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "'Policy Containers' here almost certainly denotes a data-governance/policy-tagging construct (grouping data under a privacy policy), not an OS/VM container -- likely a keyword false positive on 'container' -- but the paper could not be retrieved to confirm this, so it is recorded conservatively as CONTEXT (not DROP) per hard rule 2/5 rather than asserted as a false positive without having read it."
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: "Title implies a system for enforcing end-to-end data-privacy compliance policies scoped by 'privacy regions' and 'policy containers'; not verified to be about OS/VM isolation."
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: N/A
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: "Access failure: sigops.org accepted-papers page shows only an [ACM] link (dl.acm.org 403s through this environment's proxy); Malte Schwarzkopf's Brown homepage does not list a PDF for this paper. Logged in access_failures; likely resolves to DROP (keyword_false_positive) on a future read."
+
+- id: VIRT-SOSP24-09
+  title: "Uncovering Nested Data Parallelism and Data Reuse in DNN Computation with FractalTensor"
+  title_correction: null
+  authors: [Siran Liu, Chengxiang Qi, Ying Cao, Chao Yang, Weifang Hu, "et al."]
+  venue: SOSP
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://sigops.org/s/conferences/sosp/2024/accepted.html
+  fullpaper_source: UNKNOWN
+  classification: DROP
+  classification_note: "'Nested' here refers to nested data-parallel patterns in DNN tensor computation (a compiler/scheduling concept), not nested virtualization or any guest-physical/hypervisor-mediated memory concept -- a keyword false positive on 'nested'."
+  drop_reason: keyword_false_positive
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: N/A
+  problem: "DNN computations contain nested data-parallel and data-reuse patterns that existing tensor compilers fail to exploit fully."
+  mechanism: N/A
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: N/A
+  primary_tradeoff: N/A
+  quantitative_claims: []
+  why_useful_for_learning: N/A
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: MEDIUM
+  notes: "Excluded at screening time on well-established domain knowledge (tensor-compiler nested data-parallelism, unrelated to nested virtualization) rather than a full read; flagged here for transparency rather than silently omitted."
+
+venue_populations:
+  - venue: EuroSys
+    year: 2024
+    official_source: "https://2024.eurosys.org/accepted-papers.html (cross-checked against https://dblp.org/db/conf/eurosys/eurosys2024 )"
+    main_track_paper_count: 71
+    count_basis: "Enumerated the full accepted-papers list (71 titles) from the official EuroSys 2024 site and independently cross-checked the exact same count and titles via dblp's EuroSys 2024 proceedings listing; both sources agree on 71 main-track papers. High confidence."
+  - venue: OSDI
+    year: 2024
+    official_source: "https://www.usenix.org/conference/osdi24/technical-sessions"
+    main_track_paper_count: 43
+    count_basis: "Enumerated all 9 research sessions on the official USENIX technical-sessions page (Memory Management 6, Low-Latency LLM Serving 5, Distributed Systems 4, Deep Learning 5, Operating Systems 5, Cloud Computing 5, Formal Verification 5, Cloud Security 4, Data Management confirmed >=3) = 42 confirmed titles, plus one further Data Management paper whose title the fetch tool could not surface (the page content was repeatedly and consistently truncated mid-sentence at the same point, a tooling limit rather than a missing session -- repeated fetches confirmed no session exists after Data Management). dblp's OSDI 2024 listing could not be used to cross-check because dblp.org intermittently returned ROBOTS_DISALLOWED/rate-limit errors for the osdi2024 path specifically (while eurosys2024 and sosp2024 pages on the same domain succeeded). True count is therefore 43-45; recorded as 43 with medium-high confidence and the gap noted in possible_omissions."
+  - venue: SOSP
+    year: 2024
+    official_source: "https://sigops.org/s/conferences/sosp/2024/accepted.html (cross-checked against https://dblp.org/db/conf/sosp/sosp2024.html )"
+    main_track_paper_count: 43
+    count_basis: "Enumerated the full accepted-papers list (43 titles) from the official SIGOPS SOSP 2024 site and independently cross-checked the exact same count via dblp's SOSP 2024 proceedings listing, which also supplied several corrected/expanded official titles (e.g. VPRI, ReCycle, Morph, NOPE) versus the sigops.org wording. High confidence."
+
+possible_omissions:
+  - title: "SplitFT: Fault Tolerance for Disaggregated Datacenters via Remote Memory Logging"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "Disaggregated-memory fault tolerance mechanism; per the brief's disaggregation guidance this is at least SUPPORT-tier, but the design needed to be read to tell SUPPORT from CONTEXT and no accessible PDF was found within budget."
+    evidence: "Title/authors only, from eurosys.org accepted-papers.html and dblp; author-homepage guesses for Ramnatthan Alagappan (UIUC/Wisconsin) returned 404."
+  - title: "Exploring Performance and Cost Optimization with ASIC-Based CXL Memory"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "CXL memory disaggregation with a hardware ASIC angle; likely SUPPORT (T2/T10) per the brief's disaggregation rule, but not read."
+    evidence: "Title/authors only; author-page guess (Tongping Liu, UTSA) returned a stale 2016-era publication list without this paper."
+  - title: "Atlas: Hybrid Cloud Migration Advisor for Interactive Microservices"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "Uses 'migration' in the VM/workload-placement sense (hybrid-cloud migration advisor), a seed concept, but likely CONTEXT (advisory/placement tool consuming migration, not a migration mechanism); not read. Distinct from the unrelated OSDI 2024 paper internally named 'Atlas' (far-memory hybrid data plane) -- flagging the name collision."
+    evidence: "Title/authors only, from eurosys.org accepted-papers.html and dblp."
+  - title: "Optimus: Warming Serverless ML Inference via Inter-Function Model Transformation"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "Serverless ML inference warm-start technique; borderline SUPPORT/CONTEXT depending on whether the 'model transformation' mechanism touches the sandbox/runtime warm-start path itself or only model-level caching."
+    evidence: "Title/authors only, from eurosys.org accepted-papers.html and dblp."
+  - title: "MTM: Rethinking Memory Profiling and Migration for Multi-Tiered Large Memory"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "Host-level memory-tiering migration mechanism, likely SUPPORT (T2) by the same reasoning as Nomad (VIRT-OSDI24-06), but not read; author-page guess (Dong Li, UC Merced) 404'd."
+    evidence: "Title/authors only, from eurosys.org accepted-papers.html and dblp."
+  - title: "Transparent Multicore Scaling of Single-Threaded Network Functions"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "Internal name NFOS (per RS3 Lab, EPFL); could bear on NFV/virtual-network-function scaling, a T3/T9-adjacent topic, but the PDF link was not found (only a lab news mention) within budget."
+    evidence: "Confirmed as an EPFL RS3 Lab (Kashyap group) paper via rs3lab.github.io news/publications pages; no direct PDF link found."
+  - title: "Draconis: Network-Accelerated Scheduling for Microsecond-Scale Workloads"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "Possible T9 (resource management/oversubscription) relevance for microsecond-scale multi-tenant scheduling; not read, ambiguous whether it touches virtualization/isolation directly."
+    evidence: "Title/authors only, from eurosys.org accepted-papers.html and dblp."
+  - title: "Erlang: Application-Aware Autoscaling for Cloud Microservices"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "Autoscaling of cloud microservices touches multi-tenancy/oversubscription seed concepts; likely CONTEXT (consumes container/VM autoscaling rather than proposing a new mechanism) but not read."
+    evidence: "Title/authors only, from eurosys.org accepted-papers.html and dblp."
+  - title: "Improving Resource and Energy Efficiency for Cloud 3D through Excessive Rendering Reduction"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "Cloud 3D rendering/GPU resource efficiency; possibly touches GPU-sharing/virtualization for cloud gaming, but likely CONTEXT (application-level rendering optimization); not read."
+    evidence: "Title/authors only, from eurosys.org accepted-papers.html and dblp."
+  - title: "Improving GPU Energy Efficiency through an Application-transparent Frequency Scaling Policy with Performance Assurance"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "GPU DVFS policy; likely DROP or weak CONTEXT (energy management, not sharing/virtualization) but not read to confirm."
+    evidence: "Title/authors only, from eurosys.org accepted-papers.html and dblp."
+  - title: "CSAL: the Next-Gen Local Disks for the Cloud"
+    venue: EuroSys
+    year: 2024
+    why_relevant: "Cloud local-disk hardware architecture; possibly touches virtual-disk/storage-virtualization concerns but likely CONTEXT/DROP; not read."
+    evidence: "Title/authors only, from eurosys.org accepted-papers.html and dblp."
+  - title: "Aceso: Achieving Efficient Fault Tolerance in Memory-Disaggregated Key-Value Stores"
+    venue: SOSP
+    year: 2024
+    why_relevant: "Memory-disaggregation fault tolerance for a KV store; likely SUPPORT/CONTEXT per the brief's disaggregation rule (application built on disaggregated memory rather than a virtual-memory abstraction), not read."
+    evidence: "Title/authors only, from sigops.org accepted.html and dblp."
+  - title: "CHIME: A Cache-Efficient and High-Performance Hybrid Index on Disaggregated Memory"
+    venue: SOSP
+    year: 2024
+    why_relevant: "Same disaggregated-memory pattern as Aceso/SWARM; likely SUPPORT/CONTEXT, not read."
+    evidence: "Title/authors only, from sigops.org accepted.html and dblp."
+  - title: "SWARM: Replicating Shared Disaggregated-Memory Data in No Time"
+    venue: SOSP
+    year: 2024
+    why_relevant: "Same disaggregated-memory pattern as Aceso/CHIME; likely SUPPORT/CONTEXT, not read."
+    evidence: "Title/authors only, from sigops.org accepted.html and dblp."
+  - title: "Tiered Memory Management: Access Latency is the Key!"
+    venue: SOSP
+    year: 2024
+    why_relevant: "Host memory-tiering mechanism, same family as Nomad (VIRT-OSDI24-06) and MTM; likely SUPPORT (T2), not read."
+    evidence: "Title/authors only, from sigops.org accepted.html and dblp."
+  - title: "Caribou: Fine-Grained Geospatial Shifting of Serverless Applications for Sustainability"
+    venue: SOSP
+    year: 2024
+    why_relevant: "Serverless sustainability/placement system; likely CONTEXT (consumes serverless infrastructure for a sustainability goal), not read."
+    evidence: "Title/authors only, from sigops.org accepted.html and dblp."
+  - title: "Fast Core Scheduling with Userspace Process Abstraction"
+    venue: SOSP
+    year: 2024
+    why_relevant: "Userspace scheduling/process abstraction (T9-adjacent); unclear if it meets the CONTEXT bar or is purely OS scheduling unrelated to virtualization; not read."
+    evidence: "Title/authors only, from sigops.org accepted.html and dblp."
+  - title: "Skyloft: A General High-Efficient Scheduling Framework in User Space"
+    venue: SOSP
+    year: 2024
+    why_relevant: "Same userspace-scheduling family as 'Fast Core Scheduling'; not read."
+    evidence: "Title/authors only, from sigops.org accepted.html and dblp."
+  - title: "Modular Verification of Secure and Leakage-Free Systems: From Application Specification to Circuit-Level Implementation"
+    venue: SOSP
+    year: 2024
+    why_relevant: "Formal verification of secure/leakage-free hardware-software systems; possibly relevant to confidential-computing/hypervisor-correctness (T7) but appears circuit-level and may be out of scope; not read."
+    evidence: "Title/authors only, from sigops.org accepted.html and dblp."
+
+possible_expansion: []
+
+excluded_by_pubtype: []
+
+access_failures:
+  - title: "HD-IOV: SW-HW Co-designed I/O Virtualization with Scalability and Flexibility for Hyper-Density Cloud"
+    what_was_tried: "eurosys.org accepted-papers.html and program.html (title/session only, no abstract); dl.acm.org DOI-guess (403 via environment proxy); SJTU IPADS publication listing (paper not present); Microsoft Research publication search (404); ResearchGate keyword search (irrelevant results); dblp/general web search blocked or exhausted."
+    best_evidence_obtained: "Title, full author list, and session category ('Hardware-SW co-design', Thu 9:00-10:30) from the official EuroSys 2024 program page."
+  - title: "Hoda: a High-performance Open vSwitch Dataplane with Multiple Specialized Data Paths"
+    what_was_tried: "eurosys.org accepted-papers.html and program.html (title/session only); dl.acm.org (403); ICT-CAS author-homepage guess for Zhenyu Li (DNS failure); dblp/web search blocked or exhausted."
+    best_evidence_obtained: "Title, full author list, and session category ('Networks', Tue 11:15-12:45) from the official EuroSys 2024 program page."
+  - title: "SmartNIC Security Isolation in the Cloud with S-NIC"
+    what_was_tried: "eurosys.org accepted-papers.html and program.html (title/session only); dl.acm.org (403); Minlan Yu Harvard homepage variants (404); James Mickens Harvard page (404); dblp/web search blocked or exhausted."
+    best_evidence_obtained: "Title, full author list, and session category ('Hardware-SW co-design', Thu 9:00-10:30) from the official EuroSys 2024 program page."
+  - title: "TrEnv: Transparently Share Serverless Execution Environments Across Different Functions and Nodes"
+    what_was_tried: "sigops.org accepted.html (title/authors only, ACM link only); dl.acm.org (403); Tsinghua MADSys lab pages (three URL variants, all 404); SJTU IPADS publication listing checked but paper absent; dblp/web search blocked or exhausted."
+    best_evidence_obtained: "Full title and author list from dblp's SOSP 2024 listing."
+  - title: "Sesame: Practical End-to-End Privacy Compliance with Policy Containers and Privacy Regions"
+    what_was_tried: "sigops.org accepted.html ([ACM] link only, no PDF); dl.acm.org (403); Malte Schwarzkopf's Brown homepage (paper not listed in fetched content); dblp/web search blocked or exhausted."
+    best_evidence_obtained: "Full title and author list from dblp's SOSP 2024 listing."
+  - title: "OSDI 2024 Data Management session -- one further paper beyond FairyWREN / Massively Parallel Multi-Versioned Transaction Processing / Burstable Cloud Block Storage"
+    what_was_tried: "Repeated WebFetch calls against usenix.org/conference/osdi24/technical-sessions with different targeted prompts; every fetch was truncated mid-sentence at exactly the same point (end of the BurstCBS paper's description), which the tool explicitly flagged as '[Content truncated due to length...]'; dblp's osdi2024 page (which would have given a clean cross-check) returned ROBOTS_DISALLOWED / rate-limit errors on every attempt, unlike the sibling eurosys2024 and sosp2024 dblp pages which succeeded."
+    best_evidence_obtained: "Confirmed 9 session headings and 42 paper titles with no session existing after Data Management; the identity of one further Data Management paper (if it exists) is unresolved."
+
+seed_corrections: []
+
+batch_observations: >
+  This is a from-scratch 2024 census with no seed list, so 'seed_corrections' is
+  intentionally empty. Program enumeration completeness differs by venue:
+  EuroSys 2024 (71 papers) and SOSP 2024 (43 papers) were enumerated in FULL from two
+  independent sources each (the official eurosys.org/sigops.org accepted-papers pages
+  and dblp's proceedings listings, which matched exactly on count and title wording
+  differences were reconciled), so every title in both venues was individually screened
+  against the seed-concept list, not merely keyword-searched. OSDI 2024 was enumerated
+  from the official USENIX technical-sessions page across all 9 research sessions
+  (42 confirmed titles), but the page's HTML was too large for the fetch tool and was
+  repeatedly truncated at the identical point mid-way through the final "Data Management"
+  session; dblp's OSDI 2024 page (which would have cross-checked this) returned
+  robots.txt/rate-limit errors on every attempt despite dblp's EuroSys/SOSP 2024 pages
+  working, so the true OSDI 2024 count is recorded as 43 with a noted +1/+2 uncertainty
+  rather than a fully verified figure. Access to full paper text was structurally
+  asymmetric across venues: OSDI/USENIX papers are fully open-access PDFs directly from
+  usenix.org and every OSDI candidate reached at least ABSTRACT-level evidence; EuroSys
+  and SOSP are behind ACM Digital Library, which returned HTTP 403 through this
+  environment's egress proxy for every direct access attempt, so EuroSys/SOSP coverage
+  depended entirely on finding an author, lab, or institutional-repository mirror of each
+  PDF -- this succeeded for about two-thirds of the flagged EuroSys/SOSP candidates
+  (Orion, Pronghorn, Desiccant/Frozen-Garbage, RMMAP/Serialization-free, vSoC, VPRI,
+  Fast&Safe IO Memory Protection, SigmaOS, Dirigent, KFlex all reached FULL or
+  DESIGN_EVAL depth) and failed for the rest (HD-IOV, Hoda, S-NIC, TrEnv, Sesame are
+  recorded at TITLE_ONLY/CONTEXT/LOW per hard rule 2, and roughly 18 more borderline
+  EuroSys/SOSP titles were left in possible_omissions rather than force weak records).
+  General web-search tooling (WebSearch, arxiv.org/export.arxiv.org, dblp.org beyond the
+  two proceedings pages, semanticscholar.org, openalex.org, Bing/DuckDuckGo) was blocked
+  by robots.txt, rate-limiting (repeated 429s), or an exhausted per-session search budget
+  for most of this batch, which is the main reason EuroSys/SOSP coverage required manual
+  author/lab-homepage guessing rather than systematic search; this constraint should ease
+  in later batches if search budget resets or ACM DL access is separately arranged.
+  Threshold calls made, applying the same bar intended for 2025/2026: (1) GPU-sharing
+  schedulers over an unmodified GPU (Orion) are SUPPORT, never CORE, because no virtual-
+  GPU partition abstraction is created -- consistent with the brief's explicit MIG/MPS
+  rule. (2) Checkpoint/restore and memory-reclamation mechanisms for serverless sandboxes
+  (Pronghorn, Desiccant, RMMAP) are SUPPORT, not CORE, because they optimize policy over
+  an existing checkpoint/isolation engine rather than creating a new one; SigmaOS and
+  KFlex, by contrast, were pushed to CORE/SUPPORT respectively because they each define a
+  genuinely new isolation boundary (sigma-containers' tenant-scoped connection tokens;
+  KFlex's verifier+SFI split), matching the brief's container/kernel-extension isolation-
+  architecture CORE criterion. (3) A microkernel (HongMeng) was classified CORE under T5
+  even with no VM/hypervisor involved, per the brief's explicit listing of microkernel
+  architecture as a CORE isolation-architecture example -- this is the most aggressive
+  taxonomy call in the batch and is flagged for auditor attention, since it stretches
+  "virtualization" to a pure OS-isolation redesign; the classification_note documents the
+  specific evidence (three differentiated isolation classes trading isolation for
+  performance) that justified it rather than the title alone. (4) IOMMU/passthrough
+  memory-protection and paging mechanisms (Fast & Safe IO Memory Protection, VPRI) and a
+  unified shared-virtual-memory device-virtualization design (vSoC) were CORE without
+  hesitation as textbook T3 device virtualization. (5) Disaggregated/tiered host memory
+  work with no explicit per-tenant/VM isolation claim (Nomad, Atlas/Tale-of-Two-Paths) was
+  held to SUPPORT rather than CORE, reserving CORE for the paper that explicitly adds the
+  VM-isolation layer on top (Managing Memory Tiers with CXL in Virtualized Environments) --
+  this is the same CXL/disaggregation threshold used in the batch1 calibration file. (6)
+  Two title-level keyword false positives were DROPped from domain knowledge alone without
+  a full read (database ACID "isolation levels"; DNN "nested" data parallelism), which is
+  a narrower use of DROP-without-reading than hard rule 2 strictly contemplates (that rule
+  is written for failed-access cases) but was judged appropriate for unambiguous standard
+  CS-terminology collisions rather than genuine virtualization candidates; all other
+  access-failure cases were conservatively recorded as CONTEXT/TITLE_ONLY/LOW rather than
+  DROP, per the letter of hard rule 2.

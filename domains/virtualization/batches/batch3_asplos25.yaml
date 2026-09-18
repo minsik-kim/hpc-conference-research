@@ -1,0 +1,557 @@
+papers:
+- id: VIRT-ASPLOS25-01
+  title: "Vela: A Virtualized LLM Training System with GPU Direct RoCE"
+  title_correction: null
+  authors: [Apoorve Mohan, Robert Walkup, Bengi Karacali, Ming-Hung Chen, Abdullah Kayi, Liran Schour, Shweta Salaria, Sophia Wen, I-Hsin Chung, Abdul Alim, Constantinos Evangelinos, Lixiang Luo, Marc Dombrowa, Laurent Schares, Ali Sydney, Pavlos Maniotis, Sandhya Koteshwara, Brent Tang, Joel Belog, Rei Odaira, Vasily Tarasov, Eran Gampel, Drew Thorstensen, Talia Gershon, Seetharami Seelam]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3676641.3716280
+  official_url: https://dl.acm.org/doi/10.1145/3676641.3716280
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: "The contribution is the virtualized machine/IO stack itself - KVM VMs with PCIe-passthrough GPUs plus SR-IOV RoCE virtual functions made to carry GPUDirect peer-to-peer DMA at near-bare-metal speed - not an application that merely runs in VMs."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T1, T6, T9]
+  physical_resource: NIC
+  logical_abstraction: "A VM that presents a faithful copy of the host accelerator topology - passthrough GPUs, SR-IOV RoCE VFs and correct GPU/NIC/CPU-socket affinity - so that an unmodified NCCL/PyTorch stack can do GPUDirect RDMA from inside the guest"
+  problem: "Cloud operators want VM-level flexibility (re-provisioning, multi-tenancy, bring-your-own-stack) for large-scale LLM training, but naive KVM virtualization destroys the GPU-to-NIC RDMA data path that distributed training depends on."
+  mechanism: "GPUs are given to the guest by PCIe passthrough while the RoCE NIC is exposed as SR-IOV virtual functions; the VM definition mirrors the physical PCIe/NUMA topology so the guest can compute correct GPU-NIC affinity. GPUDirect RDMA inside the guest is enabled by turning on IOMMU, PCIe ACS and Address Translation Services on the NIC and on the virtual functions so the NIC can DMA directly into GPU BAR memory, plus huge pages and enlarged PCIe max-read-request sizing along the whole stack (firmware, host, hypervisor, guest)."
+  isolation_mechanism: "Hardware-enforced: IOMMU/EPT-based memory isolation per VM, ACS on PCIe controllers, and per-tenant SR-IOV virtual functions; software-defined networking marks and separates RoCE traffic (DSCP) from tenant TCP traffic."
+  multiplexing_mechanism: "Node-granular: a training VM owns its passthrough GPUs exclusively; multiplexing happens at the cluster level by re-provisioning whole nodes/VMs between training and inference pools. The NIC is multiplexed by SR-IOV virtual functions."
+  state_mechanism: "Virtualization state is the guest's device assignments plus IOMMU/EPT mappings; because GPUs are passed through and the NIC uses VFs, the VM is effectively pinned - no live migration of a training VM is offered, and re-provisioning means tearing the VM down."
+  overhead_bottleneck: "The guest-to-device DMA path: without ATS/ACS/huge-page tuning the NIC-to-GPU peer-to-peer path collapses and out-of-the-box KVM RoCE performance is far below bare metal; residual PCIe link degradation remains an operational bottleneck."
+  primary_tradeoff: "Virtualize the training node -> gains operational flexibility (fast re-provisioning, heterogeneous software stacks, fine-grained quota, multi-tenancy) but costs a few percent of throughput and, structurally, gives up live migration and easy memory overcommit because GPUs are passed through and DMA is direct."
+  quantitative_claims:
+  - "~80% of ideal throughput when training a 50-billion-parameter decoder model at ~1500 GPU scale (from the ASPLOS abstract)"
+  - "~70% per-GPU FLOPS relative to a single-VM baseline at that scale (from the ASPLOS abstract)"
+  - "companion preprint arXiv:2407.05467 (same Vela system, overlapping authors, NOT the ASPLOS paper): <=5% virtualization overhead vs bare metal, e.g. NMT-12 training 147K words/s bare metal vs 140K words/s in VM; OpenShift-on-VM adds a further <=4%"
+  why_useful_for_learning: "It is the clearest production-scale statement of what it costs to put a high-performance accelerator I/O path (GPUDirect RDMA over RoCE) inside a VM, and exactly which virtualization knobs (IOMMU, ACS, ATS, SR-IOV VFs, huge pages, topology fidelity) have to line up for passthrough-class performance."
+  priority: P1
+  related: [VIRT-ASPLOS25-13, "To Virtualize or Not to Virtualize: Experiences from Building Two Generations of Virtualized Infrastructure for LLM Training (SC25, non-archival talk)"]
+  relations:
+  - {type: PRECURSOR, target: "The infrastructure powering IBM's Gen AI model development (arXiv:2407.05467)", basis: "Same Vela system and overlapping author set; describes the KVM/SR-IOV/ATS design and the 5% overhead measurements that the ASPLOS paper builds on"}
+  - {type: TRADEOFF_PAIR, target: "device passthrough vs software-mediated virtio/vSwitch I/O", basis: "Vela chooses passthrough + SR-IOV for performance and thereby forfeits live migration and transparent memory management"}
+  existing_corpus_overlap: ai_hpc_systems
+  previous_analysis_depth: "analysed in ai_hpc_systems: full system analysis as an LLM-training infrastructure paper (cluster architecture, network fabric, training throughput at scale); the virtualization I/O path was not the focus there"
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, preprint, existing-corpus]
+  confidence: MEDIUM
+  notes: "KEEP_CORE_ALREADY_ANALYZED. Virtualization-specific delta: Vela shows that the accelerator I/O virtualization question for AI clusters is not 'emulate the device' but 'get the guest out of the DMA path' - GPUs by PCIe passthrough, NIC by SR-IOV VF, and GPUDirect peer-to-peer DMA made legal inside the guest via IOMMU + PCIe ACS + Address Translation Services, with the VM's PCIe/NUMA topology faithfully mirrored so the guest's collective library can pick the right GPU-NIC pairs. The trade-off it accepts is the classic passthrough trade-off taken deliberately at production scale: it keeps ~95% of bare-metal performance and VM-level operational flexibility, but gives up live migration, memory overcommit and device-state portability for training VMs, and pushes the remaining risk into firmware/PCIe-level operational failures. ACCESS NOTE: dl.acm.org and dblp.org are blocked from this environment (proxy denies CONNECT) and OpenReview returned a browser-verification page, so the ASPLOS camera-ready text could not be read; design/eval detail above comes from the companion preprint arXiv:2407.05467 read at DESIGN_EVAL depth, and the two abstract-level numbers come from IBM's official publication page for the ASPLOS paper. evidence_depth is reported as ABSTRACT for the ASPLOS paper itself, deliberately."
+- id: VIRT-ASPLOS25-02
+  title: "HyperHammer: Breaking Free from KVM-Enforced Isolation"
+  title_correction: null
+  authors: [Wei Chen, Zhi Zhang, Xin Zhang, Qingni Shen, Yuval Yarom, Daniel Genkin, Chen Yan, Zhe Wang]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3676641.3716002
+  official_url: https://dl.acm.org/doi/10.1145/3676641.3716002
+  fullpaper_source: https://yuval.yarom.org/pdfs/ChenZZSYGYW25.pdf
+  classification: CORE
+  classification_note: "The object of attack is the hypervisor's own memory-virtualization state - it corrupts an Extended Page Table entry to escape the guest - and the attack primitives are all KVM memory-management features (THP, virtio-mem, vIOMMU, iTLB-multihit hugepage splitting)."
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T2, T1, T3]
+  physical_resource: DRAM
+  logical_abstraction: "Guest-physical memory backed by host pages through EPT; the paper shows this abstraction is not opaque to the guest"
+  problem: "Can a guest VM break hardware-assisted, KVM-enforced memory isolation on a fully-featured modern hypervisor, rather than only attacking a co-resident VM or a system with security features disabled?"
+  mechanism: "Three steps. (1) Address disclosure: the guest enables transparent huge pages so the hypervisor backs guest memory with 2MB host hugepages, which leaks the low 21 bits of the host physical address - enough to derive DRAM bank/row. (2) Page steering: the guest creates ~60,000 vIOMMU I/O mappings to drain the host buddy allocator's small-order free lists, then voluntarily releases Rowhammer-vulnerable pages through virtio-mem; it then executes code on a hugepage, which forces KVM (because of the iTLB-multihit countermeasure) to split the hugepage and allocate a fresh EPT page into exactly those released, vulnerable frames. (3) Exploitation: single-sided Rowhammer from within the guest flips a bit in a leaf EPT entry so it points at another EPT page, giving the guest write access to its own translations and hence to arbitrary host physical memory."
+  isolation_mechanism: "The isolation being broken is EPT-based GPA->HPA translation plus IOMMU protection; the paper's proposed defence is to quarantine guest-initiated memory-size change requests in virtio-mem (reject a request whose delta exceeds or opposes the hypervisor's target), or to disable THP / virtio-mem overcommit / VFIO-vIOMMU."
+  multiplexing_mechanism: "N/A (the abused features are memory-overcommit multiplexing features - virtio-mem ballooning-style hotplug and THP-backed guest memory)"
+  state_mechanism: "Virtualization state lives in the two-level EPT hierarchy (leaf EPTEs, page-frame number in bits 12-47) plus vIOMMU I/O page tables and the host buddy allocator's free lists and migration types; the attack works precisely by controlling where that state is physically placed."
+  overhead_bottleneck: "Attack cost, not system overhead: memory profiling takes 48-72 hours and each page-steering + hammer attempt ~4-5 minutes, with success probability roughly (VM memory)/(512 x host memory), so the end-to-end expected attack is months."
+  primary_tradeoff: "Hypervisor memory-overcommit and device-assignment features (THP, virtio-mem, vIOMMU/VFIO) -> gain density and I/O performance but cost the guest-opacity of host physical placement, which is what makes cross-privilege Rowhammer steering possible."
+  quantitative_claims:
+  - "memory profiling: 72 h on Intel Core i3-10100 yielded 96 exploitable bits; 48 h on Intel Xeon E-2124 yielded 90 exploitable bits (Apacer DDR4-2666 non-ECC DIMMs, 16 GB)"
+  - "exploitation: 250 attempts over 16.7 h (4.0 min/attempt) on the i3 system; 432 attempts over 33.8 h (4.7 min/attempt) on the Xeon system"
+  - "expected end-to-end attack time: 192 days (i3) and 137 days (Xeon)"
+  - "page steering: with a 10 GB VM and 100 released blocks, 10-13% of released pages were reused by EPT pages; ~60,000 vIOMMU mappings needed to drive noise pages below threshold"
+  why_useful_for_learning: "It is the best single paper for understanding that the guest-physical-to-host-physical layer is a real attack surface: you learn what THP, virtio-mem, vIOMMU and hugepage splitting each expose, and why hypervisor memory-management convenience features are security-relevant."
+  priority: P1
+  related: ["Reload+Reload: Exploiting Cache and Memory Contention Side Channel on AMD SEV", "Sharing is leaking: blocking transient-execution attacks with core-gapped confidential VMs"]
+  relations:
+  - {type: ALTERNATIVE, target: "Rowhammer attacks against co-resident VMs", basis: "Paper positions itself against prior virtualized-Rowhammer work that targeted only co-resident VMs or required disabled security features"}
+  - {type: LAYER_BELOW, target: "confidential VM architectures (AMD SEV, Intel TDX, Arm CCA)", basis: "Shows DRAM-level disturbance defeats page-table-level isolation, motivating memory-encryption/integrity designs"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, preprint]
+  confidence: HIGH
+  notes: "Read the authors' accepted-manuscript PDF (Yarom's publication page) covering abstract, background, attack design, implementation, evaluation and mitigations. Note: arXiv:2506.07190 surfaces under similar search terms but is a different paper (a simulation-based evaluation framework for inter-VM Rowhammer mitigations)."
+- id: VIRT-ASPLOS25-03
+  title: "Tally: Non-Intrusive Performance Isolation for Concurrent Deep Learning Workloads"
+  title_correction: null
+  authors: [Wei Zhao, Anand Jayarajan, Gennady Pekhimenko]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3669940.3707282
+  official_url: https://dl.acm.org/doi/10.1145/3669940.3707282
+  fullpaper_source: https://arxiv.org/html/2410.07381v3
+  classification: SUPPORT
+  classification_note: "Threshold call: Tally builds a real CUDA API-remoting layer, but its contribution is a GPU preemption/temporal-multiplexing scheduler built from PTX kernel transformation - it never hands the workload a partitioned virtual GPU, so by the brief's GPU-sharing rule it is SUPPORT, not CORE."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T9, T4]
+  physical_resource: GPU
+  logical_abstraction: "An unmodified CUDA device that transparently yields to a high-priority tenant - i.e. a priority-scheduled GPU, not a partitioned vGPU"
+  problem: "Co-locating latency-critical inference with best-effort training on one GPU raises utilization but existing sharing mechanisms (time slicing, MPS, MIG, kernel-level schedulers) either destroy inference tail latency or require intrusive framework changes."
+  mechanism: "An LD_PRELOAD client intercepts CUDA calls and forwards them over shared memory to a server process that owns the device. The server rewrites best-effort kernels at the PTX level in two alternative forms - block-level slicing (add a block-index offset parameter so a kernel can be launched as small sub-kernels) and persistent-thread-block wrapping (a fixed pool of worker blocks that walk a global work counter and poll a preemption flag). A profile-guided scheduler picks slicing or preemption per kernel based on measured turnaround latency, and runs best-effort work only in the gaps between high-priority kernels."
+  isolation_mechanism: "Performance isolation by priority-preemptive scheduling: high-priority kernels dispatch immediately; best-effort kernels are constrained so they can relinquish the GPU within a target turnaround latency (default threshold 0.0316 ms). No security isolation beyond process separation."
+  multiplexing_mechanism: "Temporal multiplexing at thread-block granularity, explicitly contrasted with MPS (spatial, per-client) and MIG (static hardware partition)."
+  state_mechanism: "Client keeps local CUDA context handles to avoid round-trips; the server holds kernel metadata, transformed-PTX caches, per-kernel profiled turnaround latencies and the two priority queues. No checkpoint/migration of GPU state."
+  overhead_bottleneck: "The transformation tax on best-effort kernels (~25% average slowdown of transformed kernels) plus the initial per-kernel profiling pass; the API-interception layer itself is ~1%."
+  primary_tradeoff: "Authors' framing: 'Slicing is a lightweight transformation but can incur overhead due to multiple kernel launches. Conversely, the preemption kernel requires only a single launch, but the additional synchronization and control flow can introduce noticeable overhead to certain kernels.' System-level: strong tail-latency isolation -> costs best-effort throughput (80.3% of a throughput-first baseline)."
+  quantitative_claims:
+  - "99th-percentile inference latency overhead 7.2% average vs 188.9% (TGS), 252.3% (time slicing), 345.0% (MPS); 6 training + 6 inference models, NVIDIA A100, MAF2 trace at 50% load"
+  - "system throughput 80.3% of TGS while preserving isolation"
+  - "worst-case high-priority degradation 23% (ResNet50 inference co-located with training) vs 10x+ for kernel-level schedulers"
+  - "under 10-90% idle-time traffic loads TGS shows up to 5.8x slowdown for BERT inference where Tally stays near-ideal"
+  - "kernel transformation overhead averages 25% on best-effort kernels only; interception overhead ~1%"
+  why_useful_for_learning: "It shows concretely why GPUs are hard to virtualize: without hardware preemption you must rewrite the kernel itself to create a yield point, and it quantifies how far software preemption gets you compared with MPS and MIG."
+  priority: P1
+  related: [VIRT-ASPLOS25-06, VIRT-SC25-01, VIRT-HPDC25-02]
+  relations:
+  - {type: ALTERNATIVE, target: "MIG/MPS hardware and driver-level GPU partitioning", basis: "Paper directly measures MPS and discusses MIG's static-partition and reconfiguration-latency limits as the alternative design point"}
+  - {type: SAME_BRANCH, target: VIRT-ASPLOS25-06, basis: "Both intercept CUDA to arbitrate one GPU between tenants; Dilu adjusts SM quotas elastically, Tally preempts at block granularity"}
+  - {type: CONTRASTS_WITH, target: VIRT-SC25-01, basis: "BOER layers MPS on MIG partitions (spatial) where Tally argues spatial sharing cannot bound tail latency and uses transformed-kernel temporal sharing"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint]
+  confidence: HIGH
+  notes: "Read arXiv:2410.07381v3 (abstract, intro, design, implementation, evaluation, limitations). Author list taken from the arXiv record; verify against the ACM camera-ready if the orchestrator gains DL access. Stated limitation relevant to virtualization: Tally cannot transform device code inside closed-source libraries such as cuBLAS and substitutes CUTLASS kernels instead."
+- id: VIRT-ASPLOS25-04
+  title: "Tela: A Temporal Load-Aware Cloud Virtual Disk Placement Scheme"
+  title_correction: null
+  authors: [Difan Tan, Jiawei Li, Hua Wang, Xiaoxiao Li, Wenbo Liu, Zijin Qin, Ke Zhou, Ming Xie, Mengling Tao]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3669940.3707252
+  official_url: https://doi.org/10.1145/3669940.3707252
+  fullpaper_source: UNKNOWN
+  classification: SUPPORT
+  classification_note: "Threshold call: the virtual disk abstraction is assumed, not contributed - the contribution is a temporal-load-aware placement policy for mapping tenant virtual disks onto physical storage warehouses, which is the 'placement constrained by virtualization semantics' SUPPORT case."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T3]
+  physical_resource: NVMe
+  logical_abstraction: "A Virtual Disk exported to a VM by a Cloud Block Storage system; the paper decides which physical storage warehouse backs it"
+  problem: "Existing virtual-disk placement in cloud block storage ignores the temporal fluctuation of tenant load, producing imbalanced utilization, low efficiency and frequent warehouse overload."
+  mechanism: "Tela makes virtual-disk placement temporally aware: it models how each virtual disk's load varies over time and places disks so that their peaks do not coincide in the same physical storage warehouse, improving load balance and I/O performance. (Mechanism detail beyond the abstract could not be verified - see notes.)"
+  isolation_mechanism: "N/A at the mechanism level; performance interference between tenant virtual disks sharing a warehouse is what the placement policy tries to avoid."
+  multiplexing_mechanism: "Many tenant virtual disks are multiplexed onto shared physical storage warehouses; multiplexing quality is controlled by placement rather than by a runtime arbiter."
+  state_mechanism: "N/A - placement decisions are control-plane state; the paper does not claim to move virtual-disk state."
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: "Temporal-pattern-aware packing of virtual disks -> gains utilization and fewer warehouse overloads but costs reliance on load predictability and a more complex placement decision (exact costs unverified)."
+  quantitative_claims: []
+  why_useful_for_learning: "It is the storage-side analogue of temporal-pattern VM packing: it shows that once you virtualize a device you inherit a placement problem whose difficulty comes from the tenants' time-varying demand on shared physical media."
+  priority: P3
+  related: [VIRT-ASPLOS25-10, VIRT-ASPLOS25-12]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-ASPLOS25-12, basis: "Both exploit complementary temporal usage patterns of tenants to pack a shared physical resource - Coach for VM CPU/memory/network, Tela for virtual disks"}
+  - {type: LAYER_ABOVE, target: VIRT-ASPLOS25-10, basis: "FleetIO arbitrates inside one virtualized device at runtime; Tela decides which device a virtual disk lands on in the first place"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE: no open full text found. Tried (1) ACM DL (dl.acm.org blocked by the egress proxy for both curl and WebFetch), (2) ResearchGate/preprint search - request-PDF only, no author copy, (3) OpenAlex, which yielded only the reconstructed abstract. Classified at ABSTRACT depth; the CORE-vs-SUPPORT call rests on the abstract's own framing ('Virtual Disk placement... substantially affects resource efficiency, load distribution and I/O performance'), which is unambiguous about the contribution being placement rather than the virtual-disk abstraction. Uses the public Tencent Cloud-Volume-Workload-Traces dataset."
+- id: VIRT-ASPLOS25-05
+  title: "Embracing Imbalance: Dynamic Load Shifting among Microservice Containers in Shared Clusters"
+  title_correction: null
+  authors: [Shutian Luo, Jianxiong Liao, Chenyu Lin, Huanle Xu, Zhi Zhou, Chengzhong Xu]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3676641.3716255
+  official_url: https://doi.org/10.1145/3676641.3716255
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "A load-balancing/provisioning policy for microservice container replicas in shared clusters; it consumes container multi-tenancy rather than contributing an isolation or virtualization mechanism."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: "A pool of containers of one microservice whose per-replica capacity is deliberately treated as unequal"
+  problem: "Containers of the same microservice in a large shared cluster perform unequally across time and across machines, and conventional balanced load distribution therefore forces over-provisioning to meet SLAs."
+  mechanism: "Instead of equalising load across replicas, the system measures the spatial and temporal performance imbalance among co-located containers and shifts request load toward the currently faster replicas, reducing the provisioning headroom needed to satisfy the SLA."
+  isolation_mechanism: "N/A - the paper takes container-level (namespace/cgroup) isolation and its imperfection as given; the imbalance it exploits is precisely the residual interference that container isolation does not remove."
+  multiplexing_mechanism: "Many microservice containers share cluster machines; the paper reallocates request load rather than physical resources."
+  state_mechanism: N/A
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: "Exploit rather than suppress performance imbalance -> gains reduced over-provisioning but costs a load-distribution policy that depends on continuous per-container performance measurement."
+  quantitative_claims: []
+  why_useful_for_learning: "It is a good example of the application-level consequence of imperfect container isolation: interference in shared clusters is persistent and heterogeneous enough that it is cheaper to route around it than to eliminate it."
+  priority: P3
+  related: [VIRT-ASPLOS25-14]
+  relations:
+  - {type: LAYER_ABOVE, target: "container isolation (namespace/cgroup) mechanisms", basis: "Its premise is the measurable residual interference left by container isolation in shared clusters"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "ACCESS: no open full text located (ACM DL blocked from this environment); abstract obtained via OpenAlex. CONTEXT is a low-risk call here because the contribution is explicitly a load-distribution strategy, but a deeper read would be needed before making any claim about its mechanism internals."
+- id: VIRT-ASPLOS25-06
+  title: "Dilu: Enabling GPU Resourcing-on-Demand for Serverless DL Serving via Introspective Elasticity"
+  title_correction: null
+  authors: [Cunchi Lv, Xiao Shi, Zhengyu Lei, Jinyue Huang, Wenting Tan, Xiaohui Zheng, Xiaofang Zhao]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3669940.3707251
+  official_url: https://dl.acm.org/doi/10.1145/3669940.3707251
+  fullpaper_source: https://arxiv.org/html/2503.05130v1
+  classification: SUPPORT
+  classification_note: "Threshold call: Dilu gives each function instance an elastic SM quota enforced by CUDA-call interception and token issuing, but that is rate-limited temporal/spatial sharing over an unpartitioned GPU rather than a vGPU/MIG-like partition abstraction - an accelerator-sharing primitive, hence SUPPORT."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T8, T9]
+  physical_resource: GPU
+  logical_abstraction: "A serverless DL function instance with Kubernetes-style <request, limit> SM quotas that can be resized at ~5 ms granularity, plus horizontal instance scaling"
+  problem: "Serverless DL serving wastes 15-94% of GPU capacity because allocation is static and coarse-grained, keep-alive wastes time-dimension capacity, and horizontal-only scaling cannot reclaim fragmentation inside a GPU."
+  mechanism: "An LD_PRELOAD interception library in each container intercepts CUDA kernel launches and blocks them until it holds tokens from a per-node Real-time CUDA Kernel Manager. The manager re-issues tokens every 5 ms, moving SM share between co-located instances within profiled <request, limit> bounds, and the scheduler bin-packs complementary (compute-bound vs memory-bound) instances onto GPUs. 'Introspective elasticity' is this two-dimensional co-scaling: vertical SM-quota resizing inside a GPU plus lazy horizontal instance launch/termination across GPUs."
+  isolation_mechanism: "Container isolation for security; performance interference bounded by monitoring each instance's Kernel Launch Cycle and throttling co-located instances (EMERGENCY state) plus oversubscription caps on the sum of requests (omega=1.0) and limits (gamma=1.5) per GPU."
+  multiplexing_mechanism: "Hybrid: spatial co-location of multiple instances per GPU via bin-packing, plus temporal SM timesharing enforced by token issuing at 5 ms cycles - deliberately avoiding fixed MPS partition sizes."
+  state_mechanism: "Scheduler holds per-function resource metadata; the per-node kernel manager holds token budgets and per-instance kernel counters in memory; scaling-in is a graceful terminate with no checkpoint/restore of GPU state."
+  overhead_bottleneck: "Token request/issue traffic on the 5 ms cycle plus the CUDA interception hop; reported as <1% throughput loss for training and negligible for inference. The real cost is the offline profiling pass (roughly 8-16 trial runs per model)."
+  primary_tradeoff: "Fine-grained software SM sharing -> gains defragmentation and elasticity without touching the closed-source GPU driver, but costs profiling effort and accepts conservative oversubscription caps because interference can only be detected, not prevented."
+  quantitative_claims:
+  - "GPU fragmentation reduced from 15-94% to 10-46% (mixed DL functions, A100 40GB)"
+  - "up to 1.8x inference throughput and ~1.1x training throughput vs baselines (RoBERTa/LLaMA2, DDP/DeepSpeed on 4-GPU setups)"
+  - "SLO violation rate 1.8-9.8% vs 6-20% for INFless+ on Azure production traces (bursty/periodic/sporadic)"
+  - "saves 25-30% of GPUs vs exclusive allocation while adding <=9% latency"
+  - "vertical scaling costs <1% training throughput; scheduling overhead <1 ms per instance"
+  why_useful_for_learning: "It shows what a software-only 'elastic GPU quota' looks like when you cannot reprogram the GPU: interception plus token-based rate limiting, with interference handled by introspection (kernel launch cycle) instead of hardware partitioning."
+  priority: P2
+  related: [VIRT-ASPLOS25-03, VIRT-SC25-01, VIRT-HPDC25-02]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-ASPLOS25-03, basis: "Both are CUDA-interception arbiters over one physical GPU; Tally optimises tail-latency isolation, Dilu optimises elasticity/fragmentation"}
+  - {type: ALTERNATIVE, target: "MPS-based fixed spatial partitions (e.g. GPUlet, FaST-GS)", basis: "Paper positions token-based dynamic quotas against prior work's fixed MPS allocations"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint]
+  confidence: HIGH
+  notes: "Read arXiv:2503.05130v1 (abstract, intro, design, algorithms, evaluation, limitations). Large-scale (1000-node) results are simulation only; the physical testbed is 5 nodes / 20 GPUs. No GPU memory oversubscription or swapping - memory is statically assigned per instance, which is the main limit on collocation density."
+- id: VIRT-ASPLOS25-07
+  title: "Litmus: Fair Pricing for Serverless Computing"
+  title_correction: null
+  authors: [Qi Pei, Yipeng Wang, Seunghee Shin]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://download.vusec.net/asplos-eurosys-2025/talk/BLGTM8/
+  fullpaper_source: https://arxiv.org/html/2408.00731v1
+  classification: CONTEXT
+  classification_note: "The paper contributes a billing model, explicitly rejecting resource partitioning and contributing no isolation or virtualization mechanism; its value is as evidence of what multi-tenant interference costs tenants."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "A priced unit of serverless function execution whose charge is split into private-resource and shared-resource time"
+  problem: "Serverless tenants are billed by wall-clock execution time, so co-location interference makes them pay more precisely when they get less; strict partitioning would fix fairness but waste capacity, and per-function profiling is too expensive."
+  mechanism: "Litmus splits measured execution time into a private component and a shared-resource component using hardware performance counters (L2 miss stall cycles) and charges them at different rates. A lightweight 'litmus test' observes the memory-read burst of a function's own startup phase to estimate current system congestion, then looks up/regresses a discount rate from pre-built congestion-performance tables."
+  isolation_mechanism: "None contributed. The paper argues against guaranteeing invariant performance and instead compensates tenants financially for the slowdown that imperfect isolation causes."
+  multiplexing_mechanism: "N/A - assumes the platform's existing dense co-location of short-lived functions."
+  state_mechanism: N/A
+  overhead_bottleneck: "Congestion estimation cost; the design is built specifically to avoid per-function sampling/profiling overhead."
+  primary_tradeoff: "Price-based fairness -> gains tenant fairness at essentially no capacity cost, but costs any actual performance guarantee: interference remains, only the bill changes."
+  quantitative_claims:
+  - "a function co-running with 26 others suffers 11.5% average slowdown, up to 35% for individual functions (Intel Xeon Cascade Lake / Ice Lake bare servers)"
+  - "with 160 co-running functions Litmus computes a 17.2% average discount vs the ideal 17.4% (0.2% deviation)"
+  - "with 320 co-running functions 20.0% vs ideal 21.5% (1.5% deviation)"
+  why_useful_for_learning: "It quantifies the tenant-visible cost of weak performance isolation in dense serverless co-location, which is the economic motivation behind the isolation and partitioning mechanisms elsewhere in the corpus."
+  priority: P3
+  related: [VIRT-ASPLOS25-08]
+  relations:
+  - {type: CONTRASTS_WITH, target: "resource-partitioning approaches to serverless interference", basis: "Paper explicitly rejects partitioning as capacity-inefficient and proposes compensation instead"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: MEDIUM
+  notes: "Read arXiv:2408.00731v1 (design + evaluation). The preprint's own header/venue string reads ASPLOS '24, but the paper is in the ASPLOS 2025 programme (joint ASPLOS/EuroSys 2025 'Serverless Computing' session, evidence: the pretalx session page listed as official_url); the ACM DOI could not be confirmed because dl.acm.org is blocked. Flagged for the orchestrator to confirm volume/DOI."
+- id: VIRT-ASPLOS25-08
+  title: "Concurrency-Informed Orchestration for Serverless Functions"
+  title_correction: null
+  authors: [Qichang Liu, Yue Cheng, Haiying Shen, Ao Wang, Bharathan Balaji]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3676641.3716253
+  official_url: https://dl.acm.org/doi/10.1145/3676641.3716253
+  fullpaper_source: https://ds2-lab.github.io/pdfs/asplos25-cidre.pdf
+  classification: CONTEXT
+  classification_note: "CIDRE is a keep-alive/scaling and cache-eviction policy over an existing container sandbox substrate; it contributes no isolation mechanism and does not change how a sandbox is built or made cheap."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9, T5]
+  physical_resource: DRAM
+  logical_abstraction: "A managed pool of warm function sandboxes (containers) whose provisioning and eviction is decided per function, informed by concurrency"
+  problem: "Container keep-alive policies reduce cold starts but ignore concurrent invocations, producing 'delayed warm starts' (queueing behind a busy warm container vs paying a cold start) and 'imbalanced evictions' (per-container eviction decisions that ignore how many containers a function already holds)."
+  mechanism: "Two policies. Conditional Speculative Scaling races the queue-on-warm-container path against provisioning a new container and takes whichever completes first, with adaptive suppression of wasteful provisioning. Concurrency-Informed Priority is an eviction score combining container recency/memory/cold-start cost with function-level invocation frequency divided by the number of cached containers that function holds."
+  isolation_mechanism: "N/A - containers are the given sandbox; one container serves one request at a time and concurrency is served by more container instances, so intra-sandbox interference is not addressed."
+  multiplexing_mechanism: "Memory of the warm-container cache is multiplexed across functions by the eviction policy."
+  state_mechanism: "Warm-container state is the cached sandbox itself; the orchestrator keeps per-function invocation statistics over a 15-minute sliding window. No snapshot/restore mechanism."
+  overhead_bottleneck: "Cold-start latency and warm-container memory footprint; the paper avoids execution-time prediction (59-68% of functions show >25% variance) by speculating instead."
+  primary_tradeoff: "Speculative dual-path provisioning -> gains lower invocation overhead but costs occasional wasted container provisioning and extra bookkeeping."
+  quantitative_claims:
+  - "cold-start ratio reduced by up to 75.1% vs FaasCache (100 GB cache, Azure Functions trace replay of 14.7M requests)"
+  - "average invocation overhead reduced by up to 39.3% vs state-of-the-art policies"
+  - "median end-to-end service time 249.76 ms vs 342.23 ms for FaasCache on the Azure trace"
+  - "production deployment on Alibaba Cloud Function Compute: cold-start ratio 1.10% -> 0.72% (34.5% reduction) and 10.01% lower P99 invocation overhead"
+  why_useful_for_learning: "It shows why the cost of the isolation boundary dominates serverless design: the whole policy exists because creating a fresh sandbox is expensive, which is the motivation for snapshot/restore and lightweight-isolation work."
+  priority: P3
+  related: [VIRT-ASPLOS25-07, VIRT-ASPLOS25-09]
+  relations:
+  - {type: LAYER_ABOVE, target: "lightweight sandbox / snapshot-restore mechanisms", basis: "Policy-level workaround for expensive sandbox creation rather than a cheaper sandbox"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper]
+  confidence: HIGH
+  notes: "Read the authors' accepted PDF (ds2-lab.github.io), implemented in OpenLambda and validated on Alibaba Cloud Function Compute. System name in the paper is CIDRE."
+- id: VIRT-ASPLOS25-09
+  title: "Medusa: Accelerating Serverless LLM Inference with Materialization"
+  title_correction: null
+  authors: [Shaoxun Zeng, Minhui Xie, Shiwei Gao, Youmin Chen, Youyou Lu]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3669940.3707285
+  official_url: https://dl.acm.org/doi/10.1145/3669940.3707285
+  fullpaper_source: UNKNOWN
+  classification: SUPPORT
+  classification_note: "The mechanism is capture-and-restore of GPU-side runtime state (CUDA graphs, KV-cache reservation, weights) to skip initialization - a snapshot/restore primitive that makes a fresh isolated instance cheap, which the brief places in the CORE/SUPPORT band; it stops short of CORE because the captured state is application/runtime state, not virtualized device state."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T8, T6]
+  physical_resource: GPU
+  logical_abstraction: "A pre-materialized LLM inference instance whose GPU-side initialization state can be restored instead of recomputed"
+  problem: "Serverless LLM inference pays cold-start cost twice over: on top of sandbox startup, LLM-specific initialization stages - dynamic KV-cache profiling/reservation and CUDA-graph construction across batch sizes - dominate time-to-first-token."
+  mechanism: "Medusa materializes those initialization stages: it persists and restores the CUDA graph and the associated GPU memory/KV-cache layout (the artifact centres on CUDA-graph save/recover) and streams tensors from NVMe via SPDK, so a new instance restores a ready-to-serve state rather than rebuilding it."
+  isolation_mechanism: "N/A - containers/serverless sandboxes are the given boundary; Medusa reduces the cost of standing one up."
+  multiplexing_mechanism: "N/A at the device level; faster restore is what enables denser scale-to-zero multiplexing over time."
+  state_mechanism: "This is the paper's core: GPU runtime state (CUDA graph structure and its memory bindings, KV-cache reservation, model weights) is externalized to storage and reloaded on start, i.e. state moves host<->NVMe rather than living only in the live process."
+  overhead_bottleneck: "Cold-start latency composed of KV-cache initialization and CUDA-graph construction; storage bandwidth for restoring materialized state."
+  primary_tradeoff: "Materialize initialization state -> gains much lower cold-start latency but costs storage capacity/bandwidth and couples the restored state to a specific CUDA/driver and batch-size configuration."
+  quantitative_claims: []
+  why_useful_for_learning: "It is the GPU analogue of VM/sandbox snapshot-restore: it makes concrete which pieces of accelerator-side state must be captured for a fast restore, and how brittle that state is to runtime/driver versions."
+  priority: P2
+  related: [VIRT-ASPLOS25-08, VIRT-ASPLOS25-06]
+  relations:
+  - {type: SAME_BRANCH, target: "serverless snapshot/restore (VM and container snapshotting)", basis: "Same design pattern - restore initialized state instead of re-initializing - applied to GPU runtime state"}
+  - {type: ALTERNATIVE, target: VIRT-ASPLOS25-08, basis: "CIDRE hides cold starts by keeping sandboxes warm; Medusa makes the cold start itself cheap"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, artifact, code]
+  confidence: MEDIUM
+  notes: "ACCESS FAILURE: no open full text. Tried (1) ACM DL (blocked), (2) arXiv/author-page search - none found; the artifact repo states the paper would be released after camera-ready but no PDF is posted, (3) OpenAlex, which gave the reconstructed abstract. Mechanism description above is reconstructed from the abstract plus the public artifact repository (github.com/thustorage/Medusa: CUDA-graph save/recover, SPDK tensor persistence, CUDA 12.4 / driver 550.54.14). No verified numbers, so quantitative_claims is empty. Confidence MEDIUM; SUPPORT-vs-CORE would benefit from a full read."
+- id: VIRT-ASPLOS25-10
+  title: "FleetIO: Managing Multi-Tenant Cloud Storage with Multi-Agent Reinforcement Learning"
+  title_correction: null
+  authors: [Jinghan Sun, Benjamin Reidys, Daixuan Li, Jichuan Chang, Marc Snir, Jian Huang]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3669940.3707229
+  official_url: https://doi.org/10.1145/3669940.3707229
+  fullpaper_source: https://snir.cs.illinois.edu/listed/fleetIO.pdf
+  classification: SUPPORT
+  classification_note: "The virtual SSD is the given abstraction; FleetIO contributes a runtime arbiter (RL agents + ghost superblocks) over it. Its decisive value is that it states and measures the hardware-isolation-vs-utilization trade-off of device virtualization directly."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T9]
+  physical_resource: NVMe
+  logical_abstraction: "A virtual SSD (vSSD) per tenant whose bandwidth can elastically borrow idle capacity from co-located vSSDs"
+  problem: "Cloud platforms slice flash SSDs into vSSDs, and must choose between hardware isolation (dedicated flash channels: strong isolation, poor utilization) and software isolation (shared channels with token-bucket throttling: good utilization, 2x worse tail latency). Neither point is acceptable."
+  mechanism: "Host-based framework on an open-channel SSD: one RL agent per vSSD reads I/O counters and issues three actions - Harvest(bandwidth) to borrow from co-located vSSDs, Make_Harvestable(bandwidth) to offer idle capacity, and Set_Priority(level) to change request scheduling priority - with an admission-control stage validating actions. A ghost-superblock manager adds an extra indirection level (vSSD LBA -> ghost-superblock LBA -> physical block) so borrowed superblocks spanning several channels can be attached to a vSSD and later reclaimed via garbage collection."
+  isolation_mechanism: "Best-effort rather than hard: SLO-violation targets (default 1%) act as soft constraints, priority-based request scheduling protects latency-sensitive tenants, and harvesting only happens when a donor vSSD has spare bandwidth."
+  multiplexing_mechanism: "Dynamic, fine-grained flash-channel multiplexing: instead of a static channel partition, superblocks are lent between vSSDs at runtime."
+  state_mechanism: "Distributed: per-vSSD RL agent state (bandwidth/IOPS/latency/SLO counters, read-write ratio, queue delay, GC status), ghost-superblock metadata in superblock headers recording ownership and harvest status, and a harvested-block table distinguishing regular from harvested blocks; 2.2 MB of model state per vSSD."
+  overhead_bottleneck: "Background inference/fine-tuning cost (1.1 ms inference per time window, 51.2 ms fine-tuning every 10 windows, 0.8 ms per 1000-action admission batch) and garbage-collection write amplification (<5%) from migrating harvested blocks back."
+  primary_tradeoff: "Elastic bandwidth harvesting between vSSDs -> gains most of software isolation's utilization and most of hardware isolation's tail latency, but costs a learned controller and reaches neither extreme optimally (~89% of software-isolation bandwidth, within 1.2x of the strongest isolation)."
+  quantitative_claims:
+  - "storage utilization 1.30-1.39x better than hardware isolation (2-vSSD mixes of bandwidth-intensive and latency-sensitive workloads, open-channel SSD prototype)"
+  - "P99 tail latency 1.47x better than software isolation on average, on the same mixes"
+  - "P95/P99.9 tail latency only 3%/8% worse than hardware isolation"
+  - "8-vSSD scaling: 1.18x utilization over hardware isolation while reaching 94-99% of software-isolation performance"
+  - "within 5% of pre-trained performance when the workload mix changes mid-run"
+  why_useful_for_learning: "It gives the cleanest quantitative statement of the central device-virtualization dilemma - partition the hardware for isolation or share it for utilization - and shows a third option built by adding one more level of address indirection inside the virtual device."
+  priority: P1
+  related: [VIRT-ASPLOS25-04, VIRT-ASPLOS25-12]
+  relations:
+  - {type: TRADEOFF_PAIR, target: "hardware-partitioned vSSDs vs token-bucket-throttled shared vSSDs", basis: "Paper measures both baselines and positions itself between them"}
+  - {type: SAME_BRANCH, target: VIRT-ASPLOS25-12, basis: "Both split a virtualized resource into a guaranteed part and an opportunistically shared part"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper]
+  confidence: HIGH
+  notes: "Read the author-hosted proceedings PDF (snir.cs.illinois.edu). Evaluated on a single open-channel SSD prototype; capacity harvesting (as opposed to bandwidth harvesting) is out of scope."
+- id: VIRT-ASPLOS25-11
+  title: "Design and Operation of Shared Machine Learning Clusters on Campus"
+  title_correction: null
+  authors: [Kaiqiang Xu, Xinchen Wan, Hao Wang, Zhenghang Ren, Xudong Liao, Decang Sun, Chaoliang Zeng, Kai Chen]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3669940.3707266
+  official_url: https://dl.acm.org/doi/10.1145/3669940.3707266
+  fullpaper_source: https://arxiv.org/abs/2110.01556
+  classification: CONTEXT
+  classification_note: "An operational-experience paper about running a shared academic GPU cluster; it reports how sharing, quotas and incidents are handled in practice rather than contributing a virtualization or isolation mechanism."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T5]
+  physical_resource: GPU
+  logical_abstraction: "A shared, quota-managed GPU cluster presented to campus users as schedulable jobs with a layered workflow abstraction"
+  problem: "Universities buy large GPU clusters but cannot staff them like a cloud provider; the paper asks how to get high utilization and low maintenance cost from a shared ML cluster with minimal operations staff."
+  mechanism: "A full-stack design (hardware configuration, storage, scheduling on Slurm with fair-share/gang/backfill policies and per-user quotas, and a layered application-workflow abstraction), plus reported experience: usage-pattern analysis and incident/failure management from real multi-year operation."
+  isolation_mechanism: "Operational rather than architectural: per-user and per-group quotas and prioritization in the batch scheduler; the paper does not describe GPU partitioning, MIG, or VM-level isolation."
+  multiplexing_mechanism: "Batch-scheduler multiplexing of whole GPUs across users (fair-share, gang scheduling/time-slicing of jobs, backfill)."
+  state_mechanism: N/A
+  overhead_bottleneck: "Operational: staffing, incident handling and idle capacity rather than a measured software overhead."
+  primary_tradeoff: "Whole-GPU batch allocation with quotas -> gains operational simplicity for a tiny ops team but costs the utilization that finer-grained GPU sharing or virtualization could recover."
+  quantitative_claims: []
+  why_useful_for_learning: "It is useful landscape evidence for why GPU-sharing and accelerator-virtualization work exists: it documents how real shared clusters actually allocate GPUs (coarse, whole-device, quota-governed) and what operating them costs."
+  priority: P3
+  related: [VIRT-ASPLOS25-03, VIRT-ASPLOS25-06]
+  relations:
+  - {type: LAYER_ABOVE, target: VIRT-ASPLOS25-03, basis: "Documents the coarse whole-GPU allocation regime that GPU-sharing mechanisms such as Tally and Dilu are designed to improve"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [preprint, official-web]
+  confidence: MEDIUM
+  notes: "The long-running preprint arXiv:2110.01556 is the same line of work by the same HKUST group but is currently titled 'SING: A full-stack solution for managing shared GPU clusters in academic institutions' (an earlier version was titled TACC); the ASPLOS camera-ready title differs. I read the preprint's abstract and an earlier full version's design sections, not the ASPLOS text (dl.acm.org blocked), so GPU-sharing specifics in the ASPLOS version are unverified."
+- id: VIRT-ASPLOS25-12
+  title: "Coach: Exploiting Temporal Patterns for All-Resource Oversubscription in Cloud Platforms"
+  title_correction: null
+  authors: [Benjamin Reidys, "et al. (Microsoft, Meta, Google, University of Washington, UIUC)"]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3669940.3707226
+  official_url: https://dl.acm.org/doi/10.1145/3669940.3707226
+  fullpaper_source: https://arxiv.org/html/2501.11179
+  classification: CORE
+  classification_note: "Beyond the placement policy, Coach redefines the VM itself - the CoachVM splits each resource into a guaranteed portion (1 GB huge pages mapped directly into guest-physical memory, static CPU groups) and an oversubscribed portion (virtually addressed memory exposed through a zero-size NUMA node so the guest needs no modification), with Hyper-V enforcement and ATS/PRI or enlightenments for direct-device DMA. That is an explicit change to the guest-host memory interface."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T9, T1, T4]
+  physical_resource: DRAM
+  logical_abstraction: "A CoachVM: a VM whose CPU, memory, network and storage are each split into a guaranteed allocation and an oversubscribed allocation, offered to users as a discounted instance type"
+  problem: "Cloud servers stay underutilized, and oversubscribing CPU alone just moves the allocation bottleneck to memory and network; meanwhile VMs have complementary daily usage peaks that static per-VM allocation throws away."
+  mechanism: "Coach predicts P95 utilization per resource for each of six 4-hour time windows of a VM's life with a random-forest model, then bin-packs VMs with complementary peaks onto servers. On each host, guaranteed memory is physically backed with 1 GB huge pages while oversubscribed memory is virtually addressed and surfaced via a zero-size NUMA node (keeping the guest OS unmodified); CPU uses Hyper-V CPU groups. A local agent samples contention (CPU wait time, page read/write) every 20 s, predicts near-term contention with EWMA/LSTM, and mitigates by trimming pages, extending the oversubscribed pool with unallocated server memory, or live-migrating a VM."
+  isolation_mechanism: "Two layers: conservative provisioning (guaranteed resources sized for P95 so only ~5% of accesses can touch the oversubscribed pool) plus reactive host-level mitigation (page trimming, pool extension, live migration) driven by 20 s contention monitoring; hypervisor primitives (CPU groups, memory partitions, NUMA policy) do the enforcement."
+  multiplexing_mechanism: "Temporal multiplexing of every resource across VMs with complementary diurnal peaks, at 4-hour window granularity, with the oversubscribed portion of each resource being the shared pool."
+  state_mechanism: "Oversubscription decisions live in a logically centralized cluster manager (daily offline training over 1M+ VMs); per-host agents hold live contention state. Guest memory state can be trimmed or moved, and live migration is the escape hatch when a host becomes contended - so VM state mobility is part of the safety mechanism."
+  overhead_bottleneck: "Memory's non-fungibility: guaranteed memory must be statically physically backed, which caps how much temporal multiplexing memory can contribute; and prediction error (19-24% memory over-allocation error) bounds achievable density."
+  primary_tradeoff: "Split each virtualized resource into guaranteed + oversubscribed -> gains up to ~26% more VMs per platform but costs a small, explicit SLO risk for the oversubscribed portion (and the paper prices that risk as a discounted VM type)."
+  quantitative_claims:
+  - "hosts up to ~26% more VMs with minimal performance degradation"
+  - "six 4-hour windows save ~15% memory and ~20% CPU vs static allocation, versus ~8% for a single 24-hour window"
+  - "latency-sensitive cache/KV-store workloads see 4-10% P99 tail-latency slowdown under Coach; memory-intensive LLM fine-tuning 24%; full oversubscription baseline 2.35x"
+  - "added CPU contention +1%, memory violations <1%; random-forest over-allocation error 19-24% (memory) and 23-30% (CPU) with 1-2% under-allocation"
+  - "testbed: production server with 160 hyperthreaded Intel cores and 512 GB DRAM; 2-week Azure trace of ~1M VMs across 10 clusters in 7 regions"
+  why_useful_for_learning: "It shows how a hyperscaler actually implements memory oversubscription without paravirtualizing the guest - guaranteed huge-page-backed memory plus a virtually addressed pool hidden behind a zero-size NUMA node - and why direct-device DMA (ATS/PRI) is the hard constraint on any such scheme."
+  priority: P1
+  related: [VIRT-ASPLOS25-10, VIRT-ASPLOS25-04]
+  relations:
+  - {type: ALTERNATIVE, target: "memory ballooning and hypervisor-driven page reclamation", basis: "Coach deliberately avoids guest modification, using a zero-size NUMA node and page trimming instead of a balloon driver"}
+  - {type: USES_MECHANISM_FROM, target: "VM live migration", basis: "Live migration is one of Coach's reactive mitigations when host contention is detected"}
+  - {type: SAME_BRANCH, target: VIRT-ASPLOS25-10, basis: "Guaranteed-plus-harvestable split of a virtualized resource, applied to VM memory/CPU rather than to vSSD bandwidth"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint]
+  confidence: HIGH
+  notes: "NOT IN THE SEED LIST - found by scanning the official ASPLOS 2025 programme (Session 2A Cloud Computing 1); recorded in possible_omissions. Read arXiv:2501.11179 (design + evaluation + limitations). Author list abbreviated: the preprint lists a large multi-institution set led by Benjamin Reidys (UIUC) with Microsoft/Meta/Google/UW co-authors; full list unverified because dl.acm.org is blocked. Borderline CORE/SUPPORT - the CoachVM guest-memory architecture is what tips it to CORE."
+- id: VIRT-ASPLOS25-13
+  title: "Harmonia: A Unified Framework for Heterogeneous FPGA Acceleration in the Cloud"
+  title_correction: null
+  authors: [Luyang Li, Heng Pan, Xinchen Wan, Kai Lv, Zilong Wang, Qian Zhao, Feng Ning, Qingsong Ning, Shideng Zhang, Zhenyu Li, Layong Luo, Gaogang Xie]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3676641.3716259
+  official_url: https://doi.org/10.1145/3676641.3716259
+  fullpaper_source: https://xcwanandy.github.io/papers/2025/harmonia-asplos25.pdf
+  classification: CORE
+  classification_note: "The artifact contributed is the cloud FPGA shell - the mediation layer between the physical device and tenant logic - together with its tenant-isolation mechanisms (1K isolated DMA queues, packet filter, flow director) and partial-reconfiguration multi-tenancy, deployed on tens of thousands of production FPGAs. That is device/accelerator virtualization infrastructure, even though the paper's headline is cross-vendor portability."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T3, T9]
+  physical_resource: FPGA
+  logical_abstraction: "A vendor-independent FPGA platform: a tailorable shell assembled from Reusable Building Blocks that exposes a user role to five uniform interface types (clock, reset, streaming, mem_map, reg, irq) plus a command-based host software interface"
+  problem: "Clouds run heterogeneous FPGAs (multiple vendors, generations, and device classes such as SmartNIC vs SmartSSD), and 66-87% of the code needed per platform is shell development; migrating a role across platforms also forces ad-hoc host-software rewrites."
+  mechanism: "A two-layer architecture: a platform-specific layer of automated vendor adapters and interface wrappers, and a platform-independent layer providing the unified shell. The shell is composed of Reusable Building Blocks (Network, Memory, Host) from which a role selects concrete instances (e.g. 25G vs 100G MAC); hierarchical tailoring removes unneeded blocks and exposes only role-relevant properties. Vendor IP (MAC, PCIe DMA, DDR) is wrapped into the uniform interface types with a parameterized asynchronous FIFO doing clock-domain and data-width conversion without pipeline bubbles."
+  isolation_mechanism: "Host RBB provides 1K DMA queues so tenant data paths are separated; a packet filter drops packets not destined for the local machine and a flow director steers incoming flows to the owning host queue, giving network isolation; roles are separated by partial reconfiguration."
+  multiplexing_mechanism: "Role-level multi-tenancy via partial reconfiguration on top of the shared shell, plus per-tenant DMA-queue and flow-level multiplexing of the NIC/PCIe paths."
+  state_mechanism: "Shell state lives in FPGA fabric (registers, monitoring logic, queue state); control state is centralized in a unified control kernel on a soft processor (Nios); role/application state is managed across partial reconfiguration, and the paper does not detail preserving queue state across a reconfiguration."
+  overhead_bottleneck: "Shell generality: the unified shell costs 3-25.1% more FPGA resources than a hand-optimized single-purpose shell (mitigated by hierarchical tailoring); the centralized soft-processor control kernel is a potential control-path bottleneck, worked around by exposing raw irq signals."
+  primary_tradeoff: "One unified, vendor-independent shell -> gains 69-93% shell code reuse and drastically simpler host software, but costs some fabric resources versus a bespoke shell and requires the provider to write an adapter whenever a genuinely new peripheral or architecture appears."
+  quantitative_claims:
+  - "shell development effort reduced 69-93% (cross-vendor reuse 69-76%, cross-family 84-93%) across Xilinx and Intel devices"
+  - "configuration items reduced 8.8-19.8x by role-oriented property exposure; host software modification reduced 88-107x for the Host Network case"
+  - "interface wrappers <0.37% and unified control kernel <0.67% of resources, total <0.63% overhead; end-to-end latency increase <1% with no throughput loss"
+  - "3.5-14.9% lower shell resource use than Vitis, oneAPI and Coyote; 15-23x simpler software configuration"
+  - "deployed for several years at Douyin managing tens of thousands of FPGA accelerators across 4 device types (Xilinx Virtex/Zynq/Alveo, Intel Agilex/Stratix/Arria, custom FPGAs; PCIe Gen3/4/5; DDR3/4; HBM; 25/100/400G Ethernet)"
+  why_useful_for_learning: "It is the production-scale view of what an FPGA 'hypervisor' actually is: a shell that owns the device's I/O (PCIe DMA queues, MAC, memory) and hands tenants a narrow, uniform role interface - and it quantifies what that mediation layer costs in fabric and what it buys in portability."
+  priority: P1
+  related: ["Salus: A Practical Trusted Execution Environment for CPU-FPGA Heterogeneous Cloud Platforms", "Coyote v2: Raising the Level of Abstraction for Data Center FPGAs"]
+  relations:
+  - {type: ALTERNATIVE, target: "Vitis / oneAPI / Coyote FPGA shells", basis: "Directly compared on shell resource use and software configuration complexity"}
+  - {type: LAYER_BELOW, target: "tenant FPGA roles / accelerator kernels", basis: "The shell is the virtualization layer beneath tenant logic"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper]
+  confidence: HIGH
+  notes: "NOT IN THE SEED LIST - found in the official ASPLOS 2025 programme (Session 2D FPGAs); recorded in possible_omissions. Read the author-hosted proceedings PDF. The paper itself says it does not create virtual FPGA instances, so a reviewer could reasonably call this SUPPORT; I classify CORE because the shell plus its DMA-queue/flow isolation IS the device-virtualization layer, and this is the only production-scale cloud-FPGA virtualization paper in the batch."
+- id: VIRT-ASPLOS25-14
+  title: "Cooperative Graceful Degradation in Containerized Clouds"
+  title_correction: null
+  authors: [Kapil Agrawal, Sangeetha Abdu Jyothi]
+  venue: ASPLOS
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3669940.3707244
+  official_url: https://doi.org/10.1145/3669940.3707244
+  fullpaper_source: https://arxiv.org/abs/2312.12809
+  classification: CONTEXT
+  classification_note: "Phoenix is a Kubernetes controller that decides which non-critical containers to deactivate under capacity loss ('diagonal scaling'); it consumes container orchestration and contributes no isolation or virtualization mechanism."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: "A containerized application whose criticality annotations let the platform shed non-critical containers instead of failing uniformly"
+  problem: "When a containerized cloud loses capacity at scale, uniform degradation takes down critical services along with everything else; operators and applications have no shared mechanism to degrade cooperatively."
+  mechanism: "Diagonal scaling - deactivating non-critical containers during capacity constraints - realized by Phoenix, an automated controller for Kubernetes that uses application-supplied criticality metadata to choose what to keep running, plus AdaptLab, an open-source benchmarking framework for failure scenarios."
+  isolation_mechanism: "N/A - the container boundary is given; the paper decides which containers survive, not how they are isolated."
+  multiplexing_mechanism: "Cluster capacity is re-multiplexed toward critical containers when capacity shrinks."
+  state_mechanism: N/A
+  overhead_bottleneck: "Controller decision time at scale (reported as handling failures in a 100,000-node cluster within 10 seconds)."
+  primary_tradeoff: "Cooperative, criticality-aware degradation -> gains critical-service availability during large failures but costs application cooperation (criticality annotations) and deliberate loss of non-critical functionality."
+  quantitative_claims:
+  - "improves critical service availability by up to 2x during large-scale failures"
+  - "handles failures in a cluster of 100,000 nodes within 10 seconds"
+  why_useful_for_learning: "It illustrates a multi-tenancy consequence at the application layer: in containerized clouds, capacity loss is managed by choosing what to switch off, which is the operational counterpart to admission control and oversubscription mechanisms lower in the stack."
+  priority: P3
+  related: [VIRT-ASPLOS25-05, VIRT-ASPLOS25-12]
+  relations:
+  - {type: LAYER_ABOVE, target: VIRT-ASPLOS25-12, basis: "Oversubscription creates the capacity risk; cooperative degradation is one way applications absorb it"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [preprint]
+  confidence: MEDIUM
+  notes: "NOT IN THE SEED LIST - found in the official ASPLOS 2025 programme (Session 2A Cloud Computing 1); recorded in possible_omissions. Read the arXiv:2312.12809 abstract page only; CONTEXT is a safe call given the contribution type, and the paper is included for breadth rather than for a virtualization mechanism."

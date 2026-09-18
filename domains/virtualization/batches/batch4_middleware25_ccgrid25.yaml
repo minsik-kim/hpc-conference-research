@@ -1,0 +1,864 @@
+papers:
+
+# ============================== MIDDLEWARE 2025 ==============================
+
+- id: VIRT-MIDDLEWARE25-01
+  title: "Clair Obscur: The Light and Shadow of System Call Interposition – From Pitfalls to Solutions with K23"
+  title_correction: 'seed list said: "Clair Obscur: The Light and Shadow of System Call Interposition - From Pitfalls to Solutions with K23" (hyphen instead of en dash; official proceedings prints an en dash and the paper PDF adds an asterisk after "Obscur")'
+  authors: ["Jesús María Gómez Moreno", "Vissarion Moutafis", "Antreas Dionysiou", "Bart Coppens", "Georgios Smaragdakis", "Fernando Kuipers", "Alexios Voulimeneas"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3770772
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3770772
+  fullpaper_source: https://backoffice.biblio.ugent.be/download/01KCHA8SW28AMRGNSX0KZTGR6W/01KCHAJ5YGWQTVSTBCH09QJJVQ
+  classification: CORE
+  classification_note: "The contribution is the syscall-interposition boundary itself — a systematic pitfall taxonomy for ptrace/seccomp/SUD/zpoline/lazypoline plus K23, a mechanism that guarantees exhaustive, non-bypassable interception, which is exactly the boundary sandboxes and introspection tools are built on."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T7, T10]
+  physical_resource: CPU core
+  logical_abstraction: "A complete, tamper-resistant user-space view of every system call a process issues, delivered to an in-process interposer library"
+  problem: "No existing system call interposition mechanism is a general-purpose solution: each either misses system calls, can be silently disabled by the target, corrupts code/data through mis-disassembly, or costs far too much."
+  mechanism: "Offline phase runs the application under a Syscall-User-Dispatch-based logger to enumerate the addresses of legitimate syscall/sysenter instructions in non-writable executable regions. Online phase uses a ptrace-based interposer to cover process startup and library loading (including vDSO), injects libK23 via LD_PRELOAD into a dedicated dlmopen namespace, performs a single selective zpoline-style rewrite of only pre-validated instruction addresses, and keeps an SUD fallback for anything missed."
+  isolation_mechanism: "Every system call is funnelled through libK23, whose trampoline page at address 0 is made execute-only with Protection Keys for Userspace (PKU); LD_PRELOAD removal and prctl-based SUD disabling (the two known bypasses) are closed off, and a hash set of valid rewrite addresses prevents attacker-directed rewriting of data or partial instructions."
+  multiplexing_mechanism: N/A
+  state_mechanism: "Interposition state lives in the offline log (made immutable after the offline phase) plus libK23's in-process hash set, selector and dedicated interposer stack; the ptracer hands its state to libK23 at startup via fake system calls and process_vm_writev."
+  overhead_bottleneck: "Per-syscall trampoline/dispatch cost on the rewritten fast path, and the pipeline of validity checks; SUD-only interception is the pathological case at 15.3x."
+  primary_tradeoff: "Selective binary rewriting validated by an offline profiling pass -> gains near-zpoline speed with exhaustive, non-bypassable coverage, but costs an offline phase that needs representative inputs and leaves coverage dependent on that input quality."
+  quantitative_claims:
+    - "syscall microbenchmark (100M invocations of non-existent syscall 500, Xeon w5-3425, Ubuntu 22.04.5, Linux 6.8): K23-default 1.2788x native vs zpoline-default 1.1267x, lazypoline 1.3801x, SUD 15.3022x"
+    - "macrobenchmark geometric-mean relative throughput vs native (nginx/lighttpd/redis/sqlite): K23-default 98.62%, zpoline-default 98.93%, lazypoline 98.26%, SUD 56.70%"
+    - "redis with 6 I/O threads: K23-default 99.97% of native throughput"
+    - "K23-ultra / ultra+ variants (NULL-execution checks + stack switching enabled): 1.3919x-1.3948x on the syscall microbenchmark"
+    - "offline phase enumerated 7-44 unique syscall/sysenter instruction sites in coreutils, 20-92 in nginx..redis"
+  why_useful_for_learning: "It is the cleanest single source on why a syscall boundary is hard to make both complete and cheap — the exact trade-off that decides whether a sandbox or lightweight-isolation design can rely on syscall interposition at all."
+  priority: P1
+  related: ["VIRT-MIDDLEWARE25-11", "zpoline", "lazypoline", "Syscall User Dispatch", "gVisor"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-MIDDLEWARE25-11", basis: "svc-hook solves the same interposition-by-binary-rewriting problem on ARM64 where K23's x86 syscall/sysenter rewriting does not apply"}
+    - {type: PRECURSOR, target: "zpoline (ATC 2023)", basis: "K23 reuses zpoline's callq *%rax rewrite and address-0 trampoline but adds offline address validation"}
+    - {type: PRECURSOR, target: "lazypoline", basis: "paper enumerates lazypoline's bypass (prctl), atomicity and I-cache pitfalls as motivation"}
+    - {type: LAYER_ABOVE, target: "Linux Syscall User Dispatch / ptrace / seccomp", basis: "K23 composes all three kernel facilities rather than choosing one"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the Ghent University institutional-repository copy of the accepted paper (abstract, intro, pitfall taxonomy P1-P5, K23 design, implementation, evaluation tables, limitations). ACM DL PDF returns 403 through this environment."
+
+- id: VIRT-MIDDLEWARE25-02
+  title: "Full Trust Alchemist: Reforging Attestation for Cloud-based Confidential Workloads"
+  title_correction: null
+  authors: ["Anna Galanou", "Florian Lubitz", "Christof Fetzer", "Rüdiger Kapitza"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3770778
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3770778
+  fullpaper_source: https://www.comsys.rwth-aachen.de/publication/2025/2025_galanou_trust-alchemist/
+  classification: CORE
+  classification_note: "The contribution is the attestation machinery of confidential VMs themselves: it replaces SEV-SNP's static boot-time measurement with policy-driven, context-aware attestation across the CVM lifecycle."
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T1, T9]
+  physical_resource: CPU core
+  logical_abstraction: "A confidential VM whose trustworthiness can be re-established continuously at runtime against a declarative policy, not only at boot measurement time"
+  problem: "Confidential VMs give strong isolation from an untrusted cloud operator, but their attestation is limited to static boot-time measurements, so nothing about the workload's runtime state can be proven to a relying party."
+  mechanism: "A policy-driven attestation layer inside the CVM built on eBPF programs and Linux Security Module hooks, so that security-relevant events during the CVM's lifetime can be measured and matched against a dynamically managed policy; demonstrated for secure software supply chains and multi-tenant cloud workloads on AMD SEV-SNP."
+  isolation_mechanism: "AMD SEV-SNP hardware memory encryption and integrity for the guest, with the attestation report extended by in-guest eBPF/LSM-collected runtime evidence so a remote verifier can bound what the guest may have done."
+  multiplexing_mechanism: N/A
+  state_mechanism: "Attestation evidence accumulates inside the CVM (guest-resident measurement/policy state) rather than only in the boot-time launch measurement held by the AMD-SP; not established from the abstract how that state is anchored across reboot or migration."
+  overhead_bottleneck: "UNKNOWN — not establishable from the abstract; expected cost is the eBPF/LSM hook path on security-relevant events plus attestation report generation."
+  primary_tradeoff: "Runtime, policy-driven attestation -> gains context-aware trust decisions over the whole CVM lifecycle but costs a larger in-guest TCB (eBPF + LSM + policy engine) and per-event measurement overhead."
+  quantitative_claims: []
+  why_useful_for_learning: "It shows where the confidential-VM abstraction actually stops — hardware gives you an encrypted, measured boot, and everything about runtime trust has to be rebuilt in software inside the guest."
+  priority: P1
+  related: ["VIRT-MIDDLEWARE25-12", "Trustworthy confidential virtual machines for the masses (Middleware 2023)", "AMD SEV-SNP attestation"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-MIDDLEWARE25-12", basis: "both harden TEE-protected workloads beyond what the hardware attestation alone guarantees"}
+    - {type: LAYER_BELOW, target: "AMD SEV-SNP", basis: "builds directly on SEV-SNP launch measurement and attestation reports"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, program-only]
+  confidence: MEDIUM
+  notes: "Access failure: ACM DL PDF and abstract pages both 403 through this environment; RWTH Publications record returned empty; ResearchGate 429. Only the author-hosted abstract on the RWTH COMSYS group page was obtained, so design/eval fields are deliberately thin or UNKNOWN."
+
+- id: VIRT-MIDDLEWARE25-03
+  title: "Tiaccoon: Unified Access Control with Multiple Transports in Container Networks"
+  title_correction: null
+  authors: ["Hiroya Onoe", "Daisuke Kotani", "Yasuo Okabe"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3770783
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3770783
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3721462.3770783
+  classification: SUPPORT
+  classification_note: "A container-networking mechanism: it keeps the overlay network's access-control semantics while swapping the transport underneath, which the brief places in SUPPORT — but it sits right on the CORE boundary because the unified socket abstraction is itself a virtual-network layer replacing the overlay."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T5, T9]
+  physical_resource: NIC
+  logical_abstraction: "A single socket-level connection abstraction for containers whose policy semantics are transport-independent, backed by TCP/IP, UNIX domain sockets or RDMA as appropriate"
+  problem: "Container overlay networks enforce network access policy but are slow; faster transports (UDS, RDMA) each have scenario-specific limits, and applications cannot pick a transport freely without losing consistent policy enforcement."
+  mechanism: "Tiaccoon intercepts the socket API calls a containerised process makes, applies the access-control policy to the connection at that point, and then transparently replaces the established connection with a faster inter-container transport link."
+  isolation_mechanism: "Policy decisions are taken once, at the intercepted socket API boundary, so the same access-control rules hold regardless of which transport carries the bytes; the fast transport is only established after the policy check."
+  multiplexing_mechanism: "Multiple containers on a host share the NIC and host network stack; Tiaccoon short-circuits intra-host pairs onto UDS and RDMA-capable pairs onto RDMA instead of forcing all traffic through the overlay datapath."
+  state_mechanism: "Connection/policy binding state lives in the interposition layer alongside the container's socket state; migration behaviour is not described in the material obtained."
+  overhead_bottleneck: "The overlay network datapath (encapsulation plus extra user/kernel transitions) is the cost Tiaccoon removes; the residual cost is the socket-API interception and connection-replacement handshake."
+  primary_tradeoff: "Intercepting sockets to swap transports -> gains near-host-network throughput, latency and CPU efficiency while preserving access control, but costs an interposition layer that must understand every transport's semantics."
+  quantitative_claims:
+    - "throughput, latency and CPU efficiency comparable to a native host network and substantially better than traditional container overlay implementations (magnitudes not obtained; only the abstract was accessible)"
+  why_useful_for_learning: "It makes concrete why container network virtualization costs what it costs, and shows the standard escape hatch — keep the policy plane, bypass the virtualized datapath."
+  priority: P2
+  related: ["Grafting sockets for fast container networking (ANCS 2018)", "NetKernel", "VXLAN/Geneve overlays"]
+  relations:
+    - {type: ALTERNATIVE, target: "VXLAN/Geneve container overlay networks", basis: "Tiaccoon replaces the overlay datapath while keeping its policy semantics"}
+    - {type: SAME_BRANCH, target: "Grafting sockets for fast container networking (ANCS 2018)", basis: "same socket-level transport substitution idea for containers"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: ACM DL 403 (both /doi/ and /doi/pdf/); no preprint or author-hosted copy found. Abstract reconstructed from OpenAlex. Classification is SUPPORT but flagged as a CORE-boundary case for the orchestrator."
+
+- id: VIRT-MIDDLEWARE25-04
+  title: "Roadrunner: Accelerating Data Delivery to WebAssembly-Based Serverless Functions"
+  title_correction: null
+  authors: ["Cynthia Marcelino", "Thomas Pusztai", "Stefan Nastic"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3770777
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3770777
+  fullpaper_source: https://arxiv.org/pdf/2511.01888
+  classification: SUPPORT
+  classification_note: "The mechanism is the cost of crossing the WebAssembly sandbox boundary: Roadrunner re-plumbs how data enters and leaves Wasm linear memory, which is the standard 'make the isolation boundary cheap' lever rather than a new isolation abstraction."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T8, T3]
+  physical_resource: DRAM
+  logical_abstraction: "A near-zero-copy data path between a Wasm sandbox's linear memory and the outside world, exposed to functions as ordinary memory reads/writes"
+  problem: "Stateless serverless functions exchange data through remote services, so every hand-off costs serialization/deserialization, multiple copies and user/kernel transitions — overhead that dominates short Wasm function invocations."
+  mechanism: "An OCI-compliant sidecar shim owns the Wasm VM lifecycle and mediates all function ingress/egress. Functions in the same workflow share a Wasm VM and read/write each other's data directly in linear memory via host APIs (read_memory_host, write_memory_host, allocate_memory, deallocate_memory); across processes the shim uses UNIX domain sockets, and across nodes it uses splice()/vmsplice() to move data between user memory and kernel buffers without serialization."
+  isolation_mechanism: "Wasm's own linear-memory sandbox plus shim-mediated access control: only pre-registered memory regions are reachable, the shim bounds-checks every access, and only functions of the same workflow and tenant are co-located in one Wasm VM. The authors concede the model targets trusted single-tenant workflows."
+  multiplexing_mechanism: "One Wasm VM is shared by the functions of a workflow (same tenant), so the sandbox is the unit of multiplexing rather than one sandbox per function."
+  state_mechanism: "Data lives in the Wasm instance's linear memory and in shim-registered regions; the design is stateless across invocations and state management is explicitly future work."
+  overhead_bottleneck: "Serialization plus copy/context-switch cost of the Wasm host boundary; after Roadrunner the residual 'Wasm IO' cost to reach host data is 8-20% of latency, and over the network the link itself dominates."
+  primary_tradeoff: "Co-locating a workflow's functions in one Wasm VM with direct linear-memory access -> gains large latency/throughput/CPU wins but costs the per-function isolation boundary (single-tenant assumption) and restricts functions to languages with direct memory control (C/Rust, not Java/Python)."
+  quantitative_claims:
+    - "intra-node user-space: latency 44-89% lower than WasmEdge and 10-80% lower than RunC; throughput 64x WasmEdge and 3x RunC; CPU up to 94% lower than WasmEdge (2 VMs, 4 vCPU 2GHz, 8GB, Ubuntu 22.04, Intel Xeon Skylake; chained 2-function workflows, 1-500MB payloads)"
+    - "intra-node kernel-space: latency 76-83% lower than WasmEdge, ~13% lower than RunC; throughput 4x RunC"
+    - "inter-node (100 Mbps, ~1ms RTT via tc): total latency 62% lower than WasmEdge and 7% lower than RunC; serialization overhead 97% lower than WasmEdge, 46% lower than RunC; throughput 2.8x WasmEdge"
+    - "inter-node resources: CPU up to 85% lower and memory up to 25% lower than WasmEdge"
+  why_useful_for_learning: "It quantifies the tax of a language-level sandbox boundary on the data path, and shows how quickly relaxing per-function isolation buys performance — the same bargain container-based FaaS makes with pooled sandboxes."
+  priority: P2
+  related: ["VIRT-MIDDLEWARE25-05", "VIRT-MIDDLEWARE25-06", "WasmEdge", "Faasm"]
+  relations:
+    - {type: TRADEOFF_PAIR, target: "VIRT-MIDDLEWARE25-05", basis: "both trade Wasm's cheap isolation against native/container execution speed, from opposite directions"}
+    - {type: USES_MECHANISM_FROM, target: "WasmEdge", basis: "implemented as host-function extensions over the WasmEdge runtime"}
+    - {type: CONTRASTS_WITH, target: "Faasm (ATC 2020) software-fault-isolation shared memory", basis: "same shared-linear-memory idea, different safety argument"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, paper]
+  confidence: HIGH
+  notes: "Read arXiv:2511.01888 (the authors' preprint of the Middleware'25 paper): abstract, design, implementation, evaluation setup and results, limitations."
+
+- id: VIRT-MIDDLEWARE25-05
+  title: "A Hybrid Runtime for Function-as-a-Service at the Edge"
+  title_correction: null
+  authors: ["Adam Hall", "Umakishore Ramachandran"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3770785
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3770785
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3721462.3770785
+  classification: SUPPORT
+  classification_note: "It is a serverless-isolation-runtime mechanism — RUNE composes container-based and WebAssembly-based isolation so the cold-start/execution-speed trade-off can be resolved per invocation — which is the 'make isolation cheap' side of the brief's serverless rule, not a new isolation boundary."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T8]
+  physical_resource: CPU core
+  logical_abstraction: "A single FaaS runtime handle that can be backed either by a container instance (fast steady-state execution) or a Wasm instance (fast cold start, low memory)"
+  problem: "Container-based FaaS pays cold-start latency, and the usual fix — pre-warming and keeping idle containers alive — wastes the resources an edge site does not have; WebAssembly starts far faster but executes more slowly and cannot simply replace containers."
+  mechanism: "RUNE (RUNtime for FaaS at the Edge) runs both isolation runtimes under one platform and combines their strengths, serving invocations from the Wasm path when cold-start latency dominates and from the container path when execution speed dominates."
+  isolation_mechanism: "Two isolation boundaries are used side by side: OS-level container isolation (namespaces/cgroups) and the WebAssembly language-level sandbox; the platform chooses which boundary hosts a given invocation."
+  multiplexing_mechanism: "Idle capacity is multiplexed by not holding warm containers open: cheap Wasm instances absorb bursts, so the same edge node serves more functions per unit of memory."
+  state_mechanism: "Function instance state lives in whichever runtime is serving the invocation; how (or whether) state crosses between the container and Wasm backings is not establishable from the abstract."
+  overhead_bottleneck: "Cold-start latency for containers versus in-sandbox execution speed for Wasm; keep-alive memory footprint is the resource cost being attacked."
+  primary_tradeoff: "Two isolation runtimes under one platform -> gains 99th-percentile latency and memory efficiency but costs platform complexity and a function that must be deployable under both runtimes."
+  quantitative_claims:
+    - "tail latency at the 99th percentile reduced by more than half, with improved memory utilisation of the underlying platform (abstract-level claim; hardware/workload qualifiers not obtained)"
+  why_useful_for_learning: "It is the clearest statement of the cold-start-versus-execution-speed trade-off between OS-level and language-level isolation, which is the fork every lightweight-isolation design has to take."
+  priority: P2
+  related: ["VIRT-MIDDLEWARE25-04", "VIRT-MIDDLEWARE25-06", "Firecracker", "WasmEdge"]
+  relations:
+    - {type: TRADEOFF_PAIR, target: "VIRT-MIDDLEWARE25-04", basis: "Roadrunner attacks Wasm's data-path cost; RUNE attacks Wasm's execution-speed cost by falling back to containers"}
+    - {type: ALTERNATIVE, target: "microVM snapshot/restore (Firecracker-style)", basis: "a different answer to the same cold-start problem — cheap restore of a heavier boundary instead of a lighter boundary"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: ACM DL 403; no preprint on arXiv; the first author's advisor's publication page lists the paper without a PDF. Abstract from OpenAlex (which carries the full abstract for this record). System name RUNE comes from the abstract."
+
+- id: VIRT-MIDDLEWARE25-06
+  title: "FaaSImage: An Efficient Image Manager for FaaS"
+  title_correction: null
+  authors: ["Abhisek Panda", "Smruti R. Sarangi"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3730951
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3730951
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3721462.3730951
+  classification: SUPPORT
+  classification_note: "A container image/runtime mechanism — it modifies Docker's layered image architecture and fetch path to cut cold start — which the brief places in SUPPORT rather than CORE (no change to the isolation boundary itself)."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T8]
+  physical_resource: NVMe
+  logical_abstraction: "A container image whose contents are laid out and fetched so that a function can start before the whole image is materialised"
+  problem: "Cold start latency contradicts the premise of millisecond-scale stateless functions, and a large share of it is spent materialising the container image."
+  mechanism: "FaaSImage restructures the Docker image manager. The paper positions itself against the two existing lines — fusing Docker layers into a flatter image, and on-demand (lazy) fetching of image data — and proposes an image manager that improves on both."
+  isolation_mechanism: "N/A — the container isolation boundary is unchanged; only image storage/fetch is reworked."
+  multiplexing_mechanism: "Shared image content across function instances (layer/block sharing) is the resource being multiplexed."
+  state_mechanism: "Image state lives in the registry and the local image store; the per-instance writable layer sits on top, as in stock Docker."
+  overhead_bottleneck: "Image pull and materialisation time (and the duplicate work that layer fusing versus lazy fetching each leave behind) inside cold-start latency."
+  primary_tradeoff: "Reworking image layering/fetch -> gains lower cold-start latency but costs deviation from the standard OCI image path and its tooling."
+  quantitative_claims: []
+  why_useful_for_learning: "It isolates the part of 'cold start' that is really a storage/image problem rather than an isolation problem — a distinction the brief asks you to keep separate."
+  priority: P2
+  related: ["VIRT-MIDDLEWARE25-05", "Slacker (FAST 2016)", "SOCK (ATC 2018)", "DADI / lazy image pulling"]
+  relations:
+    - {type: SAME_BRANCH, target: "Slacker: fast distribution with lazy docker containers (FAST 2016)", basis: "FaaSImage's own framing sets it against on-demand image fetching work"}
+    - {type: LAYER_BELOW, target: "VIRT-MIDDLEWARE25-05", basis: "image materialisation is one of the cold-start components a hybrid runtime tries to avoid paying"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: ACM DL 403; no preprint found. OpenAlex holds only a truncated abstract (it stops after the related-work framing), so mechanism detail and all numbers are absent. Records no quantitative claims rather than guessing."
+
+- id: VIRT-MIDDLEWARE25-07
+  title: "WasmEye: Language- and Platform-independent Anomaly Detection for WebAssembly"
+  title_correction: null
+  authors: ["Arne Vogel", "Timothee Glörfeld", "Alexander Szekely-Schenker", "Thomas Trenner", "Rene Ermler", "Rüdiger Kapitza"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3730957
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3730957
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3721462.3730957
+  classification: CONTEXT
+  classification_note: "Monitoring and anomaly detection over Wasm modules running on someone else's isolation boundary; it observes the sandbox rather than constructing or changing it."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T7]
+  physical_resource: CPU core
+  logical_abstraction: "A behavioural profile of a Wasm module that is independent of source language and host platform"
+  problem: "WebAssembly is now used across IoT, edge and cloud, but existing anomaly-detection approaches either break Wasm's platform/source-language independence or only catch specific attack classes."
+  mechanism: "WasmEye detects anomalies in Wasm modules from signals available at the Wasm abstraction level, so the same detector works regardless of the source language the module was compiled from or the host it runs on."
+  isolation_mechanism: "Relies on the existing Wasm sandbox; WasmEye adds detection of bugs or malicious code that stay inside that sandbox."
+  multiplexing_mechanism: N/A
+  state_mechanism: "Detection state is the learned/observed module profile, held by the monitoring layer outside the module."
+  overhead_bottleneck: "UNKNOWN — not establishable from the abstract; expected cost is instrumentation on the Wasm execution path."
+  primary_tradeoff: "Observing at the Wasm level -> gains language and platform independence but costs visibility into host-specific or below-sandbox behaviour."
+  quantitative_claims: []
+  why_useful_for_learning: "Useful as the introspection counterpart to Wasm isolation: it shows what a Wasm sandbox does and does not let an operator see, which is the same question VM introspection answers for hypervisors."
+  priority: P3
+  related: ["VIRT-MIDDLEWARE25-04", "VM introspection"]
+  relations:
+    - {type: LAYER_ABOVE, target: "VIRT-MIDDLEWARE25-04", basis: "operates over Wasm-based deployments of the kind Roadrunner accelerates"}
+    - {type: ALTERNATIVE, target: "VM introspection", basis: "same observe-a-guest-from-outside problem at the language-sandbox level instead of the hypervisor level"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: ACM DL 403; no preprint found. OpenAlex abstract is truncated before the design description."
+
+- id: VIRT-MIDDLEWARE25-08
+  title: "Capybara: an Edge-Friendly Distributed Object Store for Diverse Serverless Functions"
+  title_correction: null
+  authors: ["Xin Chen", "Manoj Prabhakar Paidiparthy", "Chen Qian", "Liting Hu"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3730946
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3730946
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3721462.3730946
+  classification: CONTEXT
+  classification_note: "A storage system that serverless functions consume; the virtualization content is limited to the policies it exposes (image caching, warm-container keep-alive) rather than any isolation or virtual-resource mechanism it builds."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: DRAM
+  logical_abstraction: "A programmable distributed object store holding serverless function state at the edge, with user-supplied handlers for caching, keep-alive, access control and replication policy"
+  problem: "Serverless is valuable at the edge, but edge infrastructure cannot afford the DRAM cost of indexing metadata servers, and one-size-fits-all data-management policy does not suit diverse edge functions."
+  mechanism: "A game-theoretic DHT-based peer-to-peer architecture avoids central indexing metadata servers, and a programmable handler abstraction lets edge users install their own policies for function-image caching, warm-container keep-alive duration, data access control and replication."
+  isolation_mechanism: "Per-tenant data access-control policy expressed through the handler abstraction; no execution isolation mechanism of its own."
+  multiplexing_mechanism: "Object placement and replication across edge nodes via the P2P DHT."
+  state_mechanism: "Function state is externalised into the object store; the store itself keeps object and replica placement in the DHT rather than in metadata servers."
+  overhead_bottleneck: "DRAM cost of indexing metadata (what the DHT removes) plus DHT lookup hops on the data path."
+  primary_tradeoff: "DHT-based P2P indexing -> gains scalability and removes metadata-server DRAM cost but costs multi-hop lookups and policy complexity pushed onto users."
+  quantitative_claims: []
+  why_useful_for_learning: "Shows how serverless isolation choices leak into storage design: keep-alive duration and image caching become storage policies once functions are stateless."
+  priority: P3
+  related: ["VIRT-MIDDLEWARE25-06", "Pocket (OSDI 2018)", "Anna/Cloudburst"]
+  relations:
+    - {type: LAYER_ABOVE, target: "VIRT-MIDDLEWARE25-06", basis: "exposes function-image caching policy of the kind FaaSImage implements underneath"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: ACM DL 403; no preprint found. Abstract only (OpenAlex), truncated after the two stated innovations."
+
+- id: VIRT-MIDDLEWARE25-09
+  title: "Mocha: Scalable and Compliant Function Scheduling for Federated Serverless Computing"
+  title_correction: null
+  authors: ["Yuqiu Zhang", "Hans-Arno Jacobsen"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3770780
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3770780
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3721462.3770780
+  classification: CONTEXT
+  classification_note: "Generic serverless function scheduling and policy compliance across administrative domains; the brief puts FaaS scheduling squarely in CONTEXT."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "A federated serverless control plane in which a function is placed in some domain that satisfies regulatory, locality and resource constraints, with no central scheduler"
+  problem: "Production serverless platforms assume a single provider with a central control plane, which cannot express heterogeneous policy, data-governance constraints or geo-distributed autonomous domains."
+  mechanism: "A hierarchically structured distributed hash table embeds geographic and organisational context so placement can be locality-aware without a central authority, and each domain runs a formally specified compliance engine that checks regulatory, locality and resource constraints before accepting a function."
+  isolation_mechanism: "Administrative/policy isolation between domains (each domain independently enforces its own compliance rules); no execution-level isolation mechanism."
+  multiplexing_mechanism: "Function placement across federated domains' capacity."
+  state_mechanism: "Scheduling and policy state is distributed in the hierarchical DHT per domain; no central scheduler state."
+  overhead_bottleneck: "Scheduling tail latency from distributed lookup and compliance checking."
+  primary_tradeoff: "Decentralised, policy-aware placement -> gains compliance and much lower scheduling tail latency but costs global optimality and adds a per-domain compliance engine."
+  quantitative_claims:
+    - "scheduling tail latency reduced 4-9x versus alternatives, with full policy adherence (baselines and testbed not obtained; abstract-level)"
+  why_useful_for_learning: "Useful only as landscape: it shows what multi-tenancy looks like when the tenants are whole organisations, which is why data-locality and governance constraints appear in placement at all."
+  priority: P3
+  related: ["VIRT-MIDDLEWARE25-10"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-MIDDLEWARE25-10", basis: "both are FaaS control-plane/SLA papers at the same venue"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: ACM DL 403. Full abstract obtained from OpenAlex."
+
+- id: VIRT-MIDDLEWARE25-10
+  title: "Efficient Performance Guarantees for Function-as-a-Service with Cloud Allocators"
+  title_correction: null
+  authors: ["Hai Duc Nguyen", "Andrew A. Chien"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3730948
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3730948
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3721462.3730948
+  classification: CONTEXT
+  classification_note: "SLA-driven FaaS resource management and scheduling; no virtualization mechanism is built, the platform's existing isolation is assumed."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "A FaaS deployment that an application can configure through a performance SLA, which the platform then meets by allocation and scheduling"
+  problem: "Conventional FaaS gives applications almost no way to configure a deployment for their performance needs, which limits both applicability and developer productivity."
+  mechanism: "Builds on a performance abstraction in which applications declare needs as predefined software-level agreements; the platform's allocator then manages resources and scheduling to guarantee the declared performance."
+  isolation_mechanism: "Performance isolation is the goal, delivered by allocation/scheduling decisions rather than by any new isolation boundary."
+  multiplexing_mechanism: "Allocator-driven sharing of cloud capacity among functions with differing SLAs."
+  state_mechanism: N/A
+  overhead_bottleneck: "The cost of honouring SLAs — reserved or over-provisioned capacity versus achieved utilisation."
+  primary_tradeoff: "Declarative performance SLAs plus a cloud allocator -> gains predictable function performance but costs allocation efficiency and adds an abstraction applications must express their needs in."
+  quantitative_claims: []
+  why_useful_for_learning: "Landscape only: it documents what tenants actually want from a shared FaaS platform, which is the demand side of every multi-tenancy mechanism in this corpus."
+  priority: P3
+  related: ["VIRT-MIDDLEWARE25-09"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-MIDDLEWARE25-09", basis: "both are FaaS control-plane papers in the same Middleware 2025 serverless session"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: ACM DL 403. OpenAlex abstract is truncated after the problem framing."
+
+- id: VIRT-MIDDLEWARE25-11
+  title: "svc-hook: hooking system calls on ARM64 by binary rewriting"
+  title_correction: null
+  authors: ["Akira Moroo", "Hajime Tazaki", "Kenichi Yasukata"]
+  venue: Middleware
+  year: 2025
+  publication_type: SHORT_PAPER
+  doi: 10.1145/3721462.3770771
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3770771
+  fullpaper_source: https://github.com/retrage/svc-hook
+  classification: DROP
+  classification_note: "Technically this is a syscall-interposition boundary mechanism (the brief's CORE case), but the official Middleware 2025 program labels it a short paper, so it is excluded from the regular-research corpus on publication criteria alone."
+  drop_reason: publication_criterion
+  taxonomy_primary: T5
+  taxonomy_secondary: [T10]
+  physical_resource: CPU core
+  logical_abstraction: "A user-space hook that sees every system call an unmodified ARM64 binary issues, with no kernel feature and no source access"
+  problem: "Syscall interposition techniques built around x86 syscall/sysenter rewriting (zpoline and successors) do not carry over to ARM64, where the svc instruction has a different encoding and branch-range constraints, and the portable alternative (ptrace) is orders of magnitude too slow."
+  mechanism: "Before main() runs, svc-hook scans the loaded target's code, computes reachable branch ranges, emits a per-site trampoline, and replaces every svc instruction with a b (branch) to its trampoline; the trampoline saves CPU context, calls the hook function from a library named by the LIBSVCHOOK environment variable, restores context and returns to the instruction after the svc."
+  isolation_mechanism: "All system calls are funnelled into the hook library, which is where a sandbox or policy layer would be implemented; svc-hook itself supplies the interception, not a policy."
+  multiplexing_mechanism: N/A
+  state_mechanism: "Rewrite state (per-site trampolines and the rewritten code pages) lives in the target process image; hook state lives in the loaded hook library."
+  overhead_bottleneck: "Per-call trampoline context save/restore; the cost being avoided is the ptrace stop/resume round trip through the kernel."
+  primary_tradeoff: "Per-site trampolines with a plain branch instruction -> gains ARM64 interception at roughly native branch cost, but costs a code-scanning/rewriting pass whose correctness depends on distinguishing code from data (the same pitfall class Clair Obscur enumerates)."
+  quantitative_claims:
+    - "reported as ~1000x faster than ptrace (artifact documentation; the paper's own measured setup was not accessible)"
+  why_useful_for_learning: "It is the ARM64 half of the syscall-interposition story: reading it next to Clair Obscur shows how much of an interposition design is architecture-specific instruction encoding rather than policy."
+  priority: P2
+  related: ["VIRT-MIDDLEWARE25-01", "zpoline (ATC 2023)", "ASC-Hook (arXiv:2412.05784)"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-MIDDLEWARE25-01", basis: "same interposition-completeness problem, different ISA; Yasukata is also the zpoline author that K23 builds on"}
+    - {type: ALTERNATIVE, target: "ASC-Hook: fast and transparent system call hook for Arm", basis: "competing ARM syscall-hook design"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN
+  evidence_kinds: [code, documentation, official-web]
+  confidence: MEDIUM
+  notes: "MISSING FROM SEED LIST. Access failure for the paper itself (ACM DL 403; no preprint). Design read from the authors' artifact repository plus the OpenAlex abstract; the 1000x-vs-ptrace figure comes from the artifact README, not the paper, and is flagged as such. Orchestrator note: if short papers are ever admitted, this should be reinstated as CORE/T5, P2, paired with VIRT-MIDDLEWARE25-01."
+
+- id: VIRT-MIDDLEWARE25-12
+  title: "MVTEE: Multi-Variant Trusted Execution for Secure Model Inference"
+  title_correction: null
+  authors: ["Kailun Qin", "Dawu Gu"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3730956
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3730956
+  fullpaper_source: https://kailun-qin.github.io/files/mvtee_middleware25.pdf
+  classification: SUPPORT
+  classification_note: "The headline contribution is multi-variant execution for integrity, with TEEs as substrate — but it is directly useful for explaining CORE confidential-computing designs because it exercises the SGX-enclave versus TDX-confidential-VM boundary as an explicit diversity dimension and builds an attestation-gated, cross-TEE monitor architecture."
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T1, T5]
+  physical_resource: CPU core
+  logical_abstraction: "A model-inference service made of N diversified variants, each in its own TEE, with a separate small-TCB monitor TEE that votes on their agreement at graph checkpoints"
+  problem: "A TEE protects a model against the platform owner but, by design, does nothing about software vulnerabilities and fault attacks inside the enclave's own ML framework and libraries — so TEE-protected inference can give a false sense of integrity."
+  mechanism: "MVTEE diversifies at three levels: model graph (dummy/equivalent operators, channel manipulation, selective optimization over ONNX), inference instance (different frameworks, ONNX Runtime execution providers, TVM-compiled variants) and system (sanitizers/ASLR, and TEE-level variants — SGX enclave versus TDX confidential VM — plus ABI/ISA diversification). A random-balanced min-cut partitioning of the DNN graph inserts checkpoints; a monitor TEE compares variant outputs at checkpoints with a configurable metric (cosine similarity, MSE, max absolute difference, toleranced assertions) and a voting rule (unanimous consent by default)."
+  isolation_mechanism: "One-to-one mapping of variant to TEE to process, with the monitor in a separate TEE so a compromised variant cannot reach it; a two-stage bootstrap loads a public init-variant first and only after remote attestation does the monitor release a variant-specific key that decrypts that variant's private files and second-stage manifest, so an untrusted orchestrator never learns the MVX configuration."
+  multiplexing_mechanism: "N variants are run per inference request; the async/pipelined mode overlaps variant execution across graph partitions so the CPU is multiplexed between variants instead of stalling on the slowest."
+  state_mechanism: "Per-variant keys and encrypted filesystems, RA-TLS secure channels established after attestation, and sequence numbers for freshness; checkpoint intermediates cross the monitor boundary at partition cuts."
+  overhead_bottleneck: "Checkpoint comparison plus encrypted-channel cost dominates: 13.6-50.7% in sequential mode and 50.4-93.6% in pipelined mode; full 5-partition MVX collapses throughput."
+  primary_tradeoff: "N-variant execution inside N TEEs with a monitor TEE -> gains integrity against in-enclave memory-safety bugs and fault attacks but costs N-fold compute, checkpoint synchronisation and a large latency penalty unless pipelined and selectively applied."
+  quantitative_claims:
+    - "sequential execution: throughput down 1.7-62.2%, latency up 1.7-164.3% as partition count grows (dual-socket Xeon Gold 6354, 378GB RAM, 128GB SGX EPC, SGX + Gramine 1.7, Ubuntu 22.04; EfficientNet-b7/GoogleNet/InceptionV3/MnasNet/MobileNetV3/ResNet-50/ResNet-152, fp32, batch 1, 3x224x224)"
+    - "pipelined execution: throughput 1.7-5.4x baseline and latency 63.4-84.4% lower than the sequential-partitioned configuration"
+    - "encryption + checkpointing overhead: 13.6-50.7% sequential, 50.4-93.6% pipelined"
+    - "selective MVX (one partition activated): throughput 1.7-3.8x, latency 0.3-0.6x in pipelined execution; latency still 18.7-128.5% above baseline in sequential mode"
+    - "full 5-partition MVX: throughput ~0.3x and latency >3x baseline"
+    - "asynchronous mode gains: throughput +5.2-34.2% sequential and +3.1-17.8% pipelined; latency -5-25.6% and -3.1-15.2%"
+  why_useful_for_learning: "It is an unusually explicit statement of what a CPU TEE does not cover, and it treats 'enclave versus confidential VM' as a design variable rather than a given — exactly the distinction a confidential-computing learner needs."
+  priority: P2
+  related: ["VIRT-MIDDLEWARE25-02", "Gramine / Gramine-TDX", "dMVX (2021)", "MICRO25 ccAI"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-MIDDLEWARE25-02", basis: "both extend the trust story of a CPU TEE beyond hardware attestation, one at attestation time and one at execution time"}
+    - {type: USES_MECHANISM_FROM, target: "Gramine LibOS (SGX) and Gramine-TDX", basis: "variants are hosted as Gramine-shielded processes in SGX enclaves or TDX VMs"}
+    - {type: CONTRASTS_WITH, target: "VIRT-MICRO25-01", basis: "MVTEE explicitly leaves GPU and domain-specific TEEs unexplored, which is precisely ccAI's territory"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper]
+  confidence: HIGH
+  notes: "MISSING FROM SEED LIST. Read the author-hosted accepted-paper PDF: problem, threat model, diversification levels, partitioning/checkpointing, monitor architecture, two-stage bootstrap, evaluation and limitations."
+
+- id: VIRT-MIDDLEWARE25-13
+  title: "MTAT: Adaptive Fast Memory Management for Co-located Latency-Critical Workloads in Tiered Memory System"
+  title_correction: null
+  authors: ["Minho Kim", "Seonggyu Han", "Gyeongseo Park", "Daehoon Kim"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3770767
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3770767
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3721462.3770767
+  classification: SUPPORT
+  classification_note: "Memory-tier placement policy for co-located tenants (applications or VMs) on one server — resource partitioning under multi-tenancy, which the brief lists as SUPPORT; it is not a guest-memory or nested-translation mechanism, so not CORE."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T9]
+  physical_resource: DRAM
+  logical_abstraction: "A tier assignment per page that respects the SLO class of the tenant owning it, not just the page's access frequency"
+  problem: "Tiered memory managers classify pages by access frequency alone. Latency-critical workloads need low latency but do not sustain high access frequency, so frequency-based tiering demotes their pages to slow memory and violates their SLOs, while co-located best-effort workloads keep the fast tier."
+  mechanism: "MTAT makes promotion/demotion decisions aware of the distinct access patterns of latency-critical versus best-effort workloads instead of using a single frequency threshold across all co-located tenants."
+  isolation_mechanism: "Performance isolation by tier: the fast-memory capacity a best-effort tenant may take is bounded so latency-critical pages are not demoted out from under their SLO."
+  multiplexing_mechanism: "Fast memory (near tier) is partitioned/arbitrated between co-located LC and BE workloads sharing one physical server."
+  state_mechanism: "Per-page hotness/classification metadata held by the tiering manager; migrations move page contents between tiers."
+  overhead_bottleneck: "Page migration traffic between tiers, and the SLO violations caused by wrongly demoting latency-critical pages."
+  primary_tradeoff: "Workload-class-aware tiering -> gains LC tail-latency/SLO protection but costs best-effort throughput and adds per-workload classification the manager must obtain."
+  quantitative_claims: []
+  why_useful_for_learning: "It is a compact demonstration that 'hotness' is the wrong abstraction once a server hosts tenants with different SLOs — the same failure mode that hits ballooning, memory overcommit and CXL tiering under multi-tenancy."
+  priority: P2
+  related: ["VIRT-MICRO25-06", "Tiered Memory Management: Access Latency is the Key! (SOSP 2024)", "TPP (ASPLOS 2023)"]
+  relations:
+    - {type: SAME_BRANCH, target: "Tiered Memory Management: Access Latency is the Key! (SOSP 2024)", basis: "both argue frequency-based tiering is the wrong signal"}
+    - {type: LAYER_ABOVE, target: "CXL-attached and slow-tier memory hardware", basis: "policy layer over a heterogeneous memory hierarchy"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "MISSING FROM SEED LIST. Access failure: ACM DL 403, no preprint or author copy found. OpenAlex abstract is truncated after the problem statement, so the mechanism description is the abstract's framing and no numbers are recorded. The abstract's own framing (multiple applications or virtual machines sharing a physical server) is what puts it in scope."
+
+- id: VIRT-MIDDLEWARE25-14
+  title: "FlexClone: Efficient, Flexible and Pluggable File Cloning Support for Filesystems"
+  title_correction: null
+  authors: ["Rohit Singh", "Debadatta Mishra"]
+  venue: Middleware
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3721462.3770779
+  official_url: https://dl.acm.org/doi/10.1145/3721462.3770779
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3721462.3770779
+  classification: SUPPORT
+  classification_note: "Copy-on-write file cloning is the mechanism VM disk images and container layers are actually built on, and the paper names virtual machines and container provisioning as its motivating cases; it is a supporting storage mechanism rather than a virtual-resource abstraction, so SUPPORT."
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary: [T5, T2]
+  physical_resource: NVMe
+  logical_abstraction: "A cheap file clone that shares disk blocks and, unlike existing CoW clones, also shares page-cache pages for the blocks that stay identical"
+  problem: "Btrfs and XFS give space-efficient file clones but waste memory by caching shared disk blocks once per clone, and their support is restrictive because it is tied to block-granularity copy-on-write; filesystems without built-in cloning (e.g. Ext4) get nothing."
+  mechanism: "FlexClone is a pluggable file middleware layer that provides cloning to filesystems lacking it, avoids duplicate caching of shared blocks, and uses deferred processing on the I/O path for performance while keeping consistency and crash recovery; demonstrated by adding clone support to Ext4."
+  isolation_mechanism: "N/A — clones are logically independent files; divergence is handled by copy-on-write rather than by an isolation boundary."
+  multiplexing_mechanism: "One physical copy of a block (and one page-cache page) is shared by all clones until a write diverges."
+  state_mechanism: "Clone/sharing metadata lives in the FlexClone middleware layer alongside the host filesystem's metadata; deferred processing means some of that state is reconciled lazily, which is why consistency and recovery techniques are needed."
+  overhead_bottleneck: "Duplicate page-cache footprint of shared blocks in existing CoW clones, and the metadata/indirection cost of the cloning layer itself."
+  primary_tradeoff: "A pluggable cloning layer with deferred processing -> gains cloning on filesystems that lack it plus memory-efficient sharing, but costs an extra indirection layer and a consistency/recovery burden the filesystem did not previously carry."
+  quantitative_claims:
+    - "SQLite performance improved up to ~2.17x; OverlayFS copy-up improved 15x (baselines/hardware not obtained; abstract-level)"
+  why_useful_for_learning: "It explains the layer directly beneath VM disk images and container layers: why qcow2/OverlayFS copy-up costs what it does, and why block-granularity CoW is the constraint everyone inherits."
+  priority: P2
+  related: ["VIRT-MIDDLEWARE25-06", "Copy-on-Abundant-Write for Nimble File System Clones (TOS 2020)", "qcow2 / OverlayFS"]
+  relations:
+    - {type: LAYER_BELOW, target: "VIRT-MIDDLEWARE25-06", basis: "container image layering and copy-up sit directly on filesystem clone/CoW support"}
+    - {type: SAME_BRANCH, target: "Copy-on-Abundant-Write for Nimble File System Clones (TOS 2020)", basis: "same problem of making clones cheap without block-granularity CoW"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "MISSING FROM SEED LIST. Access failure: ACM DL 403; no preprint. Full abstract from OpenAlex; design detail beyond the abstract was not obtainable."
+
+# ============================== CCGRID 2025 ==============================
+
+- id: VIRT-CCGRID25-01
+  title: "Energy Efficient Scheduling of AI/ML Workloads on Multi Instance GPUs with Dynamic Repartitioning"
+  title_correction: null
+  authors: ["Ellie Lipe", "Neel Karia", "Connor Espenshade", "Clifford Stein", "Asser Tantawi", "Olivier Tardieu"]
+  venue: CCGrid
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGRID64434.2025.00066
+  official_url: https://site.uit.no/ccgrid2025/wp-content/uploads/sites/519/2025/05/program_ccgrid2025-44.pdf
+  fullpaper_source: https://api.openalex.org/works/doi:10.1109/ccgrid64434.2025.00066
+  classification: SUPPORT
+  classification_note: "The contribution is a scheduling and reconfiguration policy over NVIDIA MIG partitions, not the vGPU partition mechanism itself — the brief's rule puts that in SUPPORT — but it is the clearest available treatment of MIG repartitioning as a *dynamic* rather than static decision."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T9]
+  physical_resource: GPU
+  logical_abstraction: "A set of MIG GPU instances of chosen profiles, re-cut over time, that AI/ML jobs are queued onto"
+  problem: "MIG makes a physical GPU divisible into hardware-isolated instances, but the partition layout is normally fixed, so a datacenter either wastes capacity on a badly matched layout or pays the cost of repartitioning; the paper asks how often and how to re-cut partitions to minimise energy without unacceptable job tardiness."
+  mechanism: "A dynamic repartitioning framework pairs four job-scheduling algorithms with a reinforcement-learning agent that chooses the MIG configuration to apply at each repartitioning epoch, driven by an objective combining energy consumption and job tardiness; evaluated by replaying real datacenter traces."
+  isolation_mechanism: "Inherited from MIG: each GPU instance gets hardware-partitioned SMs, L2 slices and memory paths, so co-resident jobs do not interfere — the paper treats this isolation as given and schedules within it."
+  multiplexing_mechanism: "Spatial partitioning of one physical GPU into multiple MIG instances, with the profile mix itself varied over time (repartitioning twice daily was the best setting found)."
+  state_mechanism: "MIG geometry is device-level configuration state; repartitioning requires draining the affected instances, which is why the repartition frequency is a first-class tuning knob rather than a free action."
+  overhead_bottleneck: "The cost of repartitioning (jobs must drain, so tardiness rises) versus the energy wasted by a stale partition layout."
+  primary_tradeoff: "Dynamically re-cutting MIG partitions -> gains large energy savings over static partitioning but costs job tardiness at each repartition and needs a learned policy to pick the layout."
+  quantitative_claims:
+    - "dynamic repartitioning twice daily reduced energy consumption by 26% versus static partitioning, and versus no partitioning the reductions were 31% and 68% respectively on the paper's combined energy-and-tardiness objective (real-world datacenter traces; simulation-based evaluation)"
+  why_useful_for_learning: "It shows what MIG costs once you treat the partition layout as a variable: hardware-enforced spatial isolation is cheap to use but expensive to change, which is the defining property of the MIG abstraction."
+  priority: P2
+  related: ["VIRT-CCGRID25-09", "NVIDIA MIG", "MPS", "Elastic MIG Reconfiguration with PCIe-Aware Placement for Multi-Tenant GPUs (WoSC@Middleware 2025)"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-CCGRID25-09", basis: "both allocate fractional GPUs in a datacenter scheduler and both treat GPU fragmentation as the key cost"}
+    - {type: LAYER_ABOVE, target: "NVIDIA MIG hardware partitioning", basis: "the paper schedules over MIG rather than changing it"}
+    - {type: ALTERNATIVE, target: "MPS / time-sliced GPU sharing", basis: "temporal instead of spatial multiplexing of one GPU"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, program-only]
+  confidence: MEDIUM
+  notes: "Access failure: IEEE Xplore document page returned empty content and the iel8 direct PDF returned HTTP 418; no author-hosted copy or arXiv preprint found. Abstract from OpenAlex. IEEE metadata title-cases this as 'Multi Instance Gpus'; the conference program and the seed list both print 'Multi Instance GPUs', which is used here."
+
+- id: VIRT-CCGRID25-02
+  title: "Performance Characterization of Data Store Event Trigger Mechanisms for Serverless Computing"
+  title_correction: null
+  authors: ["Ritul Satish", "Sacheendra Talluri", "Sudarsan Sivakumar", "Matthijs Jansen", "Alexandru Iosup"]
+  venue: CCGrid
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGRID64434.2025.00030
+  official_url: https://site.uit.no/ccgrid2025/wp-content/uploads/sites/519/2025/05/program_ccgrid2025-44.pdf
+  fullpaper_source: https://api.openalex.org/works/doi:10.1109/ccgrid64434.2025.00030
+  classification: CONTEXT
+  classification_note: "A measurement study of managed-cloud trigger plumbing (S3, DynamoDB, AuroraDB); it characterises a serverless control-plane path rather than any isolation or virtual-resource mechanism."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: UNKNOWN
+  logical_abstraction: "The event-trigger abstraction a managed data store offers a serverless platform: a write becomes a function invocation"
+  problem: "Trigger latency — the time from an event being generated to the function actually being invoked — accounts for 62% of serverless application execution time, yet the mechanisms behind data-store triggers are essentially undocumented."
+  mechanism: "The paper defines the features that distinguish data-store trigger mechanisms and builds TriggerPerf, a benchmarking tool, then applies it to the three AWS data stores with built-in trigger support."
+  isolation_mechanism: "N/A — the study measures a managed service's behaviour; tenant isolation is the provider's and is only visible indirectly as load-dependent latency variability."
+  multiplexing_mechanism: "Implicitly: the observed tail-latency blow-up of S3 and AuroraDB under high load is what provider-side multiplexing of the trigger path looks like from a tenant's seat."
+  state_mechanism: N/A
+  overhead_bottleneck: "Trigger propagation latency, and its scalability/elasticity limits under load."
+  primary_tradeoff: "Depending on a managed data store's built-in triggers -> gains a zero-operations event source but costs latency up to two orders of magnitude worse than a local store and unpredictable tail behaviour."
+  quantitative_claims:
+    - "trigger latency is up to 100x higher than a reference etcd data store (TriggerPerf on AWS S3, DynamoDB, AuroraDB)"
+    - "median and tail latency of S3 and AuroraDB are 10x higher under high load, whereas DynamoDB is not"
+    - "trigger latency accounts for 62% of execution time for the serverless applications studied"
+  why_useful_for_learning: "It quantifies how much of a 'serverless' invocation is control-plane plumbing rather than isolation cost — a useful corrective when reading cold-start papers."
+  priority: P3
+  related: ["VIRT-CCGRID25-03", "VIRT-CCGRID25-04"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-CCGRID25-03", basis: "both are serverless-platform performance papers in the same CCGrid serverless session"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: IEEE Xplore blocked in this environment. Abstract from OpenAlex."
+
+- id: VIRT-CCGRID25-03
+  title: "Hiku: Pull-Based Scheduling for Serverless Computing"
+  title_correction: null
+  authors: ["Saman Akbari", "Manfred Hauswirth"]
+  venue: CCGrid
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGRID64434.2025.00034
+  official_url: https://site.uit.no/ccgrid2025/wp-content/uploads/sites/519/2025/05/program_ccgrid2025-44.pdf
+  fullpaper_source: https://api.openalex.org/works/doi:10.1109/ccgrid64434.2025.00034
+  classification: CONTEXT
+  classification_note: "Generic FaaS scheduling: it changes who initiates task assignment, not how isolation is created; cold-start frequency is an outcome it measures, not a mechanism it builds."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "A FaaS worker pool in which idle workers pull work rather than a central scheduler pushing it"
+  problem: "FaaS schedulers struggle to keep load balanced, keep cold starts down and cope with bursty workloads at the same time."
+  mechanism: "Decouple worker selection from task assignment: idle workers proactively request new tasks, so assignment follows actual worker availability instead of a hash or a central estimate."
+  isolation_mechanism: "N/A — the platform's existing per-function sandbox is unchanged."
+  multiplexing_mechanism: "Worker-initiated task pull as the sharing discipline for the worker pool."
+  state_mechanism: "Warm-instance state per worker is what makes a pull land on a warm sandbox instead of forcing a cold start."
+  overhead_bottleneck: "Cold starts and load imbalance under high concurrency."
+  primary_tradeoff: "Pull-based assignment -> gains balance and fewer cold starts under bursts but costs locality control that hash-based placement gives you for free."
+  quantitative_claims:
+    - "latency improved 14.9% versus hash-based scheduling; cold-start frequency reduced from 43% to 30%; throughput +8.3%; load distribution 12.9% more even (measured as requests assigned per worker, on an open-source FaaS platform)"
+  why_useful_for_learning: "It is a clean demonstration that cold-start rate is partly a scheduling artefact, not only a property of the isolation runtime."
+  priority: P3
+  related: ["VIRT-CCGRID25-02", "VIRT-MIDDLEWARE25-05"]
+  relations:
+    - {type: LAYER_ABOVE, target: "VIRT-MIDDLEWARE25-05", basis: "scheduling decides how often the cheap-isolation mechanisms a hybrid runtime provides are actually needed"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: IEEE Xplore blocked. Full abstract from OpenAlex."
+
+- id: VIRT-CCGRID25-04
+  title: "ScalaSSC: Scalable Stateful Serverless Computing for Stream Processing Applications"
+  title_correction: null
+  authors: ["Tianyu Qi", "Maria A. Rodriguez", "Rajkumar Buyya"]
+  venue: CCGrid
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGRID64434.2025.00062
+  official_url: https://site.uit.no/ccgrid2025/wp-content/uploads/sites/519/2025/05/program_ccgrid2025-44.pdf
+  fullpaper_source: https://api.openalex.org/works/doi:10.1109/ccgrid64434.2025.00062
+  classification: CONTEXT
+  classification_note: "Stateful-serverless request scheduling and operator-state placement; it works around the stateless function abstraction rather than changing the isolation or virtual-resource layer."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: DRAM
+  logical_abstraction: "A serverless stream operator whose state lives on the worker node that executes it, addressable in batch"
+  problem: "Serverless functions cannot hold state, so stream operators pay remote-storage latency; existing stateful-serverless frameworks add node-local state servers but still cannot meet real-time streaming requirements."
+  mechanism: "ScalaSSC co-locates requests with the state they act on to avoid cross-worker state access, introduces state parallelism to cut executor contention, batches requests that touch the same state, and exposes batch APIs so a batch needing several states fetches them in one operation."
+  isolation_mechanism: "N/A — state partitioning is for contention, not for security isolation."
+  multiplexing_mechanism: "State parallelism: one logical operator state is split so multiple executors can work on it concurrently instead of serialising."
+  state_mechanism: "Operator state is held in node-local state servers next to the functions, with placement driven by request affinity; this is the design point being explored."
+  overhead_bottleneck: "Cross-worker state access latency and executor contention on shared state."
+  primary_tradeoff: "Node-local, affinity-placed, parallelised operator state -> gains orders-of-magnitude throughput but costs the location transparency and free elasticity that the stateless abstraction gave you."
+  quantitative_claims:
+    - "up to 845x higher throughput than another stateful serverless system at similar end-to-end latency"
+    - "14x higher throughput than AWS Lambda at microsecond-level latency versus Lambda's second-level latency"
+  why_useful_for_learning: "It documents the price of statelessness — the property that makes serverless isolation cheap in the first place — and thus why so much serverless work is really state-placement work."
+  priority: P3
+  related: ["VIRT-CCGRID25-02", "VIRT-MIDDLEWARE25-08"]
+  relations:
+    - {type: ALTERNATIVE, target: "VIRT-MIDDLEWARE25-08", basis: "Capybara externalises function state into a distributed object store; ScalaSSC pulls it onto the worker node instead"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: IEEE Xplore blocked. Full abstract from OpenAlex."
+
+- id: VIRT-CCGRID25-05
+  title: "SUPLEC: Microservice Scheduling Under Unexpected Peak Load in the Edge-Cloud Continuum"
+  title_correction: 'seed list said: "SUPLEC: Microservice Scheduling under Unexpected Peak Load in the Edge-Cloud Continuum" (lower-case "under"; proceedings capitalise it)'
+  authors: ["Minwoo Kang", "Taeshin Kang", "Joon-Min Gil", "Heonchang Yu"]
+  venue: CCGrid
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGRID64434.2025.00039
+  official_url: https://site.uit.no/ccgrid2025/wp-content/uploads/sites/519/2025/05/program_ccgrid2025-44.pdf
+  fullpaper_source: https://api.openalex.org/works/doi:10.1109/ccgrid64434.2025.00039
+  classification: CONTEXT
+  classification_note: "Container-based microservice placement and rescheduling for SLO protection; virtualization is the substrate it schedules on, not the object of study."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: "A placement of container-based microservice replicas across edge and cloud nodes, revised only when response time says it must be"
+  problem: "Edge-cloud microservice deployments hit unexpected peak loads with limited compute and bandwidth, causing SLO violations, and the underlying node and network state keeps changing so a one-off placement will not hold."
+  mechanism: "A Placer clusters frequently interacting microservices into groups and places the groups worst-fit; a Rescheduler watches recent request response times to decide whether rescheduling is warranted and which nodes are better, explicitly minimising the number of reschedules."
+  isolation_mechanism: "Container-level resource limits as provided by the orchestrator; no new isolation mechanism."
+  multiplexing_mechanism: "Node capacity is shared among microservice groups; worst-fit placement deliberately leaves headroom for peaks."
+  state_mechanism: "Rescheduling moves container replicas, so per-instance state must be externalised or recreated; the paper's cost model is the reschedule count."
+  overhead_bottleneck: "Rescheduling overhead (migration/restart churn) versus SLO violations from a stale placement."
+  primary_tradeoff: "Response-time-triggered rescheduling with grouped worst-fit placement -> gains SLO compliance under peaks but costs reschedule churn, which the design then has to minimise."
+  quantitative_claims:
+    - "average response time reduced by up to 68.5% under dynamic cluster conditions; rescheduling overhead reduced by 80%"
+  why_useful_for_learning: "Landscape: it shows the operational reason container placement is rarely static, which is the demand that migration and checkpoint mechanisms exist to serve."
+  priority: P3
+  related: ["VIRT-CCGRID25-06"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-CCGRID25-06", basis: "same CCGrid cloud-continuum session, same SLO-driven placement problem"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: IEEE Xplore blocked. Full abstract from OpenAlex."
+
+- id: VIRT-CCGRID25-06
+  title: "LASSY: A Latency-Aware SLOs-Sufficing Scheduling System for the Cloud/Edge Continuum"
+  title_correction: 'seed list said: "LASSY: a Latency-Aware SLOs-Sufficing Scheduling System for the Cloud/Edge Continuum" (lower-case "a"; proceedings print "A")'
+  authors: ["Yinan Cao", "Étienne Rivière", "Ramin Sadre"]
+  venue: CCGrid
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGRID64434.2025.00029
+  official_url: https://site.uit.no/ccgrid2025/wp-content/uploads/sites/519/2025/05/program_ccgrid2025-44.pdf
+  fullpaper_source: https://api.openalex.org/works/doi:10.1109/ccgrid64434.2025.00029
+  classification: CONTEXT
+  classification_note: "Latency-model-driven service placement across cloud and edge; no virtualization mechanism is built, the deployment substrate is assumed."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T8]
+  physical_resource: CPU core
+  logical_abstraction: "A placement of service instances over cloud and edge nodes chosen so that predicted user-visible tail latency meets an SLO at minimum resource cost"
+  problem: "Edge computing reduces network latency but edge datacenters are small, so instance placement has to be chosen carefully or the edge advantage is lost to queueing."
+  mechanism: "LASSY models both network and queueing latency, uses queueing theory to predict the tail latency latency-sensitive services (e.g. AI inference) will see, and runs an optimisation that minimises resource cost subject to SLO satisfaction; validated on a testbed under realistic network emulation."
+  isolation_mechanism: "N/A."
+  multiplexing_mechanism: "Service instances share scarce edge node capacity; the queueing model is what prices that sharing."
+  state_mechanism: N/A
+  overhead_bottleneck: "Queueing delay at under-provisioned edge nodes versus network delay to the cloud."
+  primary_tradeoff: "Queueing-theoretic latency modelling in the scheduler -> gains SLO compliance at lower resource cost but costs model accuracy risk and assumes tractable arrival/service distributions."
+  quantitative_claims: []
+  why_useful_for_learning: "Landscape: it names the two latency components — network and queueing — that every multi-tenancy argument in this corpus has to separate."
+  priority: P3
+  related: ["VIRT-CCGRID25-05"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-CCGRID25-05", basis: "same session, same SLO-driven edge-cloud placement problem, different model"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: IEEE Xplore blocked. Full abstract from OpenAlex; no quantitative claims stated in it."
+
+- id: VIRT-CCGRID25-07
+  title: "DistWalk: A Distributed Workload Emulator"
+  title_correction: 'seed list said: "DistWalk: a Distributed Workload Emulator" (lower-case "a"; proceedings print "A")'
+  authors: ["Remo Andreoli", "Tommaso Cucinotta"]
+  venue: CCGrid
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGRID64434.2025.00042
+  official_url: https://site.uit.no/ccgrid2025/wp-content/uploads/sites/519/2025/05/program_ccgrid2025-44.pdf
+  fullpaper_source: https://api.openalex.org/works/doi:10.1109/ccgrid64434.2025.00042
+  classification: CONTEXT
+  classification_note: "A workload-emulation toolkit, not a virtualization mechanism; kept out of DROP only because its stated purpose is comparing achievable latency across bare-metal, virtualized and containerized deployments, which is exactly the measurement apparatus this corpus's overhead claims rest on."
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary: [T9]
+  physical_resource: UNKNOWN
+  logical_abstraction: "A programmable synthetic distributed workload: a graph-like sequence of compute, network and storage operations whose end-to-end latency is measured"
+  problem: "Comparing achievable latency across deployment models and system configurations needs a workload generator that can express compute, network and storage phases together, which existing tools do not."
+  mechanism: "An open-source toolkit in which a request is a graph-like sequence of operations distributed across servers, parameterised by duration, parallelism, compute intensity, I/O data access and synchronisation mode, over several communication protocols and traffic patterns."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: "N/A — the tool measures latency rather than introducing a mechanism with an overhead."
+  primary_tradeoff: "A synthetic, fully parameterised workload -> gains controlled comparison across bare-metal, virtualized, containerized, OpenStack and Kubernetes deployments but costs fidelity to any specific real application."
+  quantitative_claims: []
+  why_useful_for_learning: "Only as instrumentation: if you need to reproduce a virtualization-overhead comparison across deployment models, this is the kind of harness that produces the numbers."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Access failure: IEEE Xplore blocked. Abstract from OpenAlex. Borderline DROP (keyword_false_positive on 'virtualized/containerized'); kept as CONTEXT per the brief's preference for preservation over pruning, at the lowest priority."
+
+- id: VIRT-CCGRID25-08
+  title: "Choreography and Profiling of Quantum-Classical FaaS Workflows on Hybrid Clouds"
+  title_correction: 'seed list said: "Choreography and Profiling of Quantum-Classical FaaS Workflows On Hybrid Clouds" (capital "On"; proceedings print "on")'
+  authors: ["Vaibhav Jha", "Shikhar Srivastava", "Tarun Harishchandra Pal", "Vaishnav Manoj Kavitha", "Ritajit Majumdar", "Tuhin Khare", "Padmanabha Venkatagiri Seshadri", "Varad Kulkarni", "Anupama Ray", "Yogesh Simmhan"]
+  venue: CCGrid
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGRID64434.2025.00069
+  official_url: https://research.ibm.com/publications/choreography-and-profiling-of-quantum-classical-faas-workflows-on-hybrid-clouds
+  fullpaper_source: https://research.ibm.com/publications/choreography-and-profiling-of-quantum-classical-faas-workflows-on-hybrid-clouds
+  classification: DROP
+  classification_note: "Re-checked against the paper's own full abstract: every contribution is workflow composition, deployment and profiling (XFaaS workflow patterns, workflow partitioning, adaptive polling) plus quantum circuit-level compilation (circuit cutting, qubit reuse). There is no isolation boundary, no multiplexing of a physical resource among tenants, and no virtual-resource abstraction — the FaaS platforms and QPU queues on AWS, Azure and IBM are consumed as given. The prior audit's REMOVE_DUPLICATE judgement is upheld."
+  drop_reason: already_analysed_no_delta
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: QPU
+  logical_abstraction: "A hybrid quantum-classical FaaS workflow whose classical and quantum steps are composed as workflow patterns and deployed zero-touch across hybrid clouds"
+  problem: "Building and managing hybrid quantum-classical applications that span x86/ARM classical logic and quantum circuit blocks across public and private clouds with different capabilities, costs and queue times is hard, and the available circuit-level optimizations expose cost/time/accuracy/parallelism trade-offs that developers must navigate by hand."
+  mechanism: "A framework layered on the authors' XFaaS workflow system that composes quantum-classical FaaS workflows from workflow patterns and applies cloud-system optimizations (workflow partitioning across clouds, adaptive polling of quantum job queues) alongside quantum-circuit optimizations (circuit cutting, qubit reuse) from the IBM Qiskit toolchain, with detailed experimental profiling on AWS, Azure and IBM quantum hardware and simulators."
+  isolation_mechanism: "N/A — no tenant isolation mechanism is contributed; provider-side isolation of FaaS functions and of QPU job submission is assumed."
+  multiplexing_mechanism: "N/A as a virtualization mechanism. Qubit reuse and circuit cutting reduce the qubit count a circuit needs, and dynamic fan-out parallelises circuit fragments across backends, but these are circuit-compilation and workflow-parallelism techniques, not a layer that presents virtual qubits or isolated QPU shares to multiple consumers."
+  state_mechanism: "Workflow state is held by the XFaaS workflow engine across classical and quantum steps; no virtualization state."
+  overhead_bottleneck: "QPU queue wait time and cross-cloud data movement in the workflow, which adaptive polling and partitioning attack."
+  primary_tradeoff: "Circuit cutting plus dynamic fan-out -> gains execution time and cost but costs result accuracy and adds classical recombination work (the paper's own cost/time/accuracy/parallelism framing)."
+  quantitative_claims:
+    - "up to 53% improvement in execution time and 80% reduction in cost when quantum circuit optimization on hardware is combined with dynamic fan-out (AWS, Azure and IBM quantum backends, real and simulated hardware, realistic and synthetic HQC applications)"
+  why_useful_for_learning: "Nothing about virtualization mechanism; its value is entirely in the HPC-Quantum corpus, where it documents how hybrid quantum workloads actually consume cloud FaaS."
+  priority: P3
+  related: ["Pilot-Quantum: A Quantum-HPC Middleware (CCGrid 2025)"]
+  relations:
+    - {type: SAME_BRANCH, target: "Pilot-Quantum: A Quantum-HPC Middleware (CCGrid 2025)", basis: "same CCGrid Future Compute Continuum session, both quantum-HPC middleware"}
+  existing_corpus_overlap: hpc_quantum
+  previous_analysis_depth: "analysed in hpc_quantum: covered as a hybrid quantum-classical FaaS workflow/middleware paper (XFaaS workflow patterns, circuit cutting, qubit reuse, cross-cloud profiling); a prior audit for this virtualization corpus returned REMOVE_DUPLICATE on the grounds that virtualization is not its core contribution."
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "SPECIAL-HANDLING PAPER. Verdict: prior audit UPHELD, recorded as DROP / already_analysed_no_delta. Access failure on full text: IEEE Xplore document page blocked, the iel8 direct PDF returned HTTP 418, ResearchGate 429; the complete author/publisher abstract was obtained from IBM Research's publication page and is the basis for this judgement. Searched the abstract explicitly for isolation, multiplexing, virtual-device/virtual-queue and runtime-isolation content and found none; the only multiplexing-adjacent items (qubit reuse, circuit cutting, dynamic fan-out) are circuit-compilation and workflow-parallelism techniques. If the orchestrator wants a higher-confidence overturn check, the remaining route is an institutional IEEE subscription."

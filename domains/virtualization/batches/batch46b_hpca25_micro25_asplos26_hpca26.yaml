@@ -1,0 +1,3174 @@
+papers:
+- id: VIRT-HPCA25-01
+  title: 'NVMePass: A Lightweight, High-performance and Scalable NVMe Virtualization Architecture with I/O Queues
+    Passthrough'
+  title_correction: null
+  authors:
+  - Yiquan Chen
+  - Zhen Jin
+  - Yijing Wang
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://ieeexplore.ieee.org/document/10946776/
+  fullpaper_source: https://arxiv.org/abs/2304.05148
+  classification: CORE
+  classification_note: 'The contribution is the NVMe I/O-queue-passthrough virtualization mechanism itself: guest
+    VMs get direct access to physical NVMe submission/completion queues while control-plane resources stay trap-and-emulated,
+    which is a device-virtualization architecture, not merely a paper that uses virtualization.'
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T1
+  physical_resource: NVMe
+  logical_abstraction: A per-VM virtual NVMe controller whose I/O queues are physically passed through, so guests
+    get near-native IOPS/latency without SR-IOV/SIOV hardware support
+  problem: Software NVMe virtualization (virtio, SPDK vhost-NVMe, Mdev-NVMe) either degrades performance or burns
+    dedicated host CPU cores for polling, while hardware-assisted passthrough (SR-IOV/SIOV/FVM) needs special, mostly
+    unavailable, SSD controller support; neither scales to thousands of VMs per server cheaply.
+  mechanism: NVMe resources are split into control resources (PCIe config space, BAR, admin queue - trap-and-emulated
+    by a lightweight hypervisor device model) and data resources (I/O submission/completion queues, doorbells, interrupts,
+    LBA ranges - passed through directly). A backend driver in the host kernel creates per-VM I/O queue pairs from
+    the device's pool (NVMe allows up to 65,535 I/O queue pairs per Admin Queue) and maps their queue buffers into
+    guest-physical memory via the Controller Memory Buffer; a frontend driver in the guest kernel presents a standard
+    NVMe device to the guest OS. Guest queue GPA is resolved to HPA lazily through a single EPT page fault per queue,
+    after which the guest issues I/O directly to hardware with no per-I/O VM exit; IOMMU DMA remapping and interrupt
+    posting keep DMA and completion interrupts VM-exit-free too.
+  isolation_mechanism: 'Two independent checks: (1) LBA isolation - the backend allocates each VM a non-overlapping
+    logical block address range and the frontend adds a per-VM lba_start offset and range-checks every request;
+    (2) GPA isolation - the frontend validates that PRP addresses in submitted NVMe commands fall inside that VM''s
+    assigned guest-physical range, and the hypervisor assigns non-overlapping GPA windows per VM at boot so IOMMU
+    translation cannot let one VM''s DMA touch another''s memory.'
+  multiplexing_mechanism: A single physical NVMe controller's large per-device pool of I/O queue pairs (spec allows
+    65,535) is partitioned across VMs, each VM getting its own exclusive queue pair(s) and LBA range while sharing
+    the underlying device/controller resources.
+  state_mechanism: Per-VM virtualization state is the queue-pair assignment, LBA offset/range and GPA window, held
+    in the host backend driver and the hypervisor's lightweight device model; the data path itself (queue contents)
+    lives in guest-mapped Controller Memory Buffer, not host software, so nothing needs host-side buffering during
+    steady-state I/O.
+  overhead_bottleneck: The one-time EPT page fault per queue at first touch; after that the dominant cost approaches
+    native device latency because there is no per-I/O trap, polling core, or software copy.
+  primary_tradeoff: Software-only I/O-queue passthrough instead of vendor SR-IOV/SIOV hardware -> gains near-VFIO
+    performance and NVMe-spec-limited scalability (tens of thousands of VMs) on commodity NVMe SSDs, but costs some
+    control-plane flexibility (queue depth/count is still bounded by the physical device's queue-pair pool) and
+    needs a custom guest frontend driver.
+  quantitative_claims:
+  - 'single-VM IOPS: 97.6-100.2% of VFIO passthrough (4KB random read/write, fio, 4 jobs/QD128, Intel Xeon Platinum
+    8163, Intel P4510 NVMe SSD)'
+  - 'single-VM latency: within 1% of VFIO average latency across fio workloads'
+  - '200-VM density latency: 31.4% lower than SPDK vhost-NVMe and 45.1% lower than virtio (2 SSDs, 200 VMs)'
+  - '200-VM density IOPS: 45.7% higher than SPDK vhost-NVMe, 75.6% higher than virtio'
+  - 'RocksDB readrandom (single VM, 128 threads): 6.8% lower latency than VFIO, 21.3% lower than SPDK-vhost, 27.1%
+    higher OPS than SPDK-vhost'
+  - 'RocksDB readrandom (100 VMs, 1 thread each): 32.5% lower latency than SPDK-vhost, 29.3% lower than virtio'
+  - 'implementation size: 6,600 lines of code (300 guest kernel, 4,200 host kernel, 2,100 Firecracker) on Firecracker
+    0.14.0 / Linux 4.19'
+  why_useful_for_learning: 'It is a clean worked example of the control/data-plane split that makes device passthrough
+    scale without new hardware: trap-and-emulate only what configures the device, pass through everything on the
+    per-I/O hot path.'
+  priority: P1
+  related: []
+  relations:
+  - type: ALTERNATIVE
+    target: SR-IOV / SIOV / FVM hardware-assisted NVMe virtualization
+    basis: Paper explicitly contrasts its software-only passthrough against these hardware-dependent alternatives
+      on flexibility and availability grounds.
+  - type: ALTERNATIVE
+    target: SPDK vhost-NVMe / virtio-blk
+    basis: Directly implemented and measured as baselines representing the software-mediated end of the NVMe virtualization
+      spectrum.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: MEDIUM
+  notes: 'IEEE Xplore (document 10946776) would not render abstract/PDF text through this environment, and no author-hosted
+    copy under the exact title ''NVMePass'' was found after 3 routes (IEEE Xplore, ResearchGate, HKUST FACT Lab
+    publication page which confirms lead author Yiquan Chen and the HPCA 2025 venue but has no PDF/abstract). Read
+    instead the same authors'' group arXiv:2304.05148 ''LightIOV: High-performance and Scalable Software-based NVMe
+    Virtualization Mechanism with I/O Queues Passthrough'' (Yiquan Chen et al., Zhejiang University/Alibaba), which
+    describes the identical core mechanism (NVMe I/O queue passthrough, control/data split, LBA+GPA isolation, Firecracker
+    implementation, VFIO/SPDK-vhost/virtio baselines) and is almost certainly the tech-report precursor of the published
+    NVMePass paper under a different working name; treat the design/mechanism/numbers above as evidence about that
+    lineage rather than a confirmed identical camera-ready text.'
+- id: VIRT-HPCA25-02
+  title: 'SpecMPK: Efficient In-Process Isolation with Speculative and Secure Permission Update Instruction'
+  title_correction: null
+  authors:
+  - Debpratim Adak
+  - Huiyang Zhou
+  - Eric Rotenberg
+  - Amro Awad
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://hpca-conf.org/2025/main-program/
+  fullpaper_source: https://ericrotenberg.wordpress.ncsu.edu/files/2025/06/paper_HPCA-31_SpecMPK.pdf
+  classification: SUPPORT
+  classification_note: SpecMPK speeds up Intel Memory Protection Keys (WRPKRU) so that in-process/intra-address-space
+    compartments can switch permissions cheaply; it never creates a virtual machine, container, or any cross-process/cross-tenant
+    resource abstraction, so it is not itself CORE virtualization, but it is exactly the hardware isolation primitive
+    that lightweight in-process sandboxes (e.g. MPK-based library/WASM compartmentalization) build on, so it is
+    SUPPORT for that CORE branch.
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary:
+  - T7
+  physical_resource: CPU core
+  logical_abstraction: A per-thread set of up to 16 hardware-enforced memory-permission domains inside one process
+    address space, switchable via WRPKRU without a page-table walk or TLB shootdown
+  problem: Intel MPK's WRPKRU instruction must be executed serially (all later memory accesses wait for it to retire)
+    to prevent Spectre-style speculative permission upgrades, which makes frequent domain switches (e.g. per-call
+    sandboxing) costs up to 69.76% overhead on real Cascade Lake hardware.
+  mechanism: SpecMPK lets WRPKRU execute out-of-order and speculatively like an ordinary instruction, but adds a
+    ROBpkru (in-flight PKRU updates), an architectural ARFpkru (committed PKRU), and per-protection-key Access-Disable/Write-Disable
+    counters; loads stall while any in-flight WRPKRU could still disable their key's access, and speculative stores
+    are blocked from forwarding to loads while a disabling WRPKRU is in flight, so no instruction can observe data
+    across a not-yet-committed permission tightening.
+  isolation_mechanism: Speculative loads/stores are gated by counting in-flight permission-narrowing WRPKRUs per
+    key rather than by serializing the pipeline; on misspeculation, everything replays using the last committed
+    ARFpkru state, closing the control-steering, chosen-code, and speculative-store-forwarding attack classes the
+    authors demonstrate with a working Flush+Reload proof of concept.
+  multiplexing_mechanism: N/A (single core/thread mechanism, not a shared-resource multiplexer)
+  state_mechanism: All state (ROBpkru entries, ARFpkru, disabling counters) is per-core microarchitectural state
+    that never leaves the pipeline; nothing migrates.
+  overhead_bottleneck: Baseline WRPKRU serialization stalls the whole pipeline on every domain switch; SpecMPK's
+    residual cost is the small hardware (93 bytes, ~0.19% of L1D) needed to track in-flight permission state.
+  primary_tradeoff: Speculative WRPKRU with counter-based gating -> gains 12.21% average (up to 48.42%) speedup
+    over serialized MPK at negligible area/power cost, but costs new microarchitectural state and only defends the
+    three attack classes analysed, not all possible transient-execution interactions with permission changes.
+  quantitative_claims:
+  - 'average speedup: 12.21% over serialized WRPKRU baseline (gem5, SPEC2017 with shadow-stack + SPEC2006 with code-pointer-integrity
+    instrumentation)'
+  - 'maximum speedup: 48.42% (workload-dependent, high WRPKRU-frequency benchmark)'
+  - 'real-hardware WRPKRU overhead: 69.76% on Intel Cascade Lake vs 10.28% from a compiler-only mitigation'
+  - 'hardware cost: 93 bytes extra sequential state (~0.19% of L1D), 5,887.91 um^2 / 3,103 logic cells at 45nm,
+    2.02% dynamic / 0.39% leakage power overhead vs L1D'
+  - 'ROBpkru sizing: 8-entry ROBpkru needed to approach NonSecure-SpecMPK performance; 2-entry loses performance
+    on high-WRPKRU workloads'
+  why_useful_for_learning: It is the concrete hardware mechanism behind cheap in-process compartmentalization, the
+    same class of primitive (fast, fine-grained, hardware-checked domain switch) that sandbox/unikernel/WASM isolation
+    papers assume exists when they cite MPK as an alternative to full process or VM isolation.
+  priority: P2
+  related: []
+  relations:
+  - type: LAYER_BELOW
+    target: MPK-based in-process sandboxing systems (e.g. ERIM, Hodor-style compartmentalization)
+    basis: SpecMPK optimizes the exact WRPKRU instruction those systems rely on for fast domain switches; it does
+      not build the sandbox itself.
+  - type: CONTRASTS_WITH
+    target: Process/VM-level isolation (namespaces, hypervisor)
+    basis: Paper explicitly scopes itself to single-address-space, single-process compartments rather than cross-process
+      or cross-VM isolation.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - paper
+  - official-web
+  confidence: HIGH
+  notes: Read the author-hosted camera-ready PDF (Eric Rotenberg's NCSU page); official ACM/IEEE PDF was not attempted
+    separately since this copy is the full text with abstract, design, gem5 setup and evaluation tables.
+- id: VIRT-HPCA25-03
+  title: 'Concord: Rethinking Distributed Coherence for Software Caches in Serverless Environments'
+  title_correction: null
+  authors:
+  - Jovan Stojkovic
+  - Chloe Alverti
+  - Alan Andrade
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://ieeexplore.ieee.org/document/10946775/
+  fullpaper_source: https://iacoma.cs.uiuc.edu/iacoma-papers/hpca25_1.pdf
+  classification: CONTEXT
+  classification_note: Concord is an application-level, hardware-cache-coherence-inspired distributed caching protocol
+    for FaaS function instances; it never touches the hypervisor/container isolation boundary, so it is higher-level
+    serverless infrastructure that USES the FaaS platform rather than a virtualization mechanism itself.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  physical_resource: DRAM
+  logical_abstraction: A per-application distributed cache spanning function-execution nodes that behaves like one
+    coherent cache despite functions starting/stopping independently
+  problem: Serverless functions spend 35-93% of response time on remote storage access; single-copy caches force
+    remote reads and multi-copy schemes like Faa$T add version-check overhead that dominates for small objects.
+  mechanism: A directory-based, MESI-like (no Modified state) coherence protocol runs across per-node Cache Agents,
+    using consistent hashing to assign each key's directory home; a write-through policy keeps global storage authoritative,
+    coherence domains grow/shrink as function instances start/stop, and a coherence-aware scheduler routes invocations
+    toward nodes already caching the data they need.
+  isolation_mechanism: N/A (no tenant/security isolation contribution; coherence is a correctness protocol for a
+    single application's own cached data)
+  multiplexing_mechanism: Unused per-instance application memory (average 56.8MB) is repurposed as cache capacity
+    (average 6.2MB, 4.8% of application memory) shared read/write across function instances of the same application
+    via the coherence protocol.
+  state_mechanism: Cached copies and directory metadata live in each node's Cache Agent and move via the coherence
+    protocol's read/write messages; ZooKeeper provides failure detection/recovery coordination when nodes leave.
+  overhead_bottleneck: Remote storage round-trips remain on the critical path for writes and coherence misses; write
+    latency grows modestly (32.4ms at 30 nodes) because storage, not coherence traffic, dominates.
+  primary_tradeoff: Directory-based coherence over ephemeral serverless nodes -> gains 2.4-2.6x latency and 1.7x
+    throughput over prior FaaS caches by keeping data local, but costs the complexity of dynamic coherence-domain
+    membership as functions scale up/down.
+  quantitative_claims:
+  - 'latency: 2.4x average speedup over OFC at medium load, 2.6x at high load (OpenWhisk, 16-node cluster, 7 multi-function
+    apps)'
+  - 'throughput: 1.7x over OFC measured against SLO thresholds'
+  - 'cache footprint: 6.2MB average per cache, 4.8% of total application memory (vs 56.8MB average unused memory
+    available)'
+  - 'local read hit rate: 83% with coherence-aware scheduling vs 75% without'
+  - 'transactional workloads: 54% latency reduction vs Saga across 5 transaction-heavy applications'
+  why_useful_for_learning: It shows how a FaaS platform's cost structure (per-invocation cold state, remote storage
+    as the only durable substrate) forces application-level solutions to problems (caching, coherence) that a VM/container
+    platform would otherwise solve with persistent local state, clarifying why serverless isolation/ephemerality
+    is a real design constraint rather than a detail.
+  priority: P3
+  related: []
+  relations:
+  - type: CONTRASTS_WITH
+    target: Faa$T (multi-copy serverless caching with version checks)
+    basis: Directly implemented and measured as the state-of-the-art baseline Concord replaces its version-check
+      protocol against.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - paper
+  - official-web
+  confidence: HIGH
+  notes: Read the author-hosted (i-acoma group, UIUC) full PDF.
+- id: VIRT-HPCA25-04
+  title: Predicting DRAM-Caused Risky VMs in Large-Scale Clouds
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary:
+  - T9
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch (found IEEE Xplore doc 10946740 and title only, budget exhausted before
+    a full-text route could be tried), WebFetch of the IEEE Xplore document page (returned empty content), WebFetch
+    of OpenAlex works-search API (HTTP 429 rate limited on repeated tries). Best evidence obtained: Confirmed real
+    HPCA 2025 title (from the official hpca-conf.org main-program listing) about predicting which VMs are at elevated
+    risk from DRAM-related faults in large-scale cloud fleets; no abstract text obtained.'
+- id: VIRT-HPCA25-05
+  title: 'DPUaudit: DPU-assisted Pull-based Architecture for Near-Zero Cost System Auditing'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T10
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted for this title before it could be queried; WebFetch
+    of OpenAlex works-search API (HTTP 429). Best evidence obtained: Confirmed real HPCA 2025 title from the official
+    main-program listing; DPU-assisted architecture for system-call/security auditing offloaded from host CPU, topic
+    adjacent to but distinct from device virtualization.'
+- id: VIRT-HPCA25-06
+  title: 'RpcNIC: Enabling Efficient Datacenter RPC Offloading on PCIe-attached SmartNICs'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T9
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex
+    works-search API (HTTP 429). Best evidence obtained: Confirmed real HPCA 2025 title from the official main-program
+    listing; concerns RPC offload to SmartNIC hardware, a device-offload mechanism adjacent to but not confirmed
+    to be device *virtualization*.'
+- id: VIRT-HPCA25-07
+  title: 'Grad: Intelligent Microservice Scaling by Harnessing Resource Fungibility'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex
+    works-search API (HTTP 429). Best evidence obtained: Confirmed real HPCA 2025 title from the official main-program
+    listing; concerns microservice autoscaling using fungible resources, a cloud multi-tenancy/resource-management
+    topic.'
+- id: VIRT-HPCA25-08
+  title: 'Palermo: Improving the Performance of Oblivious Memory using Protocol-Hardware Co-Design'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex
+    works-search API (HTTP 429). Best evidence obtained: Confirmed real HPCA 2025 title from the official main-program
+    listing; oblivious RAM (ORAM) protocol/hardware co-design is a confidentiality mechanism often used inside TEEs/confidential
+    VMs, but the trust boundary (single enclave vs VM-wide) could not be confirmed.'
+- id: VIRT-HPCA25-09
+  title: 'SkyByte: Architecting An Efficient Memory-Semantic CXL-based SSD with OS and Hardware Co-design'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary:
+  - T3
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex
+    works-search API (HTTP 429). Best evidence obtained: Confirmed real HPCA 2025 title from the official main-program
+    listing; a CXL-memory-semantic SSD architecture, relevant disaggregation/tiering background but no VM/guest
+    abstraction confirmed.'
+- id: VIRT-HPCA25-10
+  title: 'Marching Page Walks: Batching and Concurrent Page Table Walks for Enhancing GPU Throughput'
+  title_correction: null
+  authors:
+  - Ipoom Jeong
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://ieeexplore.ieee.org/document/10946291/
+  fullpaper_source: https://ipoom-jeong.com/publication/marching-page-walks-batching-and-concurrent-page-table-walks-for-enhancing-gpu-throughput/
+  classification: DROP
+  classification_note: Confirmed via the author-hosted abstract that this is single-level GPU virtual-to-physical
+    address translation for one application's own thousands of concurrent threads; there is no guest OS, VM, or
+    hypervisor-mediated translation, so it falls under the brief's pure-virtual-memory exclusion.
+  drop_reason: pure_virtual_memory
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: GPU
+  logical_abstraction: UNKNOWN
+  problem: A single hardware page table walker cannot keep up with thousands of concurrent GPU threads' TLB misses,
+    causing severe queueing delay.
+  mechanism: MPW scans pending walk requests, groups ones that can be serviced together, and issues multiple memory
+    instructions concurrently to batch page-table-walk memory accesses.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A (single-context GPU address translation)
+  state_mechanism: N/A
+  overhead_bottleneck: Page-walk queueing latency from a single-request-at-a-time walker facing massively parallel
+    GPU miss traffic.
+  primary_tradeoff: UNKNOWN (not read beyond abstract, since classification is DROP)
+  quantitative_claims:
+  - 'queueing latency: 86.7% reduction (abstract-reported)'
+  - 'GPU performance: 55.6% improvement (abstract-reported)'
+  why_useful_for_learning: Screened out per the brief's explicit guidance to distinguish ordinary GPU virtual-memory/TLB
+    work from guest/nested/hypervisor-mediated translation.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: HIGH
+  notes: Screening record per the batch instructions to explicitly document pure-virtual-memory false positives
+    found while scanning the HPCA 2025 program.
+- id: VIRT-HPCA25-11
+  title: 'OASIS: Object-Aware Page Management for Multi-GPU Systems'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://ieeexplore.ieee.org/document/10946813/
+  fullpaper_source: https://users.elis.ugent.be/~leeckhou/papers/HPCA2025-OASIS.pdf
+  classification: DROP
+  classification_note: 'Read the paper: it is a single-application, multi-GPU Unified-Virtual-Memory page-placement
+    policy (per-object, per-phase migration/replication choice) with no hypervisor, guest OS, or multi-tenant isolation
+    involved, matching the brief''s pure-virtual-memory exclusion.'
+  drop_reason: pure_virtual_memory
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: GPU
+  logical_abstraction: UNKNOWN
+  problem: A single uniform UVM page-management policy is suboptimal because the best migrate/replicate/pin choice
+    differs by data object and by execution phase within one application spanning multiple physical GPUs.
+  mechanism: OASIS tracks access patterns per data object and per phase and dynamically switches page-placement
+    policy accordingly, rather than applying one policy to the whole address space.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A (single job across multiple physical GPUs, not multi-tenant sharing)
+  state_mechanism: N/A
+  overhead_bottleneck: Cross-GPU page migration/replication traffic when the wrong policy is applied to a given
+    object/phase.
+  primary_tradeoff: Per-object, per-phase adaptive policy -> gains 35-64% over uniform policies and 12% over prior
+    work GRIT, but costs the bookkeeping needed to classify objects and detect phase changes at runtime.
+  quantitative_claims:
+  - 'performance improvement over uniform policies: 64%, 35%, 42% (three configurations, MGPUSim, 4-16 simulated
+    GPUs)'
+  - 'improvement over prior work GRIT: 12%'
+  why_useful_for_learning: Screened out per the brief's explicit guidance; useful negative example distinguishing
+    single-application multi-GPU memory management from guest/VM GPU memory virtualization.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - paper
+  - official-web
+  confidence: HIGH
+  notes: Read the author-hosted (UGent) PDF; screening record for the batch report's pure-virtual-memory-false-positive
+    list.
+- id: VIRT-HPCA25-12
+  title: 'Let-Me-In: (Still) Employing In-pointer Bounds Metadata for Fine-grained GPU Memory Safety'
+  title_correction: null
+  authors:
+  - Seonjin Na
+  - et al.
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://ieeexplore.ieee.org/iel8/10946287/10946288/10946781.pdf
+  fullpaper_source: https://seonjinna.github.io/assets/pdf/LMI_hpca25.pdf
+  classification: DROP
+  classification_note: This is a spatial memory-safety (bounds-checking) mechanism for GPU pointers, not a resource-virtualization
+    mechanism; it was caught by the 'GPU' + 'memory' keyword screen but has no virtualization, isolation-between-tenants,
+    or multiplexing content.
+  drop_reason: keyword_false_positive
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: GPU
+  logical_abstraction: UNKNOWN
+  problem: Fine-grained GPU memory-safety checking (detecting out-of-bounds pointer accesses) needs low-overhead
+    bounds metadata.
+  mechanism: Encodes bounds metadata directly in the pointer representation ('in-pointer' bounds) rather than in
+    a side table, continuing a line of tagged-pointer memory-safety work applied to GPUs.
+  isolation_mechanism: N/A (memory-safety, not tenant isolation)
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: UNKNOWN (not read beyond title/venue-listing level)
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: Screened out; recorded to document a keyword false positive found while scanning the
+    HPCA 2025 program for virtualization-relevant work.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: Classified from search-result descriptions of the paper's topic (fine-grained GPU pointer bounds metadata
+    for memory safety); full text not fetched since the topic is unambiguously outside virtualization scope.
+- id: VIRT-MICRO25-01
+  title: 'ccAI: A Compatible and Confidential System for AI Computing'
+  title_correction: null
+  authors:
+  - Chenxu Wang
+  - Danqing Tang
+  - Changxu Ci
+  - et al.
+  venue: MICRO
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3725843.3756104
+  official_url: https://dl.acm.org/doi/10.1145/3725843.3756104
+  fullpaper_source: https://cse.sustech.edu.cn/faculty/~zhangfw/paper/ccai-micro25.pdf
+  classification: CORE
+  classification_note: ccAI extends the confidential-VM trust boundary past the CPU across the PCIe bus into GPU/NPU/FPGA
+    accelerators via a hardware PCIe Security Controller and TVM-side adaptor, which is exactly the confidential-computing
+    / device-virtualization-security architecture the taxonomy's T7 targets, not merely a paper that runs inside
+    a TEE.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T3
+  - T6
+  physical_resource: PCIe/CXL fabric
+  logical_abstraction: An end-to-end confidential channel from a Trusted (confidential) VM through the PCIe bus
+    into an otherwise-untrusted GPU/NPU/FPGA, so that xPU-side computation on sensitive data is protected without
+    touching accelerator firmware or drivers
+  problem: Existing confidential computing (SEV/TDX-style TVMs) protects only CPU-side execution; once data crosses
+    the PCIe bus to an accelerator, it is exposed to a privileged/untrusted OS, hypervisor, malicious devices, or
+    physical bus eavesdropping, and today's TEE ecosystem has no uniform way to extend confidentiality across heterogeneous
+    xPU vendors.
+  mechanism: 'A PCIe Security Controller (PCIe-SC, prototyped on an Intel Agilex 7 FPGA) sits on the PCIe path and
+    classifies every packet via a two-level access-control table into 4 actions: block, encrypt+integrity-check
+    (AES-GCM/SHA), integrity-only, or transparent passthrough (e.g. interrupts). A TVM-side kernel adaptor locates
+    sensitive data/code via metadata, encrypts it into bounce buffers before DMA, and requires no changes to native
+    accelerator drivers/applications. Trust is established via a TPM-compatible hardware root of trust (HRoT-Blade),
+    secure boot, and remote attestation (Diffie-Hellman + PCRs); the xPU Environment Guard clears accelerator memory/caches
+    when a confidential task ends.'
+  isolation_mechanism: 'Confidentiality/integrity is enforced per-PCIe-packet rather than per-VM-page: the trust
+    boundary is TVM -> encrypted PCIe transit -> accelerator execution, with accelerator firmware assumed vendor-authenticated
+    and malware-free, and side-channel/DoS attacks explicitly out of scope.'
+  multiplexing_mechanism: The PCIe-SC is shared hardware sitting on the bus to all attached accelerators, so one
+    controller mediates confidential traffic to NVIDIA A100/RTX4090Ti/T4 GPUs, a Tenstorrent NPU, and an Enflame
+    GPU simultaneously without per-vendor logic.
+  state_mechanism: Workload keys with dynamic IV rotation live in the PCIe-SC and TVM adaptor; batched metadata
+    and grouped encryption reduce redundant I/O reads/writes; no cross-machine migration is discussed.
+  overhead_bottleneck: Per-packet encryption/integrity-check cost and the extra I/O reads for metadata lookup, mitigated
+    by batching metadata collection and grouping encryption operations (88.7-89.8% overhead reduction from these
+    two optimizations alone).
+  primary_tradeoff: Anchoring protection at the PCIe packet level instead of per-accelerator-architecture -> gains
+    vendor-agnostic confidential xPU computing with no driver/application changes, but costs a new hardware TCB
+    component (218.6K ALUTs on the FPGA prototype) on the PCIe path and assumes accelerator firmware integrity as
+    a trust axiom.
+  quantitative_claims:
+  - 'end-to-end latency overhead: 0.05-5.67% (Llama-2-7b across token/batch sizes, vs unprotected baseline)'
+  - 'overhead across 9 LLMs (1.3b-83b parameters): 0.72-4.76%'
+  - 'overhead across 5 accelerator types (A100/RTX4090Ti/T4 GPUs, Tenstorrent NPU, Enflame GPU): 0.58-2.40%'
+  - 'optimization efficacy: 88.7-89.8% overhead reduction from batched metadata + grouped encryption vs non-optimized'
+  - 'limited-bandwidth case: 4.45% overhead at 8GT/s PCIe with 8 lanes'
+  - 'KV-cache swapping: <2% additional overhead under memory pressure'
+  - 'TCB addition: 3.1K LoC (TVM-side software), 218.6K ALUTs / 195.7K logic registers / 630 block RAMs (PCIe-SC
+    FPGA prototype)'
+  why_useful_for_learning: 'It is a concrete answer to ''what happens to confidential computing when the workload
+    needs a GPU/NPU/FPGA'': the trust boundary must be re-drawn around the PCIe transport itself, not just the CPU,
+    which matters for every CVM/TEE paper that assumes accelerator-attached confidential AI.'
+  priority: P1
+  related: []
+  relations:
+  - type: LAYER_ABOVE
+    target: TDX/SEV-SNP-style confidential VM (TVM)
+    basis: ccAI assumes an existing TVM protects CPU-side execution and adds the PCIe-to-accelerator leg on top.
+  - type: CONTRASTS_WITH
+    target: GPU-vendor-specific confidential computing (e.g. NVIDIA Confidential Computing / H100 CC mode)
+    basis: ccAI is explicitly vendor-agnostic (GPU/NPU/FPGA from 3 different vendors) via a PCIe-level mechanism
+      instead of a per-accelerator hardware TEE.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - paper
+  - official-web
+  confidence: HIGH
+  notes: 'Read the author-hosted (SUSTech) full PDF, including threat model, architecture, evaluation tables. Confirms
+    the task''s flagged question: ccAI''s confidential trust boundary explicitly extends beyond the CPU across PCIe
+    into the accelerator, which is the key trend-analysis fact requested.'
+- id: VIRT-MICRO25-02
+  title: 'Re-architecting End-host Networking with CXL: Coherence, Memory, and Offloading'
+  title_correction: null
+  authors:
+  - Houxiang Ji
+  - Yifan Yuan
+  - Yang Zhou
+  - Ipoom Jeong
+  - Ren Wang
+  - Saksham Agarwal
+  - Nam Sung Kim
+  venue: MICRO
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3725843.3756102
+  official_url: https://dl.acm.org/doi/10.1145/3725843.3756102
+  fullpaper_source: https://saksham.web.illinois.edu/assets/pdf/cxl-nic.pdf
+  classification: SUPPORT
+  classification_note: 'Applying the brief''s disaggregation rule: CXL-NIC exposes NIC-attached memory as coherent,
+    NUMA-addressable host memory and replaces PCIe DMA/MMIO with CXL.cache/CXL.mem transactions - it is a disaggregation/offload
+    and cache-coherence redesign of the NIC-host interface, not a virtual-resource abstraction (no VM/vNIC/guest
+    abstraction is introduced), so it is SUPPORT background for CORE device-virtualization and CXL-memory-virtualization
+    papers rather than CORE itself.'
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T2
+  physical_resource: NIC
+  logical_abstraction: NIC descriptor rings and NIC-attached DRAM exposed to the host CPU as coherent, directly
+    cacheable memory (a remote NUMA node) instead of DMA'd/MMIO'd PCIe device memory
+  problem: PCIe-attached NICs pay DMA latency for descriptor/packet exchange and lack cache coherence between host
+    and NIC memory, forcing software-managed synchronization that becomes the bottleneck at 100+ Gbps line rates
+    and for microsecond-scale key-value workloads.
+  mechanism: Type-1 CXL-NIC replaces DMA/MMIO descriptor and packet paths with a Descriptor Management Unit and
+    Packet Forwarding Unit issuing CXL.cache requests, using cache-line states (NC/CS/CO) to avoid explicit software
+    cache flushes. Type-2 CXL-NIC adds CXL.mem-backed, gigabyte-scale on-NIC DRAM that the host can place hot/cold
+    KVS data into using ordinary NUMA semantics, with adaptive NC-P (push-write) gating to avoid saturating the
+    host LLC.
+  isolation_mechanism: N/A (single-host coherence/offload redesign, not a multi-tenant isolation mechanism)
+  multiplexing_mechanism: N/A at the paper's scope (one host, one NIC); NIC memory capacity is treated as an additional
+    NUMA-addressable tier rather than partitioned across tenants
+  state_mechanism: Descriptor and packet state move via cache-coherent CXL.cache/CXL.mem transactions instead of
+    DMA copies; on-NIC DRAM (Type-2) holds cold KV data that migrates between host and NIC tiers under NUMA-style
+    placement.
+  overhead_bottleneck: Software cache-flush/fence operations and round-trip DMA latency in the PCIe baseline; residual
+    cost in CXL-NIC is the dual-trip penalty on the Tx (NC-read) path (62% of theoretical throughput limit).
+  primary_tradeoff: Cache-coherent CXL transactions instead of DMA+MMIO -> gains 49%/39% median/tail latency reductions
+    and removes software coherence management, but costs new CXL-capable NIC hardware (FPGA-based CXL 1.1 prototype
+    here) and only reaches 62-90% of theoretical Rx/Tx throughput limits depending on direction.
+  quantitative_claims:
+  - 'packet processing latency: 49% median reduction vs PCIe NIC baseline for 64B packets, 46% for 1500B packets
+    (Type-1)'
+  - 'descriptor operation latency: 85% reduction vs PCIe baseline'
+  - 'NIC-memory latency (Type-2): 37% median improvement over a cache-coherent-NIC design across 64-1500B packets'
+  - 'KVS tail latency: 39% p99 reduction vs NVIDIA BlueField-3 SmartNIC baseline (Zipfian distribution)'
+  - 'throughput: Rx path reaches 90% of theoretical limit with NC-write; Tx path reaches 62% with NC-read due to
+    a dual-trip penalty'
+  - 'batching (size 32): 88% throughput efficiency'
+  - 'testbed: Intel Xeon 6538Y+ (32 cores, 60MB LLC, DDR5-4800) host with an Intel Agilex-7 FPGA CXL 1.1-over-PCIe-5.0
+    device'
+  why_useful_for_learning: It is the concrete mechanical answer to 'what does cache-coherent CXL actually replace
+    on the NIC datapath', giving the coherence-vs-DMA trade-off background needed to evaluate any future CXL-attached
+    virtual-NIC or SR-IOV-over-CXL design.
+  priority: P2
+  related: []
+  relations:
+  - type: CONTRASTS_WITH
+    target: NVIDIA BlueField-3 SmartNIC (PCIe)
+    basis: Directly implemented and measured as the baseline CXL-NIC is compared against for both packet and KVS
+      workloads.
+  - type: LAYER_BELOW
+    target: Future CXL-based virtual/vNIC or SR-IOV device-virtualization designs
+    basis: Establishes the coherent NIC-host memory substrate that a virtualized network-device abstraction over
+      CXL would have to be built on.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - paper
+  - official-web
+  confidence: HIGH
+  notes: Read the author-hosted (UIUC) full PDF. Per the task's flagged threshold question, this is disaggregation/coherence
+    re-architecture, not a virtual resource abstraction, so it is classified SUPPORT rather than CORE.
+- id: VIRT-MICRO25-03
+  title: 'Chameleon: Adaptive Caching and Scheduling for Many-Adapter LLM Inference Environments'
+  title_correction: null
+  authors:
+  - Nikoleta Iliakopoulou
+  - et al.
+  venue: MICRO
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3725843.3756083
+  official_url: https://dl.acm.org/doi/10.1145/3725843.3756083
+  fullpaper_source: https://arxiv.org/abs/2411.17741
+  classification: CONTEXT
+  classification_note: Confirmed via the abstract that Chameleon is a single-process LLM-serving scheduling/caching
+    optimization for many co-located LoRA adapters, explicitly requiring 'no hardware or OS support, or changes
+    to CUDA kernels' - an LLM-serving system that uses shared GPU infrastructure, matching the brief's explicit
+    CONTEXT example of LLM serving rather than a virtualization/isolation mechanism.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  physical_resource: GPU
+  logical_abstraction: A shared base-model GPU process serving many tenants' LoRA adapters as dynamically loaded/cached,
+    scheduled units
+  problem: Serving environments with many colocated LoRA adapters suffer adapter-loading overhead and head-of-line
+    blocking when a scheduler does not account for which adapters are cheap (cached) vs expensive (must be loaded)
+    to serve next.
+  mechanism: Adapter caching keeps popular LoRA adapters resident in GPU memory to avoid reload cost, and an adapter-aware
+    multi-queue scheduler separates requests so that cheap (cached-adapter) and expensive (must-load) requests do
+    not head-of-line-block each other while meeting SLOs.
+  isolation_mechanism: N/A (no isolation contribution; all adapters run in one shared inference process)
+  multiplexing_mechanism: GPU memory and compute time are shared across many LoRA adapters purely through software
+    caching and queue scheduling, with no hardware partitioning.
+  state_mechanism: Adapter weights are the only state; they are swapped between GPU memory and a slower tier by
+    the caching layer.
+  overhead_bottleneck: Adapter (re)loading latency and head-of-line blocking in a naive single-queue scheduler.
+  primary_tradeoff: Software-only adapter caching + multi-queue scheduling -> gains large P99/P50 TTFT reductions
+    and throughput at high load without any OS/hardware/CUDA changes, but costs cache-management complexity and
+    assumes a single shared inference process (no isolation between adapters/tenants).
+  quantitative_claims:
+  - 'P99 TTFT latency reduction: 80.7% under high load vs baseline'
+  - 'P50 TTFT latency reduction: 48.1% under high load vs baseline'
+  - 'throughput improvement: 1.5x vs baseline'
+  why_useful_for_learning: 'A clean illustration of the brief''s CONTEXT category: real multi-tenant LLM serving
+    infrastructure that motivates why GPU sharing/virtualization matters, without itself building any isolation
+    or virtualization mechanism.'
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: HIGH
+  notes: Abstract read via the arXiv listing (2411.17741); MICRO 2025 is the camera-ready venue per ACM DL / DBLP.
+- id: VIRT-MICRO25-04
+  title: 'SoftWalker: Supporting Software Page Table Walk for Irregular GPU Applications'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: MICRO
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3725843.3756056
+  official_url: https://dl.acm.org/doi/10.1145/3725843.3756056
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3725843.3756056
+  classification: DROP
+  classification_note: Abstract confirms this is single-application GPU address translation (moving page-table walks
+    from fixed-function hardware to software threads on the GPU itself) with no guest OS, VM, or hypervisor involvement
+    - pure virtual memory per the brief's exclusion.
+  drop_reason: pure_virtual_memory
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: GPU
+  logical_abstraction: UNKNOWN
+  problem: Irregular GPU applications produce high TLB miss rates that overwhelm fixed-function page-table-walk
+    hardware and its limited MSHRs.
+  mechanism: Dynamically dispatches lightweight software threads on idle GPU compute units to perform page table
+    walks for TLB misses, and repurposes underused TLB entries as extra MSHRs (In-TLB MSHRs) when standard MSHRs
+    saturate, enabling thousands of concurrent walks.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: MSHR-induced contention and PTW-level queueing delay under high TLB miss rates.
+  primary_tradeoff: UNKNOWN (not read beyond abstract, since classification is DROP)
+  quantitative_claims:
+  - 'page walk latency: 72.8% average reduction (abstract-reported)'
+  - 'speedup: 2.24x average, 3.94x on irregular workloads (abstract-reported)'
+  why_useful_for_learning: Screened out per the brief's explicit guidance to distinguish ordinary GPU address-translation
+    work from guest/nested/hypervisor-mediated translation.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: HIGH
+  notes: Screening record per the batch instructions to explicitly document pure-virtual-memory false positives
+    found while scanning the MICRO 2025 program.
+- id: VIRT-MICRO25-05
+  title: 'LATPC: Accelerating GPU Address Translation Using Locality-Aware TLB Prefetching and MSHR Compression'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: MICRO
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3725843.3756069
+  official_url: https://dl.acm.org/doi/10.1145/3725843.3756069
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3725843.3756069
+  classification: DROP
+  classification_note: Abstract confirms single-level GPU virtual-to-physical translation for one execution context
+    (no nested/guest translation or hypervisor mentioned) - pure virtual memory per the brief's exclusion.
+  drop_reason: pure_virtual_memory
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: GPU
+  logical_abstraction: UNKNOWN
+  problem: GPU address translation overhead from frequent TLB misses and limited MSHR capacity stalls memory accesses.
+  mechanism: Coalesces TLB requests across threads in a warp using virtual-page-number regularity, compresses multiple
+    TLB miss requests into fewer MSHR entries, and batches page walks by VPN pattern to improve DRAM row-buffer
+    locality.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: TLB miss handling and MSHR contention.
+  primary_tradeoff: UNKNOWN (not read beyond abstract, since classification is DROP)
+  quantitative_claims:
+  - 'speedup: 1.47x geometric mean over a no-TLB-prefetching baseline across 24 GPU workloads (abstract-reported)'
+  why_useful_for_learning: Screened out per the brief's explicit guidance.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: HIGH
+  notes: Screening record per the batch instructions to explicitly document pure-virtual-memory false positives
+    found while scanning the MICRO 2025 program.
+- id: VIRT-MICRO25-06
+  title: 'Learning to Walk: Architecting Learned Virtual Memory Translation'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: MICRO
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3725843.3756093
+  official_url: https://dl.acm.org/doi/10.1145/3725843.3756093
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3725843.3756093
+  classification: DROP
+  classification_note: Abstract confirms this is ordinary CPU/OS single-level virtual-to-physical translation (a
+    learned-index page table replacing the radix page table); no nested/guest translation or hypervisor is discussed,
+    so it falls under the brief's pure-virtual-memory exclusion.
+  drop_reason: pure_virtual_memory
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: DRAM
+  logical_abstraction: UNKNOWN
+  problem: Radix page tables' translation overhead is a growing datacenter bottleneck as memory footprints grow.
+  mechanism: Replaces the page table with a learned index model (Learned Virtual Memory) that adapts its translation
+    procedure to application characteristics and supports multiple page sizes with a smaller in-memory footprint.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: Radix page-walk latency and page-walk-cache area.
+  primary_tradeoff: UNKNOWN (not read beyond abstract, since classification is DROP)
+  quantitative_claims:
+  - 'translation overhead: ~44% reduction vs radix page tables (abstract-reported)'
+  - 'page walk cache area: 1.5x reduction (abstract-reported)'
+  - 'application speedup: 2-27% (abstract-reported)'
+  why_useful_for_learning: Screened out per the brief's explicit guidance; a clean example of the single-level-vs-nested
+    distinction the brief asks reviewers to apply.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: HIGH
+  notes: Screening record per the batch instructions to explicitly document pure-virtual-memory false positives
+    found while scanning the MICRO 2025 program.
+- id: VIRT-MICRO25-07
+  title: 'Citadel: Rethinking Memory Allocation to Safeguard Against Inter-Domain Rowhammer Exploits'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: MICRO
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T2
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex/Semantic
+    Scholar search APIs (HTTP 429 rate limited repeatedly); dl.acm.org proceedings TOC returned HTTP 403. Best evidence
+    obtained: Confirmed real MICRO 2025 title from the official microarch.org program listing; ''Inter-Domain''
+    in the title suggests cross-protection-domain Rowhammer mitigation via memory allocation, plausibly relevant
+    to multi-tenant/VM isolation from Rowhammer, but this could not be confirmed.'
+- id: VIRT-MICRO25-08
+  title: Efficient Security Support for CXL Memory through Adaptive Incremental Offloaded (Re-)Encryption
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: MICRO
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary:
+  - T7
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex/Semantic
+    Scholar search APIs (HTTP 429 rate limited repeatedly). Best evidence obtained: Confirmed real MICRO 2025 title
+    from the official microarch.org program listing; concerns encryption for CXL-attached (disaggregated) memory,
+    plausible SUPPORT background for confidential/disaggregated-VM-memory papers but not confirmed to touch a guest/VM
+    abstraction.'
+- id: VIRT-MICRO25-09
+  title: 'GateBleed: A Timing-Only Membership Inference Attack, MoE-Routing Inference, and a Stealthy, Generic Magnifier
+    Via Hardware Power Gating in AI Accelerators'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: MICRO
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T7
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex/Semantic
+    Scholar search APIs (HTTP 429 rate limited repeatedly). Best evidence obtained: Confirmed real MICRO 2025 title
+    from the official microarch.org program listing; a side-channel attack on AI accelerators via power gating -
+    possibly relevant to multi-tenant GPU/accelerator-sharing security (a SUPPORT topic) but the multi-tenant angle
+    could not be confirmed from title alone.'
+- id: VIRT-MICRO25-10
+  title: Multi-Dimensional ML-Pipeline Optimization in Cost-Effective Disaggregated Datacenter
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: MICRO
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T2
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex/Semantic
+    Scholar search APIs (HTTP 429 rate limited repeatedly). Best evidence obtained: Confirmed real MICRO 2025 title
+    from the official microarch.org program listing; concerns ML pipeline scheduling/placement across a disaggregated
+    datacenter, plausibly CONTEXT-level resource-management background but not confirmed to build any virtual resource
+    abstraction.'
+- id: VIRT-ASPLOS26-01
+  title: 'SG-IOV: Socket-Granular I/O Virtualization for SmartNIC-Based Container Networks'
+  title_correction: null
+  authors:
+  - Chenxingyu Zhao
+  - Hongtao Zhang
+  - Jaehong Min
+  - Shengkai Lin
+  - Wei Zhang
+  - Kaiyuan Zhang
+  - Ming Liu
+  - Arvind Krishnamurthy
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790218
+  official_url: https://dl.acm.org/doi/10.1145/3779212.3790218
+  fullpaper_source: https://danglingpointers.substack.com/p/sg-iov-socket-granular-io-virtualization
+  classification: CORE
+  classification_note: SG-IOV is a new I/O-virtualization architecture (socket-granular rather than device/VF-granular)
+    that directly attacks SR-IOV's scalability ceiling for containers, which is squarely T3 device virtualization
+    as the paper's main contribution.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T5
+  physical_resource: NIC
+  logical_abstraction: Thousands of independently virtualized TCP sockets per physical NIC, each with hardware-accelerated
+    data movement, instead of the ~100s of SR-IOV virtual functions a NIC can expose
+  problem: SR-IOV virtualizes NICs at PCIe-function granularity and 'tops out on the order of 100s of virtual functions
+    per physical NIC,' far below the thousands of containers/sockets a dense host needs to virtualize network I/O
+    for.
+  mechanism: 'Moves the virtualization unit from the PCIe function down to the socket: per-socket ring buffers (''Warp
+    Pipes'') hold socket data in host or NIC memory, and ''Cross-FIFOs'' carry small pointer-update messages (ring-buffer
+    ID, head/tail, new value) between host CPUs and the NIC''s onboard ARM cores (implemented on an NVIDIA BlueField-3
+    SmartNIC), with PCIe used for host->NIC and RDMA for NIC->NIC delivery. The design targets stream-based (TCP)
+    sockets and keeps low-level NIC hardware resources stateless/multiplexed across many sockets rather than dedicating
+    hardware state per socket.'
+  isolation_mechanism: Each socket's Warp Pipe is an independent ring buffer, and cross-FIFO messages are scoped
+    per ring-buffer ID, so one tenant/container's socket state cannot be addressed by another's; hardware NIC resources
+    stay stateless so no per-VF hardware quota limits how many sockets can be virtualized.
+  multiplexing_mechanism: A single physical NIC's stateless hardware resources are time-multiplexed across many
+    thousands of per-socket Warp Pipes, coordinated via coarse-grained Cross-FIFO messages rather than one hardware
+    queue/VF per tenant.
+  state_mechanism: Per-socket state (data + head/tail pointers) lives in the Warp Pipe ring buffer, placed in host
+    or NIC memory; Cross-FIFOs propagate only pointer deltas, not data, between host and NIC-resident state.
+  overhead_bottleneck: Cross-FIFO message rate for pointer synchronization between host and NIC cores as socket
+    count grows.
+  primary_tradeoff: Socket-granular virtualization instead of PCIe-function-granular SR-IOV -> gains three-orders-of-magnitude
+    higher virtualized-endpoint density on the same NIC hardware while still hardware-accelerating the data path,
+    but costs assuming stream-based (TCP) semantics and a SmartNIC with programmable onboard cores (BlueField-3)
+    rather than a plain SR-IOV NIC.
+  quantitative_claims:
+  - latency/bandwidth benchmarks reported in Section 8 (Figures 17-18) showing hardware-accelerated virtualization
+    while saving host CPU cycles versus alternative container networking systems (exact figures not extracted from
+    the secondary summary read)
+  why_useful_for_learning: A direct, contemporary answer to SR-IOV's scalability ceiling for container-dense hosts,
+    showing how choosing a finer virtualization granularity (socket vs PCIe function) trades hardware-state simplicity
+    for far higher density.
+  priority: P1
+  related:
+  - FastIOV (EuroSys 2025)
+  relations:
+  - type: ALTERNATIVE
+    target: SR-IOV
+    basis: Paper explicitly frames its contribution as overcoming SR-IOV's per-NIC virtual-function scalability
+      ceiling.
+  - type: SAME_BRANCH
+    target: 'FastIOV: Fast Startup of Passthrough Network I/O Virtualization for Secure Containers (EuroSys 2025)'
+    basis: Both target container-scale network I/O virtualization performance/scalability problems left by SR-IOV/passthrough
+      designs.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: MEDIUM
+  notes: Read via a third-party (danglingpointers) detailed summary of the paper's problem/architecture/mechanism/evaluation
+    section headings, not the primary PDF text itself (ACM DL PDF was not fetched); quantitative results are therefore
+    not independently verified against the paper and are omitted from quantitative_claims beyond what the summary
+    described qualitatively.
+- id: VIRT-ASPLOS26-02
+  title: 'gShare: Efficient GPU Sharing with Aggressive Scheduling in Multi-tenant FaaS platform'
+  title_correction: null
+  authors:
+  - Yanan Yang
+  - Zhengxiong Jiang
+  - Meiqi Zhu
+  - Hongqiang Xu
+  - Yujun Wang
+  - Liang Li
+  - Jiansong Zhang
+  - Jie Wu
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790168
+  official_url: https://dl.acm.org/doi/abs/10.1145/3779212.3790168
+  fullpaper_source: https://cis.temple.edu/~jiewu/research/publications/Publication_files/3779212.3790168.pdf
+  classification: CORE
+  classification_note: 'Applying the GPU-sharing CORE-vs-SUPPORT rule: gShare''s contribution is a VM-passthrough
+    vGPU virtualization layer (kernel-space vfio-mdev interception, hot-pluggable vGPU instances with checkpoint/restore)
+    that a scheduler sits on top of, not merely a scheduler over someone else''s existing vGPU primitive - the virtual-GPU
+    abstraction itself is the paper''s mechanism, so this is CORE, unlike a pure scheduling paper.'
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T1
+  - T8
+  physical_resource: GPU
+  logical_abstraction: Variable-sized vGPU slices (128MB-40GB) that can be hot-plugged into and reallocated across
+    VM-based serverless functions with sub-millisecond attach latency
+  problem: Multi-tenant FaaS platforms that back functions with VMs need fine-grained, fast-changing GPU allocation
+    to keep utilization high and SLOs met, but PCIe-style GPU (re)attachment is slow (~700ms) and existing serverless
+    GPU-sharing schemes do not virtualize the GPU itself for VM-based isolation.
+  mechanism: 'Three components: (1) VM-passthrough GPU virtualization via kernel-space vfio-mdev API interception
+    giving zero-copy direct I/O to GPU slices; (2) a vGPU Manager that hot-plugs vGPU instances (a pseudo-offloading
+    strategy cuts PCIe-insertion-equivalent time from ~700ms to <1ms) and checkpoints/restores/swaps models using
+    a GPU-memory-overwrite technique with snapshot caching that avoids explicit swap-out; (3) an SLO-aware Dual-Queue
+    Lazy Scheduling (DQLS) algorithm that splits requests into cache/share queues and prioritizes by deadline slack,
+    run as a minimum-heap.'
+  isolation_mechanism: Each tenant's function runs against its own vGPU slice attached via vfio-mdev passthrough,
+    so isolation is at the same VM/device-passthrough boundary as other vfio-mediated-device virtualization, rather
+    than a purely software co-location scheme.
+  multiplexing_mechanism: Physical A100 GPUs (40GB each) are partitioned into variable-sized vGPU slices (128MB-40GB)
+    drawn from 9 slice pools across 20 servers/64 GPUs, dynamically remapped across tenants as functions start/stop.
+  state_mechanism: vGPU state (model weights, execution context) lives in GPU memory and is checkpointed/restored
+    via a GPU-memory-overwrite technique with snapshot caching, avoiding the swap-out path used by prior serverless
+    GPU caches; hot-plugging attaches/detaches the vfio-mdev device with <1ms overhead versus ~700ms for a full
+    PCIe-style insertion.
+  overhead_bottleneck: vGPU attach/detach latency in the naive PCIe-insertion path (~700ms), which the pseudo-offloading
+    hot-plug technique removes as the bottleneck.
+  primary_tradeoff: VM-passthrough vGPU virtualization plus aggressive hot-plugging -> gains near-native GPU performance
+    (<1% loss) with sub-millisecond reallocation and 43-63% lower GPU usage at >95% SLO compliance, but costs the
+    complexity of a custom vfio-mdev-based virtualization layer and checkpoint/restore machinery versus a simpler
+    process-level GPU-sharing scheme.
+  quantitative_claims:
+  - 'GPU usage reduction vs Keep-alive baseline: 43-63% (20 servers, 64 NVIDIA A100 40GB GPUs, production traces)'
+  - 'latency SLO compliance: >95%'
+  - 'cost savings vs FaaSwap: 24-58%'
+  - 'vGPU hot-plug latency: <1ms vs ~700ms PCIe-style insertion baseline'
+  - 'scheduling near-optimality: DQLS reaches ~75% of the MINLP optimum at 10-100x faster solving time'
+  - 'virtualization overhead: <1% loss vs native (unvirtualized) GPU execution'
+  - 'estimated annual cluster cost savings: ~$330k-400k'
+  why_useful_for_learning: 'A concrete, currently-published example of what ''CORE, not just scheduling'' GPU sharing
+    looks like: the vfio-mdev passthrough plus checkpoint/restore vGPU layer is the mechanism a later scheduler
+    (its own DQLS, or any other) is built on top of.'
+  priority: P1
+  related:
+  - VIRT-HPCA26-?? (uShare)
+  relations:
+  - type: CONTRASTS_WITH
+    target: uShare (HPCA 2026)
+    basis: Both are 2026 GPU co-location/sharing papers; gShare virtualizes the GPU via VM/vfio-mdev passthrough
+      for VM-based FaaS while uShare's exact mechanism could not be confirmed (access failure) but its title indicates
+      non-VM, non-intrusive kernel co-location, a different point in the GPU-sharing design space.
+  - type: ALTERNATIVE
+    target: FaaSwap / FaasCache / NoCache (prior serverless GPU caching baselines)
+    basis: Directly implemented and measured as baselines gShare improves cost/latency over.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - paper
+  - official-web
+  confidence: HIGH
+  notes: Read the author-hosted (Temple University CIS) full PDF.
+- id: VIRT-ASPLOS26-03
+  title: 'TEEM³: Core-Independent and Cooperating Trusted Execution Environments'
+  title_correction: null
+  authors:
+  - Nils Asmussen
+  - Sebastian Haas
+  - Carsten Weinhold
+  - Nicholas Gordon
+  - Stephan Gerhold
+  - Friedrich Pauls
+  - Nilanjana Das
+  - Michael Roitzsch
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790232
+  official_url: https://dl.acm.org/doi/abs/10.1145/3779212.3790232
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3779212.3790232
+  classification: CORE
+  classification_note: TEEM3 is a new TEE architecture that is deliberately not tied to one CPU ISA and lets heterogeneous
+    per-core/per-accelerator TEE implementations securely cooperate, which is a direct confidential/security-isolation
+    architecture contribution (T7), not merely a paper that uses an existing TEE.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T1
+  - T6
+  physical_resource: CPU core
+  logical_abstraction: A core-independent TEE abstraction that lets differently-implemented per-ISA/per-accelerator
+    TEEs establish secure communication with each other without each pair needing bespoke integration
+  problem: Existing TEEs are tied to specific ISAs/CPUs, and once accelerators add their own TEE support, a workload
+    spanning heterogeneous processing units ends up needing N different TEE implementations to interoperate, multiplying
+    system complexity and the trusted computing base.
+  mechanism: Defines a core-independent TEE model plus a cooperation protocol so that per-core/per-accelerator TEE
+    instances (each possibly implemented differently) can be composed into a single trusted computation spanning
+    heterogeneous processing units, rather than requiring one bespoke bridge per pair of TEE implementations.
+  isolation_mechanism: Each participating core/accelerator keeps its own local TEE isolation boundary; TEEM3's contribution
+    is the cross-TEE cooperation/attestation layer that lets these boundaries be composed while keeping the combined
+    trusted computing base additive rather than multiplicative across heterogeneous ISAs.
+  multiplexing_mechanism: N/A at abstract-level detail (paper is about composing TEE trust boundaries across heterogeneous
+    cores, not about time/space multiplexing a single physical resource)
+  state_mechanism: UNKNOWN (not read beyond the reconstructed abstract)
+  overhead_bottleneck: UNKNOWN (not read beyond the reconstructed abstract)
+  primary_tradeoff: Core-independent, composable TEE model -> gains the ability to build one heterogeneous trusted
+    computation across differently-implemented TEEs instead of N bespoke bridges, but the paper's own cost/overhead
+    figures were not available at this evidence depth.
+  quantitative_claims: []
+  why_useful_for_learning: 'Directly addresses a gap ccAI (VIRT-MICRO25-01) also runs into from a different angle:
+    once confidential computing must span heterogeneous accelerators, someone has to define how their separate TEE
+    trust boundaries compose.'
+  priority: P2
+  related:
+  - VIRT-MICRO25-01
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-MICRO25-01 (ccAI)
+    basis: Both address confidential computing spanning heterogeneous accelerators; ccAI extends one TVM's trust
+      boundary over PCIe to untrusted accelerators, while TEEM3 instead composes multiple independently-implemented
+      TEEs.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: ACM DL PDF (epdf/pdf links) could not be fetched as full text in this environment; abstract reconstructed
+    from OpenAlex's abstract_inverted_index. Design/evaluation-level detail (mechanism internals, overhead numbers)
+    was not reachable, so evidence_depth is capped at ABSTRACT and several design fields are UNKNOWN.
+- id: VIRT-ASPLOS26-04
+  title: 'WorksetEnclave: Towards Optimizing Cold Starts in Confidential Serverless with Workset-Based Enclave Restore'
+  title_correction: null
+  authors:
+  - Xiaolong Yan
+  - Qihang Zhou
+  - Zisen Wan
+  - Feifan Qian
+  - Wentao Yao
+  - Weijuan Zhang
+  - Xiaoqi Jia
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790249
+  official_url: https://dl.acm.org/doi/10.1145/3779212.3790249
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3779212.3790249
+  classification: CORE
+  classification_note: 'Applying the brief''s serverless threshold rule: the contribution is exactly the mechanism
+    that makes confidential (SGX-enclave) isolation cheap for serverless cold starts - a workset-tracking snapshot/restore
+    technique for Enclave Page Cache state - which the brief calls out as CORE/SUPPORT-worthy in its own right,
+    and here it is squarely about the TEE''s own restore mechanism (T7), not an application that merely runs inside
+    an enclave.'
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T8
+  physical_resource: CPU core
+  logical_abstraction: A restorable SGX enclave snapshot that only carries the working set of Enclave Page Cache
+    (EPC) pages an enclave actually touched, rather than its full EPC footprint
+  problem: Serverless platforms need Intel SGX-class TEEs for security, but SGX enclave startup latency and Enclave
+    Page Cache (EPC) consumption are especially punishing on cold starts, undermining the fast-scaling premise of
+    serverless.
+  mechanism: Tracks which EPC pages an enclave's workset actually touches during execution and builds a snapshot
+    restricted to that workset, so a cold-start restore only has to re-establish the pages that matter rather than
+    the enclave's full memory footprint; implemented on both the Gramine and Occlum LibOS platforms to show portability
+    across SGX LibOS stacks.
+  isolation_mechanism: Isolation is the underlying SGX enclave boundary itself (unchanged); the paper's contribution
+    is making that boundary's cold-start cost tractable, not altering what is isolated from what.
+  multiplexing_mechanism: N/A (single-enclave lifecycle optimization, not resource sharing across tenants)
+  state_mechanism: EPC working-set pages are snapshotted and restored across the enclave's stop/start lifecycle,
+    replacing a full-EPC snapshot/restore with a workset-scoped one.
+  overhead_bottleneck: EPC paging cost (both time to populate EPC pages and the EPC memory consumed) during cold
+    start, which dominates when the full enclave footprint is restored unconditionally.
+  primary_tradeoff: Workset-scoped enclave snapshot/restore -> gains large cold-start latency and EPC memory reductions,
+    but costs the bookkeeping needed to track per-execution working sets accurately enough that a restored enclave
+    still behaves correctly.
+  quantitative_claims:
+  - 'startup time improvement: 1.9-54x (Gramine and Occlum LibOS platforms, per abstract)'
+  - 'memory consumption reduction: 13.37-94.87% (per abstract)'
+  why_useful_for_learning: 'A direct, contemporary instance of the brief''s serverless-isolation threshold case:
+    it is the snapshot/restore mechanism itself (not an application built on top of confidential serverless) that
+    determines whether confidential computing is compatible with serverless''s cold-start economics.'
+  priority: P1
+  related: []
+  relations:
+  - type: SAME_BRANCH
+    target: Non-confidential serverless snapshot/restore systems (e.g. Catalyzer, REAP-style checkpoint/restore)
+    basis: Solves the analogous cold-start problem but specifically for SGX EPC state rather than ordinary process/VM
+      memory, the confidential-computing instance of the same design problem.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: ACM DL PDF could not be fetched as full text; abstract reconstructed from OpenAlex's abstract_inverted_index.
+    Design internals (exact workset-tracking mechanism, evaluation workloads/baselines) were not reachable at this
+    depth.
+- id: VIRT-ASPLOS26-05
+  title: 'Trust-V: Toward Secure and Reliable Storage for Trusted Execution Environments'
+  title_correction: null
+  authors:
+  - Seung-Kyun Han
+  - Jiyeon Yang
+  - Jinsoo Jang
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790242
+  official_url: https://dl.acm.org/doi/10.1145/3779212.3790242
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3779212.3790242
+  classification: SUPPORT
+  classification_note: Trust-V patches a gap in TEE sealed-storage integrity (untrusted OS can delete/tamper sealed
+    data) using storage-side mechanisms (region partitioning, locked MMIO, block-I/O monitoring); it strengthens
+    an existing TEE's guarantees rather than constituting the TEE/virtualization boundary itself, so it is SUPPORT
+    background for CORE confidential-VM/TEE papers.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T3
+  physical_resource: NVMe
+  logical_abstraction: A storage region whose integrity is protected end-to-end even though the TEE's confidentiality/integrity
+    guarantees stop at the CPU boundary and the OS below it is untrusted
+  problem: TEEs protect a security-critical application's runtime execution and data, but do not ensure the integrity
+    of that application's *sealed* (at-rest) data, which an untrusted OS can delete or manipulate outside the TEE's
+    view.
+  mechanism: Partitions storage into trusted and untrusted regions, enforces access control on the trusted region
+    through locked MMIO regions the untrusted OS cannot reconfigure, and monitors block I/O operations to detect/prevent
+    unauthorized modification - all without requiring new hardware, which the authors highlight as enabling portability
+    including to RISC-V systems.
+  isolation_mechanism: The trusted storage region's MMIO control registers are locked so the untrusted OS cannot
+    remap or disable the monitoring path; the TEE's existing CPU-side execution isolation is assumed and extended
+    down into the storage stack.
+  multiplexing_mechanism: N/A (partition-based storage isolation, not resource sharing)
+  state_mechanism: Sealed data lives in the trusted storage partition; the locked-MMIO monitor observes and gates
+    every block I/O request that could reach it.
+  overhead_bottleneck: The I/O monitoring/gating path added to every block request touching the trusted region,
+    reported as up to 3.86x system overhead.
+  primary_tradeoff: Software-only, no-new-hardware storage-integrity monitoring -> gains portability (including
+    RISC-V) and closes the sealed-data integrity gap, but costs up to 3.86x overhead on protected I/O paths.
+  quantitative_claims:
+  - 'system overhead: up to 3.86x (per abstract-level metadata; workload/baseline qualifiers not confirmed)'
+  why_useful_for_learning: 'Highlights a TEE guarantee that is easy to assume and easy to get wrong: confidentiality/integrity
+    of *live* enclave memory is not the same as integrity of *sealed* data once it leaves the TEE for storage under
+    an untrusted OS.'
+  priority: P2
+  related: []
+  relations:
+  - type: LAYER_BELOW
+    target: Confidential VM / SGX-class TEE architectures
+    basis: Trust-V assumes an existing TEE's execution isolation and extends its integrity guarantee into the storage
+      stack beneath it.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: ACM DL PDF could not be fetched as full text; abstract/overhead figure taken from OpenAlex metadata summary.
+    Evaluation workloads/baselines not confirmed at this depth.
+- id: VIRT-ASPLOS26-06
+  title: Detecting Inconsistencies in Arm CCA's Formally Verified Specification
+  title_correction: null
+  authors:
+  - Changho Choi
+  - Xiang Cheng
+  - Bokdeuk Jeong
+  - Taesoo Kim
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790152
+  official_url: https://dl.acm.org/doi/abs/10.1145/3779212.3790152
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3779212.3790152
+  classification: CORE
+  classification_note: This paper finds 35 confirmed bugs in the Realm Management Monitor specification of Arm's
+    Confidential Compute Architecture (CCA) - RMM is the hypervisor-analog component that creates and mediates Arm's
+    confidential-VM 'Realms' - so correctness flaws in its formal spec are a direct hypervisor-correctness/confidential-VM
+    finding (T7), not an adjacent topic.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T1
+  physical_resource: CPU core
+  logical_abstraction: Arm CCA Realms - hardware-isolated confidential VMs managed by the Realm Management Monitor
+    (RMM), whose correctness this paper's formally-verified specification is supposed to guarantee
+  problem: Arm CCA's Realm Management Monitor has a formally verified specification, but verifying an implementation
+    against a spec only shows conformance to that spec - it cannot catch cases where the specification itself is
+    internally inconsistent (contradictory success/failure conditions, missing state transitions, wrong dependency
+    rules), which can still leave real security-critical bugs.
+  mechanism: Scope treats the specification as the sole ground truth (rather than comparing an implementation against
+    it) and translates the specification into machine-verifiable models using the Verus verifier and SMT solvers,
+    then applies rule-based consistency checking to automatically flag contradictions in success/failure conditions,
+    dependency rules between operations, and state-transition definitions.
+  isolation_mechanism: N/A directly (this is a verification tool for the specification of the isolation mechanism,
+    not the isolation mechanism itself)
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A (targets the RMM's specified Realm state-transition rules, not runtime state migration)
+  overhead_bottleneck: N/A (a static/formal analysis tool, not a runtime system)
+  primary_tradeoff: Checking the specification's internal consistency (vs only implementation-to-spec conformance)
+    -> gains detection of bugs no amount of implementation testing/verification against the (flawed) spec could
+    find, but costs having to build a machine-verifiable model of the entire specification up front.
+  quantitative_claims:
+  - 35 previously unknown bugs found in Arm CCA's RMM specification, including security-critical ABI-semantics and
+    missing-state-transition flaws, all confirmed by Arm
+  why_useful_for_learning: A rare, concrete demonstration that 'formally verified' does not mean 'bug-free' for
+    a confidential-VM hypervisor component when the specification itself can be wrong - directly relevant to trusting
+    any CORE paper that builds on or cites Arm CCA/Realms as a secure foundation.
+  priority: P1
+  related: []
+  relations:
+  - type: LAYER_BELOW
+    target: Arm CCA Realms / Realm Management Monitor
+    basis: Directly analyses and finds confirmed bugs in the RMM's own formally verified specification, the mechanism
+      that creates and isolates Arm confidential VMs.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: ACM DL PDF could not be fetched as full text; abstract/finding-count taken from OpenAlex metadata summary.
+    Full methodology and the nature of the 35 bugs were not read at source-text depth.
+- id: VIRT-ASPLOS26-07
+  title: 'Fault Escaping: Improving Robustness of DPU Enhanced Platform with Mutual Assisted VM Recovery'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary:
+  - T1
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before a working route to this paper''s PDF/abstract
+    could be found; the RealZST/csconf-papers ASPLOS-2026 abstract-collection page (which had abstracts for 6 other
+    ASPLOS26 candidates) does not list this title; dl.acm.org proceedings ToC returned HTTP 403. Best evidence obtained:
+    Confirmed real ASPLOS 2026 title from the official asplos-conference.org program page; title indicates a VM-recovery
+    mechanism assisted by DPU-enhanced platforms, which is very plausibly CORE (T4 migration/checkpoint/state) but
+    this could not be confirmed.'
+- id: VIRT-ASPLOS26-08
+  title: 'Bullet: Boosting GPU Utilization for LLM Serving via Dynamic Spatial-Temporal Orchestration'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790135
+  official_url: https://doi.org/10.1145/3779212.3790135
+  fullpaper_source: https://arxiv.org/abs/2504.19516
+  classification: CONTEXT
+  classification_note: Bullet dynamically provisions and schedules existing GPU resources across LLM prefill/decode
+    phases with real-time performance modeling and SLO-aware scheduling; it coordinates but does not create any
+    new GPU-partitioning/virtualization primitive, matching the brief's LLM-serving CONTEXT example.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  physical_resource: GPU
+  logical_abstraction: A GPU resource pool dynamically re-provisioned in real time between concurrently-running
+    LLM prefill (compute-bound) and decode (memory-bound) phases
+  problem: Serving LLM inference separately for compute-bound prefill and memory-bound decode phases leaves GPUs
+    poorly utilized because their resource demands mismatch.
+  mechanism: Spatial-temporal orchestration runs prefill and decode concurrently, using real-time performance modeling
+    to dynamically (re)provision GPU resources between them under SLO-aware scheduling and adaptive resource allocation.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: Existing GPU compute/memory resources are time- and space-shared between prefill and decode
+    workloads via scheduling decisions, not a new hardware partition mechanism.
+  state_mechanism: N/A
+  overhead_bottleneck: Mismatch between compute-bound prefill and memory-bound decode phases competing for the same
+    GPU.
+  primary_tradeoff: Dynamic real-time re-provisioning between phases -> gains 1.26x average throughput while meeting
+    latency constraints, but costs the complexity/overhead of continuous real-time performance modeling.
+  quantitative_claims:
+  - 'throughput gain: 1.26x average vs baseline while meeting latency constraints (per abstract)'
+  why_useful_for_learning: 'Illustrates the brief''s LLM-serving CONTEXT category: real infrastructure that motivates
+    why GPU spatial/temporal sharing mechanisms (the SUPPORT/CORE layers below it) matter operationally.'
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: MEDIUM
+  notes: Abstract read via arXiv listing (2504.19516); ASPLOS 2026 is the camera-ready venue per ACM DOI.
+- id: VIRT-ASPLOS26-09
+  title: 'GFS: A Preemption-aware Scheduling Framework for GPU Clusters with Predictive Spot Instance Management'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3760250.3762231
+  official_url: https://doi.org/10.1145/3760250.3762231
+  fullpaper_source: https://arxiv.org/abs/2509.11134
+  classification: CONTEXT
+  classification_note: GFS is a cluster-scheduling policy layer (demand forecasting + dynamic spot-quota allocation)
+    built on top of existing cloud preemption/spot-instance mechanisms; it introduces no new isolation or virtualization
+    primitive itself, matching the brief's GPU-cluster-scheduling CONTEXT example.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T8
+  physical_resource: GPU
+  logical_abstraction: A GPU cluster whose spare (spot-instance) capacity is dynamically reallocated between low-priority
+    and high-priority tasks based on a demand forecast
+  problem: High-priority GPU tasks need SLO compliance while low-priority (spot) tasks should use spare capacity,
+    but static spot-quota policies either preempt low-priority tasks too often or leave high-priority SLOs at risk.
+  mechanism: A lightweight forecasting model predicts near-term GPU demand and drives a dynamic allocation mechanism
+    that adjusts the spot quota available to low-priority tasks, combined with a preemption-aware scheduling policy
+    over existing cloud preemption/spot-instance mechanisms.
+  isolation_mechanism: N/A (relies on existing preemption/isolation primitives)
+  multiplexing_mechanism: Spot-instance quota is the shared resource dynamically re-partitioned between high- and
+    low-priority tasks by policy, not by a new hardware mechanism.
+  state_mechanism: N/A
+  overhead_bottleneck: Mispredicted demand leading to either excess low-priority preemptions or missed high-priority
+    SLOs.
+  primary_tradeoff: Predictive, dynamic spot-quota allocation -> gains better SLO compliance for high-priority tasks
+    with fewer unnecessary low-priority preemptions than static policies, but costs dependence on forecast accuracy.
+  quantitative_claims: []
+  why_useful_for_learning: A cluster-scheduling-level illustration of how spot/preemptible-instance economics (an
+    artifact of VM/container scheduling policy, not a virtualization mechanism) shape GPU cluster operation.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: MEDIUM
+  notes: Abstract read via arXiv listing (2509.11134). Published in ASPLOS 2026 Volume 1 (DOI prefix 3760250), a
+    different proceedings volume from most other ASPLOS26 records here (DOI prefix 3779212) documented as a batch_observation
+    about ASPLOS's multiple submission cycles.
+- id: VIRT-ASPLOS26-10
+  title: 'Lambda-trim: Reducing Monetary and Performance Cost of Serverless Cold Starts with Cost-driven Application
+    Debloating'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3676642.3736129
+  official_url: https://dl.acm.org/doi/pdf/10.1145/3676642.3736129
+  fullpaper_source: https://www.cis.upenn.edu/~sga001/projects/papers/lambda-trim.pdf
+  classification: CONTEXT
+  classification_note: Lambda-trim is a static-analysis/delta-debugging application-debloating tool that produces
+    a smaller Python package to deploy; it is an offline preprocessing step layered on top of an unmodified serverless
+    runtime (AWS Lambda), not an isolation/sandbox/snapshot mechanism, so it is CONTEXT rather than CORE/SUPPORT.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: A deployable Python serverless package stripped of code the function's observed execution
+    paths never use
+  problem: Serverless cold starts pay latency and monetary cost proportional to unnecessary imported code, but developers
+    do not know which of their dependencies' code is actually exercised at runtime.
+  mechanism: Static AST/call-graph analysis identifies imported modules; a cost-based profiler ranks modules by
+    marginal monetary cost under the platform's pricing model; delta debugging then removes unused functions/classes/imports
+    from the highest-impact modules, producing an optimized package with no infrastructure changes required.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A (build-time transformation, not a runtime mechanism)
+  overhead_bottleneck: Unnecessary module-loading work incurred on every cold start.
+  primary_tradeoff: Offline debloating instead of a runtime isolation/snapshot change -> gains ~20% average cost
+    reduction and up to 2x cold-start latency improvement with zero infrastructure changes, but costs correctness
+    risk from static analysis potentially missing dynamically-reached code paths.
+  quantitative_claims:
+  - 'cost reduction: ~20% average (per abstract)'
+  - 'cold-start latency improvement: up to 2x (per abstract)'
+  why_useful_for_learning: Shows the class of serverless optimization that is explicitly NOT the isolation/snapshot
+    mechanism (contrast with WorksetEnclave, VIRT-ASPLOS26-04) - useful for keeping the CORE/SUPPORT vs CONTEXT
+    line clear in the serverless branch.
+  priority: P3
+  related:
+  - VIRT-ASPLOS26-04
+  relations:
+  - type: CONTRASTS_WITH
+    target: VIRT-ASPLOS26-04 (WorksetEnclave)
+    basis: Both target serverless cold-start cost, but Lambda-trim debloats the application package offline while
+      WorksetEnclave optimizes the TEE's own snapshot/restore mechanism - the CONTEXT vs CORE line in the same problem
+      space.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - paper
+  confidence: MEDIUM
+  notes: Read the author-hosted (UPenn) PDF's abstract/mechanism section.
+- id: VIRT-ASPLOS26-11
+  title: 'Morphlux: Transforming Torus Fabrics for Efficient Multi-tenant ML'
+  title_correction: 'seed list said: "Transforming Torus Fabrics for Efficient Multi-tenant ML" (the seed dropped
+    the paper''s own name, "Morphlux")'
+  authors:
+  - Unknown
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.asplos-conference.org/asplos2026/program/
+  fullpaper_source: https://arxiv.org/abs/2508.03674
+  classification: SUPPORT
+  classification_note: Morphlux is a server-scale programmable photonic interconnect that reconfigures the physical
+    torus fabric topology to improve per-tenant bandwidth allocation and reduce compute fragmentation; it reshapes
+    the physical substrate rather than adding a software virtual-network abstraction, so it is SUPPORT (accelerator/interconnect-sharing
+    primitive) background for CORE network- or accelerator-virtualization papers rather than CORE itself.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T3
+  physical_resource: switch ASIC
+  logical_abstraction: A server-scale programmable photonic fabric that can be rapidly reconfigured to change which
+    accelerators are interconnected and with how much bandwidth, per tenant
+  problem: Fixed torus interconnect topologies fragment compute capacity and under-serve tenants whose bandwidth
+    needs do not match the static topology, in multi-tenant ML clusters.
+  mechanism: A programmable photonic switching fabric interconnects accelerators within servers and can be reconfigured
+    (as fast as 1.2s to replace a failed chip) to reshape the effective torus topology and bandwidth allocation
+    per tenant.
+  isolation_mechanism: N/A (bandwidth/topology reallocation, not a security isolation contribution)
+  multiplexing_mechanism: Physical photonic links are dynamically reconfigured/reassigned across tenants' accelerator
+    groups rather than being statically wired, directly changing which tenants get how much interconnect bandwidth.
+  state_mechanism: N/A (a physical-layer reconfiguration, not software state that migrates)
+  overhead_bottleneck: Reconfiguration time when reshaping the fabric (as fast as 1.2s to replace a failed chip,
+    per abstract).
+  primary_tradeoff: Reconfigurable photonics instead of a fixed torus -> gains up to 66% better tenant bandwidth
+    allocation and up to 70% less compute fragmentation, but costs the added hardware complexity/cost of a programmable
+    photonic switching layer.
+  quantitative_claims:
+  - 'tenant bandwidth allocation improvement: up to 66% (per abstract)'
+  - 'compute fragmentation reduction: up to 70% (per abstract)'
+  - 'fabric reconfiguration time: 1.2s to replace a failed chip (per abstract)'
+  why_useful_for_learning: 'A physical-layer counterpart to software network-virtualization/SR-IOV papers: shows
+    how multi-tenant interconnect sharing can also be solved by reconfiguring the physical fabric rather than adding
+    a virtualization layer on top of a fixed one.'
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: MEDIUM
+  notes: 'Abstract read via arXiv listing (2508.03674); official title is ''Morphlux: Transforming Torus Fabrics
+    for Efficient Multi-tenant ML'', recorded in title_correction since the seed list only carried the subtitle.'
+- id: VIRT-ASPLOS26-12
+  title: 'Skyler: Static Analysis for Predicting API-Driven Costs in Serverless Applications'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790221
+  official_url: https://dl.acm.org/doi/10.1145/3779212.3790221
+  fullpaper_source: https://www.dpss.inesc-id.pt/~rbruno/papers/bribeiro-asplos26.pdf
+  classification: CONTEXT
+  classification_note: Skyler is purely an offline static-analysis/cost-prediction tool for serverless applications
+    (symbolic cost expressions over control flow and cloud pricing models); it has no isolation, sandboxing, or
+    virtualization mechanism, matching the brief's generic-serverless CONTEXT category.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: A symbolic cost model of a serverless application's cloud-API usage, queryable before deployment
+  problem: Serverless applications incur unpredictable costs because they call cloud APIs with complex tiered pricing,
+    and developers have no way to estimate cost impact before deploying.
+  mechanism: Static analysis builds symbolic cost expressions from source code and infrastructure templates, modeling
+    control flow and pricing semantics to identify 'economic sinks' - code paths where API usage disproportionately
+    drives cost - and compiles these into SMT formulas developers can query across input scenarios.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: N/A (an offline analysis tool, not a runtime system)
+  primary_tradeoff: Static symbolic cost modeling instead of runtime cost monitoring -> gains pre-deployment cost
+    visibility with no runtime overhead, but costs static-analysis precision limits (cannot see dynamic/runtime-only
+    behavior).
+  quantitative_claims: []
+  why_useful_for_learning: Illustrates the FaaS-cost-economics CONTEXT category that motivates (but does not itself
+    build) serverless isolation/runtime mechanisms.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - paper
+  confidence: MEDIUM
+  notes: Read the author-hosted (INESC-ID) PDF's abstract/mechanism description.
+- id: VIRT-ASPLOS26-13
+  title: Enabling Fast Networking in the Public Cloud
+  title_correction: null
+  authors:
+  - Alireza Sanaee
+  - Vahab Jabrayilov
+  - Ilias Marinos
+  - Farbod Shahinfar
+  - Divyanshu Saxena
+  - Gianni Antichi
+  - Kostis Kaffes
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790158
+  official_url: https://dl.acm.org/doi/10.1145/3779212.3790158
+  fullpaper_source: https://www.cs.columbia.edu/~kkaffes/papers/enabling-fast-networking-public-cloud-asplos26.pdf
+  classification: CONTEXT
+  classification_note: Machnet is a userspace network stack that deliberately works within the constraints of whatever
+    minimal vNIC a cloud VM exposes, using a microkernel-sidecar/DPDK design rather than modifying or extending
+    the underlying virtio/SR-IOV virtualization mechanism itself - it is an application-level system that USES virtualized
+    cloud networking, not a device-virtualization contribution.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T3
+  physical_resource: NIC
+  logical_abstraction: A cross-cloud-portable, kernel-bypass socket-like API for VM applications that assumes only
+    a 'least common denominator' vNIC (plain Ethernet I/O, opaque RSS, one TX/RX queue per core)
+  problem: High-performance kernel-bypass network stacks assume hardware features (flow steering, deep buffers,
+    reconfigurable RSS) that public-cloud vNICs do not expose, and library-OS-style stacks cannot support the multi-process/multi-threaded
+    deployments common in cloud applications.
+  mechanism: A microkernel sidecar process handles kernel-bypass I/O via DPDK behind a socket-like shim library
+    that applications link against, communicating over shared memory; a Least-Common-Denominator NIC model defines
+    the minimal cross-cloud vNIC feature set the design relies on, and a randomized-port-selection technique ('RSS--')
+    maps flows to specific cores despite opaque, unconfigurable RSS hashing on cloud vNICs.
+  isolation_mechanism: N/A (works entirely within the VM's own already-virtualized vNIC; does not alter or bypass
+    the hypervisor's network isolation boundary)
+  multiplexing_mechanism: One TX/RX queue per CPU core is time-shared among the sidecar's connections using the
+    RSS-- flow-to-core mapping technique, operating within (not replacing) the cloud provider's existing vNIC virtualization.
+  state_mechanism: Connection/flow state lives in the sidecar process and shared memory between it and the shim
+    library; no cross-host migration is discussed.
+  overhead_bottleneck: Extra hop through the sidecar process relative to a bare-metal kernel-bypass stack, and inability
+    to use hardware flow steering since cloud vNICs do not expose it.
+  primary_tradeoff: Software workaround for a minimal vNIC feature set instead of requiring specialized virtualized-NIC
+    hardware support -> gains 2.3-9x lower latency and up to 3.3x higher throughput than the Linux TCP/IP stack
+    across three major clouds with multi-process/multi-language support, but costs staying ~10% behind a specialized
+    bare-metal stack (eRPC) and being unable to exploit any hardware feature a given cloud's vNIC happens to expose
+    beyond the least-common-denominator set.
+  quantitative_claims:
+  - '64B echo latency on Azure: 27us median (Machnet) vs 70us (Linux TCP)'
+  - 'Raft median/p99 latency: 185us/625us (Machnet) vs 282us/1000us (Linux) - 37% p99 improvement'
+  - 'HTTP server throughput on Azure: 68,000 RPS (Machnet) vs 40,000 RPS (Linux)'
+  - 'FASTER KV-store throughput: 700K RPS (Machnet) vs 210K RPS (Linux), 3.3x higher'
+  - 'FASTER p99 latency: 50us (Machnet) vs 250us (Linux), 80% reduction'
+  - 'connection setup overhead (8x8 engines): <1ms median'
+  - 'throughput scaling: 4.12 Mpps (64B) / 49.9 Gbps (8KB) across 5 cores'
+  - latency within ~10% of eRPC (a specialized bare-metal stack) while supporting multi-process/multi-language deployment
+  why_useful_for_learning: 'A clear, well-measured illustration of the brief''s CONTEXT category: it shows precisely
+    which virtualized-NIC constraints (opaque RSS, no flow steering, single queue/core) a cloud tenant must design
+    around, which is exactly the information needed to judge why a CORE virtual-NIC/SR-IOV paper''s design choices
+    matter.'
+  priority: P2
+  related: []
+  relations:
+  - type: CONTRASTS_WITH
+    target: eRPC / TAS (bare-metal or library-OS kernel-bypass stacks)
+    basis: Directly implemented and measured as baselines; Machnet trades a small performance gap vs eRPC for portability
+      across vNICs it cannot modify.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - paper
+  - official-web
+  confidence: HIGH
+  notes: Read the author-hosted (Columbia) full PDF, including problem statement, architecture, evaluation setup,
+    and results tables.
+- id: VIRT-ASPLOS26-14
+  title: 'PIPM: Partial and Incremental Page Migration for Multi-host CXL Disaggregated Shared Memory'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790203
+  official_url: https://dl.acm.org/doi/10.1145/3779212.3790203
+  fullpaper_source: https://ghuang14.github.io/files/pipm2026asplos.pdf
+  classification: SUPPORT
+  classification_note: 'Applying the brief''s disaggregation rule: PIPM optimizes page/cache-block migration inside
+    an existing multi-host CXL disaggregated-shared-memory system; it does not build a new virtual/guest-memory
+    abstraction over the pool, so per the rule it is SUPPORT rather than CORE.'
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary:
+  - T9
+  physical_resource: PCIe/CXL fabric
+  logical_abstraction: A shared CXL memory pool across multiple hosts where hot cache blocks migrate into a host's
+    local DRAM while cold ones stay remote
+  problem: Migrating whole pages between local and CXL-shared memory in multi-host disaggregated shared memory is
+    wasteful when only some cache blocks in a page are actually hot for a given host, and naively marking migrated
+    pages non-cacheable for other hosts hurts their performance.
+  mechanism: Selectively migrates only the frequently-accessed cache blocks of a page into a host's local memory
+    while leaving less-accessed blocks in shared CXL memory, using remapping tables and a majority-vote migration
+    policy that only migrates a page when one host's access count substantially dominates other hosts' access to
+    it, avoiding harmful migrations.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: The shared CXL memory pool is accessed by multiple hosts with hot sub-page blocks selectively
+    pulled into each host's local memory based on per-host access frequency.
+  state_mechanism: Cache-block-level remapping tables track which blocks of a page have migrated to which host's
+    local memory versus remaining in shared CXL memory.
+  overhead_bottleneck: Migration overhead and the performance cost of making migrated pages non-cacheable for remote
+    hosts under naive whole-page migration.
+  primary_tradeoff: Partial, incremental (cache-block-granularity) migration with majority-vote gating -> gains
+    an average 1.86x speedup over presumably whole-page migration baselines by avoiding harmful/premature migrations,
+    but costs the added remapping-table bookkeeping at sub-page granularity.
+  quantitative_claims:
+  - 'speedup: average 1.86x on multi-host CXL-DSM systems (per author summary)'
+  why_useful_for_learning: 'Concrete evidence for the brief''s disaggregation-vs-virtualization distinction: a genuinely
+    difficult and valuable CXL memory-sharing optimization that still does not amount to virtualizing the pool into
+    a guest-facing resource.'
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - paper
+  confidence: MEDIUM
+  notes: Read the author-hosted (Gangqi Huang) PDF's abstract/mechanism summary.
+- id: VIRT-ASPLOS26-15
+  title: 'Cxlalloc: Safe and Efficient Memory Allocation for a CXL Pod'
+  title_correction: null
+  authors:
+  - Newton Ni
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790149
+  official_url: https://dl.acm.org/doi/10.1145/3779212.3790149
+  fullpaper_source: https://www.cs.utexas.edu/~witchel/pubs/ni26asplos-cxlalloc.pdf
+  classification: SUPPORT
+  classification_note: Cxlalloc is an allocator-correctness mechanism (metadata layout, coherence-in-software protocols,
+    crash recovery) for applications that already directly share a CXL memory device across hosts; it does not pool
+    or virtualize CXL memory into a new guest-facing resource, so per the disaggregation rule it is SUPPORT.
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: PCIe/CXL fabric
+  logical_abstraction: Safe malloc/free semantics for multiple processes/hosts directly sharing one CXL memory device
+  problem: Applications that directly share a CXL memory device across multiple hosts/processes need correct, crash-safe
+    memory allocation, but hardware cache coherence may be limited or absent and pointers must stay consistent across
+    concurrently-mapping processes.
+  mechanism: Careful allocator metadata layout plus new protocols maintain cache coherence in software where hardware
+    coherence is insufficient, coordinate memory-mapping installation across processes so pointers remain valid,
+    and enable lock-free crash recovery via atomic state snapshots without blocking live threads.
+  isolation_mechanism: N/A (correctness, not security isolation)
+  multiplexing_mechanism: N/A (allocation within an already-shared pool, not a partitioning/virtualization mechanism)
+  state_mechanism: Allocator metadata (free lists, mapping tables) lives in the shared CXL device itself and is
+    recovered via atomic snapshots after a crash.
+  overhead_bottleneck: Software-maintained coherence operations substituting for insufficient hardware coherence
+    on the shared CXL device.
+  primary_tradeoff: Software-coherence allocator protocols -> gains safe, crash-recoverable multi-host shared-memory
+    allocation without requiring full hardware coherence, but costs the software coherence-maintenance overhead
+    that hardware-coherent memory would not need.
+  quantitative_claims: []
+  why_useful_for_learning: Shows a foundational correctness layer (safe allocation) that any future CXL-memory-pool
+    *virtualization* paper (were one to build a guest-facing abstraction on top) would have to assume or subsume.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - paper
+  confidence: MEDIUM
+  notes: Read the author-hosted (UT Austin) PDF's abstract/mechanism summary.
+- id: VIRT-ASPLOS26-16
+  title: A Programming Model for Disaggregated Memory over CXL
+  title_correction: null
+  authors:
+  - Gal Assa
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790121
+  official_url: https://dl.acm.org/doi/10.1145/3779212.3790121
+  fullpaper_source: https://arxiv.org/abs/2407.16300
+  classification: SUPPORT
+  classification_note: This paper (CXL0) gives programmers formal operational semantics and a durability-transformation
+    technique for reasoning directly about CXL's actual coherence/crash model; it equips programmers to deal with
+    disaggregated memory's real behavior rather than hiding it behind a virtual resource abstraction, so per the
+    disaggregation rule it is SUPPORT.
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: PCIe/CXL fabric
+  logical_abstraction: A formal high-level abstraction for memory accesses over CXL that exposes (rather than hides)
+    coherence and partial-crash semantics to the programmer
+  problem: CXL memory is shared, cache-coherent, and subject to partial crashes/failures, but concurrent programs
+    written against it have no formal semantics to reason about what consistency guarantees their memory accesses
+    actually get.
+  mechanism: Defines CXL0, the first programming model with formal operational semantics for concurrent programs
+    over CXL memory including cache coherence and distributed partial-crash behavior, and presents a general transformation
+    that adds durability to any linearizable concurrent algorithm in this partial-crash setting.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: Durability is added via the paper's transformation so that a linearizable algorithm's state survives
+    partial crashes in the distributed CXL setting.
+  overhead_bottleneck: UNKNOWN (not read beyond abstract-level description)
+  primary_tradeoff: Formal semantics and a durability transformation instead of a virtualized/abstracted memory
+    interface -> gains provable correctness guarantees for programmers who must reason about CXL's real coherence/crash
+    behavior directly, but costs exposing that complexity rather than hiding it behind a simpler (but potentially
+    leaky) virtual abstraction.
+  quantitative_claims: []
+  why_useful_for_learning: 'Directly demonstrates the brief''s disaggregation-is-not-automatically-virtualization
+    distinction: a rigorous, valuable CXL memory contribution whose entire point is to let programmers reason about
+    disaggregated memory as it really behaves, rather than virtualizing it away.'
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: MEDIUM
+  notes: Abstract read via the arXiv listing (2407.16300); accepted/published at ASPLOS 2026 per the ACM DOI found
+    in search results.
+- id: VIRT-ASPLOS26-17
+  title: 'CEMU: Enabling Full-System Emulation of Computational Storage beyond Hardware Limits'
+  title_correction: null
+  authors:
+  - Qiuyang Zhang
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790137
+  official_url: https://doi.org/10.1145/3779212.3790137
+  fullpaper_source: https://github.com/cs-qyzhang/CEMU
+  classification: CORE
+  classification_note: CEMU uses QEMU to emulate computational-storage-drive (CSD) hardware inside a guest VM, presenting
+    virtualized NVMe namespaces (e.g. /dev/nvme0n1) backed by host CPU/DRAM instead of real CSD hardware - this
+    is device virtualization/emulation for guest VMs (T3), letting software be developed/tested against CSD capabilities
+    beyond what any physical device on hand supports.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T1
+  physical_resource: NVMe
+  logical_abstraction: A guest-VM-visible virtual NVMe computational storage device (with in-storage compute capability)
+    whose actual implementation is a QEMU-emulated model running on host CPU/DRAM
+  problem: Real computational storage drives (CSDs) are limited in the range of compute capability, capacity, and
+    configurations available on hand, constraining what CSD software/architecture research can actually evaluate.
+  mechanism: Builds on QEMU to emulate CSD hardware, exposing standard virtualized NVMe namespaces to a guest VM
+    (with names such as /dev/nvme0n1, /dev/nvme0n2, /dev/nvme0n3 in the project's own quick-start example) so guest
+    software can mount and use emulated computational-storage devices as if they were real, while the underlying
+    emulation can model device capabilities beyond current hardware limits.
+  isolation_mechanism: Standard QEMU-VM guest/host isolation boundary; the emulated CSD device is only visible inside
+    its guest VM.
+  multiplexing_mechanism: Host CPU/DRAM resources are used to emulate multiple distinct virtual CSD namespaces/devices
+    simultaneously within one guest VM.
+  state_mechanism: Emulated device state (namespace contents, in-storage-compute state) lives in host-backed QEMU
+    device model memory rather than real flash/CSD hardware.
+  overhead_bottleneck: UNKNOWN (not read beyond the README-level description)
+  primary_tradeoff: Full-system QEMU emulation of CSDs -> gains the ability to evaluate CSD hardware/software designs
+    beyond what any physical device on hand supports, but costs emulation fidelity/performance relative to real
+    CSD hardware.
+  quantitative_claims: []
+  why_useful_for_learning: 'A direct, current example of device virtualization/emulation used as a research methodology:
+    it is the same QEMU device-model technique CORE I/O-virtualization papers use, applied to make an otherwise
+    hardware-limited class of device (CSDs) usable inside a guest VM for evaluation.'
+  priority: P2
+  related: []
+  relations:
+  - type: USES_MECHANISM_FROM
+    target: QEMU device emulation
+    basis: README explicitly states CEMU 'leverages QEMU to emulate CSDs within the guest VM using the host CPU
+      and DRAM.'
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - code
+  - official-web
+  confidence: MEDIUM
+  notes: Read the project's GitHub README (architecture description and quick-start guide showing guest-VM-mounted
+    virtualized NVMe namespaces); the ACM DL paper PDF itself was not fetched.
+- id: VIRT-ASPLOS26-18
+  title: 'vCXLGen: Automated Synthesis and Verification of CXL Bridges for Heterogeneous Architectures'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790245
+  official_url: https://dl.acm.org/doi/10.1145/3779212.3790245
+  fullpaper_source: UNKNOWN
+  classification: DROP
+  classification_note: Title and venue listing indicate an EDA-style automated hardware synthesis and formal-verification
+    tool for CXL protocol bridge circuits in heterogeneous SoCs; this is hardware-design tooling for the CXL fabric
+    itself, not a virtualization/isolation/resource-sharing mechanism.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: PCIe/CXL fabric
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (not read beyond title/venue-listing level)
+  mechanism: Automated synthesis and formal verification of hardware bridge circuits implementing CXL protocol translation
+    for heterogeneous architectures (per title).
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: N/A
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: Recorded to document a CXL-keyword candidate that on inspection is EDA/hardware-verification
+    tooling rather than a virtualization contribution.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: Classified from the paper's title and its GitHub artifact repository description (automated synthesis/verification
+    of CXL bridge hardware); full text not fetched.
+- id: VIRT-ASPLOS26-19
+  title: 'CXLMC: Model Checking CXL Shared Memory Programs'
+  title_correction: null
+  authors:
+  - Yutong Guo
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790150
+  official_url: https://dl.acm.org/doi/10.1145/3779212.3790150
+  fullpaper_source: http://plrg.ics.uci.edu/publications/CXLMCASPLOS26.pdf
+  classification: DROP
+  classification_note: Title, authorship (PL/formal-methods research group) and companionship with 'A Programming
+    Model for Disaggregated Memory over CXL' indicate this is a program-correctness/model-checking tool for concurrent
+    CXL shared-memory programs, not a virtualization or resource-sharing mechanism.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: PCIe/CXL fabric
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (page fetch failed with a TLS/robots error; not read beyond title-listing level)
+  mechanism: A model checker for verifying concurrent programs written against CXL shared memory's coherence/consistency
+    semantics (per title).
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: N/A
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: Recorded to document a CXL-keyword candidate that is program-verification tooling rather
+    than a virtualization contribution.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - official-web
+  confidence: LOW
+  notes: Direct PDF fetch failed with an SSL/robots error; classification is inferred from title plus the PL Research
+    Group publication listing context, not from reading the paper. Consistent with a program-correctness (not virtualization)
+    contribution given the closely related 'A Programming Model for Disaggregated Memory over CXL' (VIRT-ASPLOS26-16)
+    in the same research area.
+- id: VIRT-ASPLOS26-20
+  title: 'Toasty: Speeding Up Network I/O with Cache-Warm Buffers'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3779212.3790235
+  official_url: https://dl.acm.org/doi/abs/10.1145/3779212.3790235
+  fullpaper_source: https://www.cse.iitb.ac.in/~mythili/research/papers/2026-toasty.pdf
+  classification: DROP
+  classification_note: Confirmed via the abstract that this is a bare-metal, software-only AF_XDP packet-buffer
+    cache-management optimization (LIFO buffer reuse, adaptive RX ring sizing) for DDIO/LLC behavior on commodity
+    NICs, with no virtio, SR-IOV, vSwitch, or VM/container involvement.
+  drop_reason: keyword_false_positive
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: NIC
+  logical_abstraction: UNKNOWN
+  problem: When packet-buffer working sets exceed LLC capacity, Direct Cache Access (DDIO) thrashes the cache, hurting
+    network I/O throughput.
+  mechanism: Manages free packet buffers as a LIFO stack (reusing cache-warm buffers under steady load) instead
+    of FIFO, and adaptively controls NIC RX ring population based on traffic load, expanding the buffer pool only
+    during bursts.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: LLC thrashing from DDIO when the packet-buffer working set exceeds cache capacity.
+  primary_tradeoff: UNKNOWN (not read beyond abstract, since classification is DROP)
+  quantitative_claims:
+  - 'throughput improvement: up to 78% (per abstract)'
+  why_useful_for_learning: Recorded to document a networking-keyword candidate that is a bare-metal cache-management
+    optimization rather than a virtualized-networking contribution.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - paper
+  confidence: HIGH
+  notes: Read the author-hosted (IIT Bombay) PDF's abstract.
+- id: VIRT-ASPLOS26-21
+  title: 'Hitchhike: Efficient Request Submission via Deferred Enforcement of Address Contiguity'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: ASPLOS
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.asplos-conference.org/asplos2026/program/
+  fullpaper_source: https://ranger.uta.edu/~jiang/publication/Conferences/2026/ASPLOS26(Hitchhike).pdf
+  classification: DROP
+  classification_note: Confirmed via the abstract that this optimizes storage-I/O request merging within the standard
+    Linux kernel I/O stack for physical NVMe devices, with no VM, hypervisor, or IOMMU/device-virtualization involvement.
+  drop_reason: keyword_false_positive
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: NVMe
+  logical_abstraction: UNKNOWN
+  problem: Enforcing address contiguity throughout the storage I/O software stack limits how many logically-related
+    but physically non-contiguous ranges a single request can encapsulate, adding per-request overhead.
+  mechanism: Defers address-contiguity validation to the device driver, letting a single I/O request encapsulate
+    multiple non-contiguous address ranges and amortizing kernel-level per-request overhead.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: Per-request kernel overhead multiplied by unnecessary request splitting to satisfy contiguity
+    checks earlier in the stack.
+  primary_tradeoff: UNKNOWN (not read beyond abstract, since classification is DROP)
+  quantitative_claims:
+  - 'throughput improvement: 1.43-3.5x (microbenchmarks, per abstract)'
+  - 'throughput improvement: 1.17-2.54x (real applications, per abstract)'
+  why_useful_for_learning: Recorded to document a storage-I/O-keyword candidate that is a kernel I/O-stack optimization
+    rather than a device-virtualization contribution.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - paper
+  confidence: HIGH
+  notes: Read the author-hosted (UT Arlington) PDF's abstract; paper explicitly distinguishes itself from IOMMU-based
+    approaches (e.g. BypassD) in its related work.
+- id: VIRT-HPCA26-01
+  title: 'μShare: Non-Intrusive Kernel Co-Locating on NVIDIA GPUs'
+  title_correction: null
+  authors:
+  - Wenhao Huang
+  - Zhaolin Duan
+  - Laiping Zhao
+  - Yuhao Zhang
+  - Yanjie Wang
+  - Yiming Li
+  - Yihan Wang
+  - Yichi Chen
+  - Zhihang Tang
+  - Kang Chen
+  - Deze Zeng
+  - Wenxin Li
+  - Keqiu Li
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: IEEE Xplore document page (11408561) returned empty content on fetch; the paper''s
+    own research-group homepage (clouduv.cn) and a likely co-author''s homepage (yuhaozhang-tju.github.io) both
+    list the accepted title with no PDF/abstract; Google Scholar author page blocked by robots.txt; GitHub account
+    of a probable co-author has no related repository; WebSearch budget exhausted attempting further routes. Best
+    evidence obtained: Full author list and HPCA 2026 venue confirmed from the paper''s own research group''s announcement
+    page and IEEE Xplore''s author-list metadata. Title (''Non-Intrusive Kernel Co-Locating'') suggests a GPU-kernel
+    co-location/spatial-sharing mechanism, the same design space as gShare (VIRT-ASPLOS26-02), but whether its contribution
+    is a new virtual-GPU partition abstraction (CORE) or a scheduler/co-location policy over existing primitives
+    (SUPPORT) could not be determined without the abstract.'
+- id: VIRT-HPCA26-02
+  title: 'eGPU: Production-Scale Elastic Sharing over 10,000 GPUs'
+  title_correction: null
+  authors:
+  - Xiaochuan Tang
+  - Hao Qi
+  - Jianbo Dong
+  - Yinghao Yu
+  - Zhennan Xue
+  - Zhengyu Zhang
+  - Daocheng Ying
+  - Zheng Cao
+  - Xiaoyi Lu
+  venue: HPCA
+  year: 2026
+  publication_type: INDUSTRY_TRACK
+  doi: UNKNOWN
+  official_url: https://2026.hpca-conf.org/details/hpca-2026-industry-track/3/eGPU-Production-Scale-Elastic-Sharing-over-10-000-GPUs
+  fullpaper_source: https://2026.hpca-conf.org/details/hpca-2026-industry-track/3/eGPU-Production-Scale-Elastic-Sharing-over-10-000-GPUs
+  classification: CORE
+  classification_note: eGPU provides fine-grained, runtime-adjustable GPU sharing with fault isolation and native
+    inter-instance communication across a >10,000-GPU production fleet - a genuine GPU-virtualization/partitioning
+    mechanism (not just a scheduler), kept per the task's instruction as an Industry Track record and excluded from
+    regular-research statistics.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T9
+  physical_resource: GPU
+  logical_abstraction: Runtime-resizable GPU shares that multiple concurrent ML jobs can hold on the same physical
+    GPU, each fault-isolated from the others and able to use native (e.g. NCCL-style) communication between shared
+    instances
+  problem: At Alibaba's production scale (10,000+ GPUs over 5 years), static GPU allocation to jobs wastes capacity,
+    but sharing a GPU across jobs must preserve fault isolation and support the native communication protocols ML
+    jobs expect between GPU instances, and must integrate with Kubernetes.
+  mechanism: A GPU-sharing framework that runtime-adjusts how much of a physical GPU each concurrent job holds,
+    isolates faults between co-located jobs, supports native communication protocols between the shared GPU instances,
+    and integrates with Kubernetes orchestration; operated in production for over 10,000 GPUs across five years.
+  isolation_mechanism: Fault isolation between concurrently-scheduled jobs sharing one physical GPU (exact mechanism
+    - hardware MIG-style partitioning vs software-managed contexts - not confirmed at this evidence depth).
+  multiplexing_mechanism: Physical GPUs are runtime-resized/re-partitioned across concurrently running ML jobs rather
+    than statically assigned one-job-per-GPU.
+  state_mechanism: UNKNOWN (not confirmed at this evidence depth)
+  overhead_bottleneck: UNKNOWN (not confirmed at this evidence depth)
+  primary_tradeoff: Fine-grained runtime-adjustable sharing with fault isolation -> gains up to 8x fewer GPUs needed
+    and >3x cluster GPU utilization plus 21-31% job efficiency improvement at production scale, but costs the engineering
+    complexity of maintaining fault isolation and native communication support across shared instances at 10,000+
+    GPU scale.
+  quantitative_claims:
+  - 'job efficiency improvement: 21-31% vs existing solutions (per abstract)'
+  - 'GPU count reduction: up to 8x (per abstract)'
+  - 'cluster GPU utilization increase: more than 3x (per abstract)'
+  - 'production deployment: 10,000+ GPUs, 5 years (per abstract)'
+  why_useful_for_learning: A rare, dated (2026) industry account of GPU sharing operating at extreme scale in production,
+    giving a real-world upper bound on what utilization/efficiency gains a well-engineered GPU-sharing/virtualization
+    layer delivers versus academic prototypes evaluated at much smaller scale.
+  priority: P2
+  related:
+  - VIRT-ASPLOS26-02
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-ASPLOS26-02 (gShare)
+    basis: Both are 2026 fine-grained GPU-sharing systems for multi-tenant/multi-job environments, one an industry
+      production system (Alibaba, 10,000+ GPUs) and one an academic VM-passthrough vGPU design evaluated at 64-GPU
+      scale.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: Read the official HPCA 2026 Industry Track detail page's abstract; no separate preprint/PDF was found after
+    searching for one, so design/isolation-mechanism internals below the abstract level are UNKNOWN. Per task instruction,
+    publication_type is INDUSTRY_TRACK and this record must never be counted in regular-research statistics.
+- id: VIRT-HPCA26-03
+  title: 'SCALE: Tackling Communication Bottlenecks in Confidential Distributed Machine Learning'
+  title_correction: null
+  authors:
+  - Joongun Park
+  - Yongqin Wang
+  - Huan Xu
+  - Hanjiang Wu
+  - Mengyuan Li
+  - Tushar Krishna
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T9
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before the paper''s own text could be retrieved; the
+    lead author''s personal publication page (yongqinw.github.io) lists title/authors/DOI but explicitly has no
+    abstract in the fetched content; WebFetch of OpenAlex/Semantic Scholar search APIs (HTTP 429 rate limited repeatedly).
+    Best evidence obtained: Confirmed real HPCA 2026 title, full author list and DOI (10.1109/HPCA68181.2026.11408582)
+    from the lead author''s own publication listing. Title strongly implies the confidential-computing trust boundary
+    extends across distributed/multi-node ML training (not just a single CPU/TEE), which is exactly the trend-relevant
+    question the task asked to check, but this could not be confirmed from any accessible source.'
+- id: VIRT-HPCA26-04
+  title: 'ARIADNE: Adaptive UVM Management for Efficient GPU Memory Oversubscription'
+  title_correction: null
+  authors:
+  - Hyunkyun Shin
+  - Seongtae Bang
+  - Hyungwon Park
+  - Daehoon Kim
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://2026.hpca-conf.org/details/hpca-2026-main-conference/66/ARIADNE-Adaptive-UVM-Management-for-Efficient-GPU-Memory-Oversubscription
+  fullpaper_source: https://2026.hpca-conf.org/details/hpca-2026-main-conference/66/ARIADNE-Adaptive-UVM-Management-for-Efficient-GPU-Memory-Oversubscription
+  classification: DROP
+  classification_note: Confirmed via the official abstract that ARIADNE is a runtime change inside NVIDIA's single-GPU
+    UVM driver for one application exceeding its own device's physical memory (pipelined fault handling, a 'Sharing
+    Degree' locality metric, GPU/zero-copy placement); there is no guest OS, VM, or multi-tenant sharing involved,
+    matching the brief's pure-virtual-memory exclusion applied to GPU UVM oversubscription.
+  drop_reason: pure_virtual_memory
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: GPU
+  logical_abstraction: UNKNOWN
+  problem: GPU Unified Virtual Memory suffers severe performance degradation (page-fault overhead and thrashing)
+    when an application's working set exceeds physical GPU memory capacity.
+  mechanism: A runtime implemented inside NVIDIA's UVM driver (no hardware modification or recompilation needed)
+    that pipelines fault handling to hide migration latency, computes a 'Sharing Degree' metric capturing thread-level
+    access locality, and dynamically places data between GPU memory and zero-copy host memory based on observed
+    runtime access patterns.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A (single application oversubscribing its own GPU's memory, not multiple tenants sharing
+    one GPU)
+  state_mechanism: Page placement between GPU device memory and host zero-copy memory is adjusted dynamically at
+    the UVM driver level as access patterns are observed.
+  overhead_bottleneck: Page-fault handling latency and thrashing under high memory-oversubscription pressure.
+  primary_tradeoff: UNKNOWN (not read beyond abstract, since classification is DROP)
+  quantitative_claims:
+  - 'speedup: 1.9x, 5.0x, and 4.8x over a state-of-the-art method at varying oversubscription levels (per abstract)'
+  why_useful_for_learning: Screened out per the brief's explicit guidance; a clean, current (2026) example distinguishing
+    single-application GPU virtual-memory oversubscription from any guest/VM-level GPU memory virtualization.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: HIGH
+  notes: Read the official HPCA 2026 program detail page's abstract. Screening record per the batch instructions
+    to explicitly document a pure-virtual-memory false positive found while scanning the HPCA 2026 program.
+- id: VIRT-HPCA26-05
+  title: 'DSAssassin: Cross-VM Side-Channel Attacks by Exploiting Intel Data Streaming Accelerator'
+  title_correction: null
+  authors:
+  - Ben Chen
+  - Kunlin Li
+  - Shuwen Deng
+  - Dongsheng Wang
+  - Yun Chen
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T7
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: IEEE Xplore document page (11408519) returned empty content on fetch; the authors''
+    own lab publication page (thu-haslab.org) lists title/authors/venue but explicitly has no abstract or attack-mechanism
+    description in the fetched content; a probable co-author''s personal CV page (i.benx.dev) returned a 404; WebFetch
+    of OpenAlex/Semantic Scholar search APIs (HTTP 429 rate limited repeatedly); WebSearch budget exhausted. Best
+    evidence obtained: Full author list and HPCA 2026 venue confirmed from the authors'' own lab (THU HAS Lab) publication
+    page. Title directly names a cross-VM side channel via a shared I/O accelerator (Intel DSA, used with SIOV-style
+    device virtualization) - this is very plausibly CORE/SUPPORT for T3/T7 (a device-virtualization isolation failure),
+    but the exact mechanism and severity could not be confirmed.'
+- id: VIRT-HPCA26-06
+  title: Towards Resource-Efficient Serverless LLM Inference with SLINFER
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex/Semantic
+    Scholar search APIs (HTTP 429 rate limited repeatedly). Best evidence obtained: Confirmed real HPCA 2026 title
+    from the official DBLP/program listing (also a seed-list item); concerns resource-efficient serverless LLM inference,
+    plausibly CONTEXT (LLM serving is the brief''s explicit CONTEXT example) but the mechanism could not be confirmed.'
+- id: VIRT-HPCA26-07
+  title: 'LowCarb: Carbon-Aware Scheduling of Serverless Functions'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex/Semantic
+    Scholar search APIs (HTTP 429 rate limited repeatedly). Best evidence obtained: Confirmed real HPCA 2026 title
+    from the official DBLP/program listing (also a seed-list item); a carbon-aware serverless scheduling policy,
+    plausibly CONTEXT (generic serverless scheduling is the brief''s explicit CONTEXT example) but the mechanism
+    could not be confirmed.'
+- id: VIRT-HPCA26-08
+  title: 'AUM: Unleashing the Efficiency Potential of Shared Processors with Accelerator Units for LLM Serving'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T9
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex/Semantic
+    Scholar search APIs (HTTP 429 rate limited repeatedly). Best evidence obtained: Confirmed real HPCA 2026 title
+    from the official DBLP listing; ''Shared Processors with Accelerator Units'' suggests accelerator-sharing for
+    LLM serving, plausibly SUPPORT (accelerator-sharing primitive) but this could not be confirmed.'
+- id: VIRT-HPCA26-09
+  title: 'SpotCC: Facilitating Coded Computation for Prediction Serving Systems on Spot Instances'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex/Semantic
+    Scholar search APIs (HTTP 429 rate limited repeatedly). Best evidence obtained: Confirmed real HPCA 2026 title
+    from the official DBLP listing; concerns coded-computation fault tolerance for prediction serving on preemptible
+    (spot) VM instances, plausibly CONTEXT (cloud VM economics) but the mechanism could not be confirmed.'
+- id: VIRT-HPCA26-10
+  title: 'VectorLiteRAG: Latency-Aware and Fine-Grained Resource Partitioning for Efficient RAG'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex/Semantic
+    Scholar search APIs (HTTP 429 rate limited repeatedly). Best evidence obtained: Confirmed real HPCA 2026 title
+    from the official DBLP listing; ''fine-grained resource partitioning'' suggests a resource-management scheme
+    for RAG serving, plausibly CONTEXT/SUPPORT but the mechanism could not be confirmed.'
+- id: VIRT-HPCA26-11
+  title: 'AccelFlow: Orchestrating an On-Package Ensemble of Fine-Grained Accelerators for Microservices'
+  title_correction: null
+  authors:
+  - Unknown
+  - et al.
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or full text after multiple access routes; per the hard rule
+    for title-only evidence, this is recorded as CONTEXT (not DROP/CORE/SUPPORT) rather than classified from the
+    title alone.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T9
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN - access failed before the problem statement could be read.
+  mechanism: UNKNOWN - access failed before the mechanism could be read.
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN pending access; title/venue suggest it is topically relevant to the taxonomy
+    area noted.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'ACCESS FAILURE. Tried: WebSearch budget exhausted before this title could be queried; WebFetch of OpenAlex/Semantic
+    Scholar search APIs (HTTP 429 rate limited repeatedly). Best evidence obtained: Confirmed real HPCA 2026 title
+    from the official DBLP listing; concerns orchestrating multiple on-package accelerators across microservices,
+    plausibly SUPPORT (accelerator-sharing primitive) but the mechanism could not be confirmed.'
+venue_populations:
+- venue: HPCA
+  year: 2025
+  official_source: https://hpca-conf.org/2025/main-program/
+  main_track_paper_count: 121
+  count_basis: Full title list scraped from the official HPCA 2025 main-program page (hpca-conf.org/2025/main-program/),
+    which lists the complete multi-day, multi-track research program; counted every distinct paper title (121).
+- venue: MICRO
+  year: 2025
+  official_source: https://www.microarch.org/micro58/program/
+  main_track_paper_count: 123
+  count_basis: Full title list scraped from the official MICRO 2025 (micro58) main-program page (microarch.org),
+    covering all research sessions across the conference; counted every distinct paper title (123). ACM DL proceedings
+    TOC (10.1145/3725843) could not be fetched directly (403) to cross-check.
+- venue: ASPLOS
+  year: 2026
+  official_source: https://www.asplos-conference.org/asplos2026/program/
+  main_track_paper_count: UNKNOWN (approximately 167-190; two DOI-distinct proceedings volumes confirmed)
+  count_basis: 'The official ASPLOS 2026 program page states ''167 unique papers'' across 36 sessions, but a full
+    verbatim scrape of the page returned more distinct titles (~185+) than that stated count, and DOIs collected
+    while researching individual papers confirm at least two separate ACM proceedings volumes for ASPLOS 2026 (prefix
+    10.1145/3760250.* = Volume 1, and 10.1145/3779212.* = Volume 2), consistent with ASPLOS''s multiple submission-cycle
+    (Summer/Fall/Winter-style) structure feeding one conference. The exact combined main-track count could not be
+    reconciled from the sources reachable in this environment (dblp.org/db/conf/asplos/asplos2026-1.html and -2.html
+    were both blocked by robots.txt in this environment), so it is left as a range rather than a single verified
+    number. IMPORTANT DATA-QUALITY NOTE: two titles that appeared in the raw scrape of the ASPLOS 2026 program page
+    (''HybridTier: an Adaptive and Lightweight CXL-Memory Tiering System'' and ''Wave: Offloading Resource Management
+    to SmartNIC Cores'') were subsequently found to actually carry DOI prefix 10.1145/3676642.* (the 30th ACM ASPLOS
+    conference = ASPLOS 2025 Volume 3), i.e. they are ASPLOS 2025 papers, not ASPLOS 2026. They were excluded entirely
+    from this batch''s records (out of scope venue/year) and are not counted in the population estimate above; this
+    is flagged as a likely page-scraping/template artifact on the official program page rather than a real duplicate
+    submission.'
+- venue: HPCA
+  year: 2026
+  official_source: https://dblp.org/db/conf/hpca/hpca2026.html
+  main_track_paper_count: 122
+  count_basis: Full paper list retrieved from DBLP's HPCA 2026 proceedings page (122 entries), cross-checked against
+    the official hpca-conf.org 2026 program/track pages for a subset of titles (both sources agreed on every title
+    checked). This count includes the Industry Track paper 'eGPU' and excludes only keynotes/workshops/tutorials,
+    consistent with DBLP's usual scope for a main-proceedings listing.
+possible_omissions:
+- title: Predicting DRAM-Caused Risky VMs in Large-Scale Clouds
+  venue: HPCA
+  year: 2025
+  why_relevant: Explicitly about predicting which VMs in a production cloud fleet are at risk from DRAM-related
+    faults - a real-infrastructure VM-reliability topic the 3-item HPCA25 seed list missed entirely.
+  evidence: Found by scanning the full 121-title HPCA 2025 program for virtualization keywords ('VM' in title);
+    IEEE Xplore document 10946740 confirms it as a real accepted HPCA 2025 paper. Full text could not be accessed
+    in this session (see access_failures) so it is recorded as CONTEXT/TITLE_ONLY rather than given a firm CORE/SUPPORT
+    call.
+- title: 'DSAssassin: Cross-VM Side-Channel Attacks by Exploiting Intel Data Streaming Accelerator'
+  venue: HPCA
+  year: 2026
+  why_relevant: A cross-VM side channel through a shared I/O accelerator (Intel DSA, the same class of device SIOV/device-virtualization
+    CORE papers target) is a direct device-virtualization-isolation-failure finding, exactly the kind of paper the
+    taxonomy's T3/T7 branches want.
+  evidence: Found by scanning the full 122-title HPCA 2026 DBLP listing for virtualization keywords ('Cross-VM'
+    in title); confirmed as a real accepted paper via IEEE Xplore document 11408519 and the authors' own lab (THU
+    HAS Lab) publication page. Full text could not be accessed in this session (see access_failures).
+- title: 'Fault Escaping: Improving Robustness of DPU Enhanced Platform with Mutual Assisted VM Recovery'
+  venue: ASPLOS
+  year: 2026
+  why_relevant: Title directly names a VM-recovery mechanism assisted by DPU-enhanced platforms, plausibly CORE
+    T4 (migration/checkpoint/state), and was not in the ASPLOS26 seed list at all.
+  evidence: Found by scanning the full ASPLOS 2026 program-page title dump for virtualization keywords ('VM Recovery'
+    in title); confirmed as a real title on the official asplos-conference.org program page. Full text could not
+    be accessed in this session (see access_failures).
+- title: 'SCALE: Tackling Communication Bottlenecks in Confidential Distributed Machine Learning'
+  venue: HPCA
+  year: 2026
+  why_relevant: Directly addresses whether confidential-computing trust boundaries extend across distributed/multi-node
+    ML training - exactly the trend-analysis question the task asked to check for ccAI, but for a second, independent
+    HPCA26 paper the seed list did not include.
+  evidence: Found by scanning the full 122-title HPCA 2026 DBLP listing for virtualization/confidential-computing
+    keywords; confirmed as a real accepted paper (DOI 10.1109/HPCA68181.2026.11408582) via the lead author's own
+    publication page. Full text could not be accessed in this session (see access_failures).
+possible_expansion: []
+excluded_by_pubtype:
+- title: 'eGPU: Production-Scale Elastic Sharing over 10,000 GPUs'
+  venue: HPCA 2026
+  actual_type: INDUSTRY_TRACK
+  evidence: Official HPCA 2026 program page lists this under the 'HPCA 2026 Industry Track', not the main research
+    track; per the task's explicit instruction it is kept as a full record (VIRT-HPCA26-02) with publication_type=INDUSTRY_TRACK
+    but excluded from regular-research statistics.
+access_failures:
+- title: 'μShare: Non-Intrusive Kernel Co-Locating on NVIDIA GPUs (HPCA 2026)'
+  what_was_tried: IEEE Xplore document page (empty content), research group homepage clouduv.cn (title only, no
+    abstract), a probable co-author's personal homepage (title only), Google Scholar author page (robots-blocked),
+    a probable co-author's GitHub account (no related repo), WebSearch (budget exhausted before further routes)
+  best_evidence_obtained: Full 13-author list and HPCA 2026 acceptance confirmed via the authors' own research-group
+    announcement page; no abstract or design details obtained.
+- title: 'NVMePass: A Lightweight, High-performance and Scalable NVMe Virtualization Architecture with I/O Queues
+    Passthrough (HPCA 2025)'
+  what_was_tried: IEEE Xplore document page (empty content), ResearchGate, HKUST FACT Lab publication page (metadata
+    only, no PDF/abstract)
+  best_evidence_obtained: 'Confirmed lead author (Yiquan Chen) and venue via HKUST FACT Lab; substituted the same
+    authors'' arXiv:2304.05148 ''LightIOV'' preprint (same core mechanism: NVMe I/O-queue passthrough virtualization)
+    as strong secondary evidence, flagged as MEDIUM confidence rather than a confirmed identical camera-ready text.'
+- title: 'DSAssassin: Cross-VM Side-Channel Attacks by Exploiting Intel Data Streaming Accelerator (HPCA 2026)'
+  what_was_tried: IEEE Xplore document page (empty content), authors' lab (thu-haslab.org) publication page (title
+    only, no abstract), a probable co-author's personal CV page (404), OpenAlex/Semantic Scholar search APIs (HTTP
+    429 repeatedly), WebSearch (budget exhausted)
+  best_evidence_obtained: Full 5-author list and HPCA 2026 venue confirmed via the authors' own lab publication
+    page; no abstract or attack-mechanism description obtained.
+- title: 'Fault Escaping: Improving Robustness of DPU Enhanced Platform with Mutual Assisted VM Recovery (ASPLOS
+    2026)'
+  what_was_tried: WebSearch (no working PDF/abstract route found before budget exhaustion), a third-party ASPLOS-2026-abstracts
+    collection repo (RealZST/csconf-papers, which had abstracts for 6 other ASPLOS26 titles but not this one), dl.acm.org
+    proceedings table of contents (HTTP 403)
+  best_evidence_obtained: Confirmed as a real ASPLOS 2026 title via the official program page; no authors, abstract,
+    or DOI obtained.
+- title: 'SCALE: Tackling Communication Bottlenecks in Confidential Distributed Machine Learning (HPCA 2026)'
+  what_was_tried: Lead author's own publication page (title/authors/DOI only, explicitly no abstract in the fetched
+    content), OpenAlex/Semantic Scholar search APIs (HTTP 429 repeatedly), WebSearch (budget exhausted)
+  best_evidence_obtained: Full 6-author list and DOI (10.1109/HPCA68181.2026.11408582) confirmed via the lead author's
+    publication page; no abstract, trust-boundary confirmation, or quantitative results obtained.
+- title: Six additional HPCA25/MICRO25/ASPLOS26/HPCA26 titles found via program scanning (Predicting DRAM-Caused
+    Risky VMs, DPUaudit, RpcNIC, Grad, Palermo, SkyByte, Citadel, Efficient Security Support for CXL Memory, GateBleed,
+    Multi-Dimensional ML-Pipeline Optimization, SLINFER, LowCarb, AUM, SpotCC, VectorLiteRAG, AccelFlow, CXLMC)
+  what_was_tried: WebSearch (session budget of 200 calls was exhausted partway through this batch), WebFetch of
+    OpenAlex works-search and Semantic Scholar graph-search APIs (both returned HTTP 429 rate-limit errors on every
+    retry for the remainder of the session), direct IEEE Xplore / ACM DL document fetches (returned empty content
+    or HTTP 403), duckduckgo.com/html and bing.com search pages via WebFetch (both robots-disallowed)
+  best_evidence_obtained: Titles confirmed as real accepted papers via official program pages/DBLP; recorded as
+    CONTEXT/TITLE_ONLY/LOW confidence per the schema's hard rule for title-only evidence, rather than guessed at
+    from the title.
+seed_corrections:
+- seed_title: Transforming Torus Fabrics for Efficient Multi-tenant ML
+  official_title: 'Morphlux: Transforming Torus Fabrics for Efficient Multi-tenant ML'
+  source: arXiv:2508.03674 (the paper's own name, 'Morphlux', is dropped from the seed list's title)
+batch_observations: "VENUE STATUS: ASPLOS 2026 (Pittsburgh, March 22-26 2026) and HPCA 2026 (Sydney, Jan 31-Feb\
+  \ 4 2026)\nwere both CONFIRMED HELD before the 2026-09-18 cutoff (both several months in the past), so both are\n\
+  correctly in scope and produced records; no venue was excluded for not-yet-having-occurred.\n\nDATA-QUALITY CATCH:\
+  \ while verifying individual ASPLOS 2026 papers by DOI, two titles that appeared in a\nraw scrape of the official\
+  \ asplos-conference.org program page (\"HybridTier...\" and \"Wave: Offloading\nResource Management to SmartNIC\
+  \ Cores\") turned out to carry ACM proceedings DOI prefix 10.1145/3676642.*,\nwhich is the 30th ACM ASPLOS conference\
+  \ (ASPLOS 2025 Volume 3), not ASPLOS 2026. They were treated as\nout-of-scope venue/year and given NO records\
+  \ in this batch (not even DROP records), rather than being\nmisfiled as ASPLOS26 papers. This looks like a page-template/caching\
+  \ artifact on the conference site\nrather than an actual re-submission, but it is worth the orchestrator knowing\
+  \ this batch explicitly\nscreened for and excluded it. ASPLOS 2026's own accepted-paper population is itself split\
+  \ across at\nleast two ACM proceedings volumes (DOI prefixes 3760250 and 3779212), consistent with ASPLOS's\n\
+  multi-cycle (Summer/Fall/Winter-style) submission model feeding one conference; the exact combined\nmain-track\
+  \ count could not be pinned to a single verified number (see venue_populations).\n\nTHIN-SEED-LIST SCANNING: HPCA\
+  \ 2025 (3 seeds) and MICRO 2025 (3 seeds) were rescanned against their full\nofficial programs (121 and 123 titles\
+  \ respectively, both obtained as complete verbatim title lists from\nofficial/DBLP sources). This surfaced 4 genuinely\
+  \ new virtualization-adjacent candidates now in\npossible_omissions (Predicting DRAM-Caused Risky VMs, DSAssassin,\
+  \ Fault Escaping, SCALE) plus roughly a\ndozen weaker CONTEXT/DROP candidates now recorded individually (Concord,\
+  \ DPUaudit, RpcNIC, Grad, Palermo,\nSkyByte, Citadel, Efficient Security Support for CXL Memory, GateBleed, Multi-Dimensional\
+  \ ML-Pipeline\nOptimization, plus the pure-virtual-memory screen below). No additional CORE papers beyond the\
+  \ seeds were\nfound for HPCA25/MICRO25 at the depth this session could reach, but 4 access-failed candidates (see\n\
+  access_failures) remain unresolved and could plausibly be CORE/SUPPORT (DSAssassin and SCALE especially,\ngiven\
+  \ their explicit VM/confidential-computing titles).\n\nPURE-VIRTUAL-MEMORY SCREENING (explicit task instruction):\
+  \ six architecture-venue GPU/CPU virtual-memory\npapers were identified via the keyword scan and explicitly screened\
+  \ per the brief's rule (\"DROP unless\nnested translation, guest-physical address space, or hypervisor-mediated\
+  \ memory\"): Marching Page Walks\n(HPCA25, GPU page-table-walk batching), OASIS (HPCA25, single-app multi-GPU\
+  \ UVM page placement,\nfull text read), Let-Me-In (HPCA25, GPU pointer bounds-metadata memory *safety*, not memory\n\
+  management - keyword false positive), SoftWalker (MICRO25, GPU software page-table walking), LATPC\n(MICRO25,\
+  \ GPU TLB prefetching), Learning to Walk (MICRO25, learned CPU/OS page table), and ARIADNE\n(HPCA26, single-app\
+  \ GPU UVM oversubscription). All seven were confirmed via at least an abstract read\nto involve no guest OS, VM,\
+  \ or hypervisor-mediated translation and were classified DROP\n(drop_reason=pure_virtual_memory, except Let-Me-In\
+  \ which is keyword_false_positive since it is a memory\n*safety* mechanism, not memory management at all).\n\n\
+  CXL/EDA SCREENING: ASPLOS 2026's CXL-memory cluster of papers was screened against the brief's\ndisaggregation\
+  \ rule (\"CORE only if a virtual resource abstraction is built over the disaggregated pool,\notherwise SUPPORT\"\
+  ). PIPM, Cxlalloc, and \"A Programming Model for Disaggregated Memory over CXL\" all\nexplicitly do NOT build\
+  \ a guest/virtual-memory abstraction over the CXL pool (they are, respectively, a\npage-migration optimization,\
+  \ an allocator-correctness mechanism, and a formal programming model/\nconsistency-semantics contribution for\
+  \ programmers reasoning about the pool directly) and were classified\nSUPPORT. Two further CXL-adjacent titles\
+  \ (vCXLGen, CXLMC) turned out on inspection to be EDA/formal-\nverification tooling for CXL hardware/programs\
+  \ rather than virtualization contributions and were DROPped\n(no_virtualization_relation). Two networking/storage\
+  \ titles caught by the I/O keyword screen (Toasty,\nHitchhike) were confirmed via their abstracts to be bare-metal,\
+  \ non-virtualized optimizations (NIC cache\nmanagement and kernel I/O-request merging respectively) and DROPped\
+  \ (keyword_false_positive).\n\nTHRESHOLD CALLS (explicit task list):\n- NVMePass (HPCA25): read via the same authors'\
+  \ arXiv:2304.05148 \"LightIOV\" preprint (IEEE Xplore and the\n  official HKUST lab page could not supply the\
+  \ camera-ready text); confirmed CORE, T3 device\n  virtualization (control/data-plane split, I/O-queue passthrough,\
+  \ LBA+GPA isolation). Flagged MEDIUM\n  confidence because the preprint's exact identity with the published HPCA25\
+  \ paper is inferred from\n  matching authorship/mechanism/venue, not confirmed byte-for-byte.\n- SpecMPK (HPCA25):\
+  \ read in full. It is INTRA-PROCESS isolation (MPK/WRPKRU permission-domain switching\n  within one address space)\
+  \ with no VM/container/hypervisor involvement at all - classified SUPPORT\n  (T5 secondary T7) rather than CORE,\
+  \ on the grounds that it is the hardware primitive lightweight\n  in-process sandboxes build on, not a machine/resource-virtualization\
+  \ mechanism itself.\n- ccAI (MICRO25): read in full. Its confidential trust boundary EXTENDS PAST THE CPU, across\
+  \ the PCIe\n  bus, into GPU/NPU/FPGA accelerators via a hardware PCIe Security Controller - this is the\n  cross-accelerator\
+  \ case the task asked to check for, and is recorded explicitly in the record's\n  classification_note/notes for\
+  \ future trend analysis. Classified CORE, T7.\n- \"Re-architecting End-host Networking with CXL\" (MICRO25): read\
+  \ in full. Applying the disaggregation\n  rule, it exposes NIC memory as coherent NUMA-addressable host memory\
+  \ (a disaggregation/coherence\n  redesign) and introduces no VM/vNIC/guest abstraction, so it is SUPPORT, not\
+  \ CORE.\n- SG-IOV (ASPLOS26): read via a detailed third-party summary (ACM DL PDF not fetched). Confirmed CORE,\n\
+  \  T3 - a genuine new I/O-virtualization granularity (per-socket instead of per-PCIe-function), directly\n  attacking\
+  \ SR-IOV's scalability ceiling.\n- gShare (ASPLOS26) vs uShare (HPCA26): the GPU-sharing CORE-vs-SUPPORT rule\
+  \ was applied to each\n  separately as instructed. gShare's own PDF confirms its mechanism IS a VM-passthrough\
+  \ vGPU\n  virtualization layer (vfio-mdev interception, hot-pluggable vGPU slices with checkpoint/restore) that\n\
+  \  a scheduler sits on top of - classified CORE. uShare's abstract could not be obtained after 5 distinct\n  access\
+  \ routes (see access_failures), so per the schema's hard rule for title-only evidence it is\n  recorded as CONTEXT/TITLE_ONLY/LOW\
+  \ rather than guessed at; its title (\"non-intrusive kernel\n  co-locating\") suggests it may in fact land on\
+  \ the SUPPORT side of the same rule (a co-location\n  mechanism/policy rather than a new virtual-GPU partition\
+  \ abstraction), but this could not be confirmed,\n  so no such determination was forced onto the record.\n- eGPU\
+  \ (HPCA26): kept as INDUSTRY_TRACK per the task's explicit instruction, classified CORE (fine-grained\n  runtime-adjustable\
+  \ GPU sharing with fault isolation at 10,000+ GPU production scale), and excluded from\n  the regular-research\
+  \ CORE/SUPPORT/CONTEXT/DROP tallies below."

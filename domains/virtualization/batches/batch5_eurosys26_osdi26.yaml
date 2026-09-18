@@ -1,0 +1,1414 @@
+papers:
+
+# ============================= EUROSYS 2026 =============================
+
+- id: VIRT-EUROSYS26-01
+  title: "CofferOS: Hardening OS-level Virtualization with Rust"
+  title_correction: null
+  authors: [Minkyu Jung, Chanshin Kwak, Junho Ahn, Sunho Park, Changjun Lee, Jongyul Kim, Jeehoon Kang, Youngjin Kwon]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3803569
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3803569
+  classification: CORE
+  classification_note: "The contribution is a hardened OS-level virtualization (container) design that keeps the shared-kernel model but rewrites the isolation-critical kernel surface in Rust to close the container/VM security gap without VM-level overhead."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T7]
+  physical_resource: CPU core
+  logical_abstraction: "An OS-level (container) sandbox whose kernel-facing attack surface is memory-safe, aiming to approach VM-grade isolation without a second guest kernel"
+  problem: "Linux containers share one kernel, so a single memory-safety bug in the shared kernel can break isolation across all tenants on a host, while switching to VM-based sandboxes (gVisor/Kata-style) to fix this imposes substantial performance and elasticity costs."
+  mechanism: "CofferOS hardens the OS-level virtualization boundary itself (the parts of the shared kernel a container can reach) by rewriting the isolation-critical surface in Rust, aiming to keep the low overhead of shared-kernel containers while removing the memory-safety-driven isolation escapes that motivate full VM sandboxing."
+  isolation_mechanism: "Memory-safe (Rust) reimplementation of the container-facing kernel surface, reducing the class of memory-corruption bugs that let a container escape into the shared kernel."
+  multiplexing_mechanism: "Standard OS-level virtualization multiplexing (namespaces/cgroups) is retained; the paper's change is to the safety of the mediation code, not the multiplexing model."
+  state_mechanism: "N/A at abstract depth — no migration/checkpoint mechanism described in the retrieved material."
+  overhead_bottleneck: "The performance/isolation trade-off between shared-kernel containers (fast, weak isolation) and VM-sandboxed containers (slow, strong isolation) that CofferOS is positioned to narrow."
+  primary_tradeoff: "Rewriting the container-kernel boundary in Rust -> gains memory-safety-driven isolation without a second guest kernel, but costs re-implementation effort and (per abstract) does not fully match VM-based sandbox isolation guarantees."
+  quantitative_claims: []
+  why_useful_for_learning: "Gives a concrete example of the isolation-vs-performance spectrum between namespace/cgroup containers and VM-sandboxed containers (gVisor/Kata), the same spectrum SKernel (this batch) also addresses with a split-kernel design."
+  priority: P2
+  related: [VIRT-EUROSYS26-06]
+  relations:
+  - {type: CONTRASTS_WITH, target: VIRT-EUROSYS26-06, basis: "Both target the container isolation/performance gap; CofferOS hardens the shared-kernel model in Rust while SKernel (same batch) splits the kernel per-container instead."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Official EuroSys program (papers.html) confirmed title/authors/DOI. Abstract text obtained via OpenAlex (works/doi lookup on ACM DOI) since dl.acm.org itself returns 403 to automated fetches in this environment; USENIX/ACM full text and arXiv preprint were not found (no arXiv preprint located across cs.OS Sep 2025-Jun 2026 listings). Abstract was reconstructed from an inverted index and appears truncated before mechanism/evaluation detail, so DESIGN-level claims above are inferred from the stated problem framing, not read from a methods/eval section."
+
+- id: VIRT-EUROSYS26-02
+  title: "Proteus: Heterogeneous FPGA Virtualization"
+  title_correction: null
+  authors: [Felix Gust, Shu Anzai, Charalampos Mainas, Atsushi Koshiba, Pramod Bhatotia]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3803577
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3803577
+  classification: CORE
+  classification_note: "Direct contribution is a virtualization layer that abstracts heterogeneous cloud FPGA hardware (different vendors, capacities, memory configs) behind one logical FPGA abstraction, matching the brief's FPGA-virtualization CORE criterion exactly."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T3]
+  physical_resource: FPGA
+  logical_abstraction: "A vendor- and capacity-independent logical FPGA that application bitstreams/kernels can target without being rewritten per physical device"
+  problem: "Cloud FPGA offerings are heterogeneous across vendors, device capacity, memory configuration, and performance, so applications built for one FPGA SKU are not portable and utilization/performance become inconsistent across the fleet."
+  mechanism: "Proteus interposes a virtualization layer between application accelerator logic and the physical FPGA, normalizing differing device capabilities/memory configurations so a single logical accelerator description can be deployed and multiplexed across heterogeneous physical FPGAs."
+  isolation_mechanism: "UNKNOWN (not present at abstract depth)"
+  multiplexing_mechanism: "Abstracts device-capacity heterogeneity so the same logical accelerator can be placed on different physical FPGA capacities/vendors; exact partitioning mechanism not given at abstract depth."
+  state_mechanism: "UNKNOWN (not present at abstract depth)"
+  overhead_bottleneck: "Portability/compatibility loss and inconsistent performance/utilization caused directly by cross-vendor, cross-capacity FPGA heterogeneity."
+  primary_tradeoff: "A vendor-agnostic virtualization layer -> gains portability and uniform utilization across heterogeneous FPGA fleets, but costs an abstraction layer between the application and the raw device (exact overhead not given at abstract depth)."
+  quantitative_claims: []
+  why_useful_for_learning: "Direct FPGA analogue of GPU virtualization/MIG-style abstraction work: shows what 'virtualizing an accelerator' means when the underlying physical devices are not even uniform, unlike a homogeneous GPU fleet."
+  priority: P1
+  related: [uShell (OSDI 2026, this batch), "Funky: Cloud-Native FPGA Virtualization and Orchestration (same author group, precursor/companion work)"]
+  relations:
+  - {type: SAME_BRANCH, target: "Funky: Cloud-Native FPGA Virtualization and Orchestration", basis: "Same last three authors (Mainas, Koshiba, Bhatotia) publish a companion cloud-native FPGA virtualization/orchestration system (found on arXiv, cs.OS Oct 2025 listing), suggesting a shared FPGA-cloud research program."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Abstract obtained via OpenAlex (ACM DOI lookup); ACM DL itself, USENIX-style program pages, and an arXiv preprint were all inaccessible/absent for this exact title. A companion paper 'Funky: Cloud-Native FPGA Virtualization and Orchestration' by an overlapping author subset was found as an arXiv preprint (Oct 2025, cs.OS) but is a separate work, not this one, and was not itself seeded for this batch so no full record was made for it (flagged in possible_expansion instead)."
+
+- id: VIRT-EUROSYS26-03
+  title: "NecoFuzz: Effective Fuzzing of Nested Virtualization via Fuzz-Harness Virtual Machines"
+  title_correction: null
+  authors: [Reima Ishii, Takaaki Fukai, Takahiro Shinagawa]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769347
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://arxiv.org/abs/2512.08858
+  classification: CORE
+  classification_note: "The paper's entire contribution is a fuzzing methodology that directly probes hardware-assisted nested-virtualization interfaces (VMCS/VMCB fields, VM-exit handling) inside real hypervisors, i.e. hypervisor correctness/nested-virtualization is the object of study, not an incidental setting."
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary: [T7]
+  physical_resource: CPU core
+  logical_abstraction: "The L1-guest-hypervisor-facing virtual CPU/VMCS interface exposed by a host hypervisor for nested virtualization (Intel VMX / AMD SVM)"
+  problem: "Nested virtualization (a guest hypervisor L1 running its own guests L2) greatly increases host-hypervisor (L0) complexity, and no prior fuzzer systematically tests the hardware-assisted virtualization interface itself; random mutation of a multi-kilobyte VMCS/VMCB state is impractical and symbolic testing does not scale to that state space."
+  mechanism: "NecoFuzz synthesizes 'fuzz-harness VMs' -- executable UEFI binaries that boot as an L1 guest hypervisor and launch L2 nested guests -- via three components: a VM Execution Harness that mutates setup instructions and repeatedly triggers VM exits; a VM State Validator that generates candidate VMCS/VMCB fields, rounds them toward specification-valid values using validation logic extracted from the Bochs CPU emulator, then selectively re-mutates a subset to sit near the valid/invalid boundary (using physical CPUs as oracles); and a vCPU Configurator that mutates CPU feature combinations (e.g. EPT, unrestricted guest). A host-side agent bridges this to AFL++, feeding 2 KiB fuzzing inputs and collecting coverage via KCOV (KVM) or gcov (Xen)."
+  isolation_mechanism: "N/A -- NecoFuzz studies isolation-boundary correctness rather than proposing an isolation mechanism itself."
+  multiplexing_mechanism: "N/A"
+  state_mechanism: "The fuzz target's state is exactly the hypervisor's own nested-virtualization control state (VMCS12 on Intel, VMCB12 on AMD); NecoFuzz's contribution is generating and mutating that state near its validity boundary rather than managing state migration."
+  overhead_bottleneck: "Boundary-state generation cost: producing VM instances that are 'near-valid' (to reach deep validation/error-handling code) rather than either trivially valid or trivially rejected."
+  primary_tradeoff: "Boundary-oriented, specification-guided state generation -> gains far higher coverage of nested-virtualization-specific error-handling code than blind mutation (Syzkaller) or general hypervisor fuzzers (IRIS), but costs a hypervisor-specific validator built from an external CPU emulator's semantics and is restricted to single-vCPU, single-level (L2, not L3) nesting and synchronous (instruction-triggered) VM exits only."
+  quantitative_claims:
+  - "code coverage of nested-virtualization-specific code on KVM (48h runs): 84.7% Intel / 74.2% AMD for NecoFuzz vs 61.4% Intel / 7.0% AMD for Syzkaller (1.4x and 11.0x improvement; p=0.012 Intel, p=0.014 AMD)"
+  - "Xen coverage (24h runs): 83.4% Intel / 79.0% AMD for NecoFuzz vs 20.4% Intel / 10.8% AMD for the XTF baseline (63.0 and 68.2 percentage-point improvement)"
+  - "vs IRIS (Intel-only baseline): 1.6x coverage improvement (IRIS reached 52.3% and terminated after minutes in the nested setting)"
+  - "component ablation (24h, KVM): removing the VM State Validator costs 16.9 pp coverage on Intel and 15.8 pp on AMD; removing the VM Execution Harness costs 6.1 pp Intel / 20.2 pp AMD; removing all three components costs 28.2 pp Intel / 22.5 pp AMD"
+  - "six previously unknown vulnerabilities found across KVM, Xen and VirtualBox; two received CVE assignments (CVE-2023-30456 on KVM/Intel; CVE-2024-21106 on VirtualBox/Intel), four confirmed/fixed"
+  why_useful_for_learning: "Concretely explains the VMCS/VMCB nested-virtualization interface (the exact structures and validity constraints a guest hypervisor must satisfy), which is the low-level mechanism every CORE nested-virtualization paper (e.g. JANUS, this batch) builds on top of."
+  priority: P1
+  related: [VIRT-OSDI26-01]
+  relations:
+  - {type: LAYER_BELOW, target: VIRT-OSDI26-01, basis: "NecoFuzz tests the correctness of the hardware-assisted nested-virtualization mechanism (VMCS/VMCB handling) that a cooperative nested-virtualization architecture such as JANUS would run on top of."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: "Read via arXiv preprint 2512.08858 (listed there as 'To appear in EuroSys 2026'), which supplied full abstract, architecture, evaluation, and limitations; official EuroSys program (papers.html) independently confirmed title/authors/DOI. This is the deepest read in the batch alongside Nixie."
+
+- id: VIRT-EUROSYS26-04
+  title: "Everything You Need to Know About Virtual Machine Live Migration Between Heterogeneous Processors"
+  title_correction: null
+  authors: [Kenta Ishiguro, Caleb Fonyuy-Asheri, Elouan Barraud, Renaud Lachaize, Yérom-David Bromberg, Alain Tchana]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3803609
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3803609
+  classification: CORE
+  classification_note: "Live migration feasibility across heterogeneous (same-ISA, different-capability) processors is the paper's entire subject; it introduces MigCheck, a dedicated simulation tool to predict migration feasibility, which is a direct virtualization/migration-mechanism contribution."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T1]
+  physical_resource: CPU core
+  logical_abstraction: "A VM whose vCPU is portable across physical hosts that share an ISA but differ in exposed CPU features/microarchitecture ('semi-heterogeneous' processors)"
+  problem: "Cloud fleets are never perfectly homogeneous over their lifetime (hardware refreshes, hypervisor updates, added/removed capacity), and processor feature/capability mismatches between source and destination host can silently block or break a live migration, but operators currently lack a way to know this before attempting (and paying the cost of) a real migration."
+  mechanism: "The authors perform the first systematic feasibility analysis of VM live migration across semi-heterogeneous (same-ISA, differently-capable) processors and build MigCheck, a simulation tool that predicts whether a given migration will succeed without performing a costly real migration, validated across scenarios including hardware additions/removals, hypervisor updates, and platform configuration changes."
+  isolation_mechanism: "N/A -- the paper is about migration feasibility/compatibility prediction, not tenant isolation."
+  multiplexing_mechanism: "N/A"
+  state_mechanism: "VM CPU state (feature/capability-dependent architectural state) is the object being checked for portability between source and destination host before/at migration time; MigCheck statically/predictively evaluates this rather than performing an actual live transfer."
+  overhead_bottleneck: "The cost of a failed or broken real migration attempt when source/destination processor capabilities are incompatible -- the paper's tool moves this cost from 'discovered during migration' to 'predicted beforehand'."
+  primary_tradeoff: "Predicting migration feasibility via simulation (MigCheck) -> avoids the cost and risk of attempting real migrations that may fail, but costs the effort of building and maintaining an accurate model of processor-capability compatibility across vendors/generations."
+  quantitative_claims: []
+  why_useful_for_learning: "Directly addresses the practical operational question every live-migration CORE paper glosses over -- 'can this VM even move to that host' -- and is explicitly flagged as the priority read for the live-migration branch of this corpus."
+  priority: P0
+  related: ["TGVM: Live Migration of Virtual Machines on Heterogenous Same ISA Processors (SPMA 2022, same research group)"]
+  relations:
+  - {type: EXTENSION, target: "TGVM: Live Migration of Virtual Machines on Heterogenous Same ISA Processors (SPMA 2022)", basis: "Found on Alain Tchana's personal publication page while searching for this paper; a 2022 workshop paper by an overlapping group on the same same-ISA heterogeneous-processor live-migration problem, suggesting this EuroSys 2026 paper is a matured/extended treatment of that earlier workshop-scale result."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Flagged as a P0 priority read by the task brief, but only the abstract (via OpenAlex ACM-DOI lookup) was reachable: ACM DL blocks automated fetches (403) in this environment, the authors' personal/lab pages (ENS Lyon, IRISA/Univ. Rennes, Grenoble) were either stale (last updated ~2022) or blocked by robots.txt, and no arXiv preprint was found. This record should be revisited with the actual PDF once accessible -- the MigCheck architecture, validation methodology and quantitative accuracy numbers are all still unread."
+
+- id: VIRT-EUROSYS26-05
+  title: "Squeezy: Rapid VM Memory Reclamation for Serverless Functions"
+  title_correction: null
+  authors: [Orestis Lagkas Nikolos, Chloe Alverti, Stratos Psomadakis, Georgios Goumas, Nectarios Koziris]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769357
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769357
+  classification: CORE
+  classification_note: "This is exactly the brief's 'mechanism that makes isolation cheap' case: the contribution is a new VM memory-reclamation mechanism (segregating and lifespan-bounding hotplugged memory) implemented in the Linux kernel, not a system that merely consumes serverless VMs."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T8]
+  physical_resource: DRAM
+  logical_abstraction: "VM-sandboxed serverless function memory that can be elastically inflated and rapidly, predictably deflated without long reclamation stalls"
+  problem: "VM-sandboxed serverless functions need elastic memory, but traditional memory hot-unplugging suffers long reclamation latencies and burns CPU, because the guest kernel has no notion that a given memory region was hotplugged and therefore cannot preferentially and quickly reclaim it."
+  mechanism: "Squeezy segregates hotplugged memory from ordinary VM memory inside the guest allocator and bounds hotplugged regions' lifespans, so the kernel can identify and reclaim exactly the hotplugged pages fast; implemented as a patch to the Linux kernel (v6.6)."
+  isolation_mechanism: "N/A (memory-capacity elasticity mechanism, not a tenant-isolation boundary)"
+  multiplexing_mechanism: "Physical host DRAM is shared across FaaS VMs by returning hotplugged guest memory to the host quickly once a function's burst demand subsides, rather than holding it until a slow generic reclamation path completes."
+  state_mechanism: "Guest-kernel-tracked hotplugged-memory regions are the state; Squeezy's contribution is making the guest kernel aware of which physical memory is hotplugged so it can be reclaimed with bounded latency."
+  overhead_bottleneck: "Long reclamation latency and CPU cost of traditional memory hot-unplugging, caused by the guest kernel treating hotplugged and non-hotplugged memory identically."
+  primary_tradeoff: "Segregating and lifespan-bounding hotplugged memory -> gains order-of-magnitude faster, sub-second reclamation of multiple gigabytes during live FaaS workloads, at the cost of guest-kernel changes that constrain how hotplugged memory can be used/allocated."
+  quantitative_claims:
+  - "reclamation latency: 'order-of-magnitude faster' than existing (traditional hot-unplug) methods (per abstract; exact baseline numbers not read)"
+  - "sub-second recovery of multiple gigabytes of memory during active FaaS workloads (per abstract)"
+  why_useful_for_learning: "Directly explains why ballooning/hot-unplug is normally slow (no guest awareness of which pages were hotplugged) and how segregating that state fixes it -- a concrete case study for the T2 memory-virtualization branch alongside HyperAlloc (batch1)."
+  priority: P1
+  related: [VIRT-EUROSYS25-03]
+  relations:
+  - {type: ALTERNATIVE, target: VIRT-EUROSYS25-03, basis: "Both attack slow VM memory de/inflation (HyperAlloc via a shared page-frame allocator interface, Squeezy via segregating and lifespan-bounding hotplugged memory); different mechanisms for the same overhead_bottleneck."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Abstract obtained via OpenAlex ACM-DOI lookup; ACM DL PDF and any preprint were inaccessible in this environment (no arXiv preprint found). Flagged by the task brief as a mechanism (not consumption) paper; the abstract confirms this directly."
+
+- id: VIRT-EUROSYS26-06
+  title: "SKernel: An Elastic and Efficient Secure Container System at Scale with a Split-Kernel Architecture"
+  title_correction: null
+  authors: [Xiaohu Chai, Keyang Hu, Jianfeng Tan, Tiwei Bie, Guotao Tan, Tianyu Zhou, Anqi Shen, Dawei Shen, Xinyao Yang, Xin Chen, Xu Wang, Feng Yu, Zhengyu He, Dong Du, Yubin Xia, Kang Chen, Yu Chen]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769332
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769332
+  classification: CORE
+  classification_note: "Explicitly a container isolation architecture (a per-container split guest kernel replacing the shared-kernel model), which the brief names as CORE (as opposed to container image/runtime mechanism, which would be SUPPORT)."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T1]
+  physical_resource: CPU core
+  logical_abstraction: "A secure container that gets its own split guest kernel (isolated from the host and from other containers) while remaining elastic/on-demand like a lightweight container rather than a full VM"
+  problem: "Existing secure-container designs force a choice: VM-based approaches (e.g. Kata) get strong isolation via a full guest kernel but sacrifice elasticity/on-demand scaling for unpredictable serverless-style workloads, while lightweight approaches (e.g. gVisor) avoid a second kernel but depend on host-kernel mechanisms, causing performance loss from guest-host interdependency."
+  mechanism: "SKernel introduces a split-kernel architecture: rather than a monolithic guest kernel per VM (Kata-style) or intercepting syscalls into the host kernel (gVisor-style), it splits kernel responsibilities so each container gets an isolated kernel slice that can be instantiated/torn down elastically at scale."
+  isolation_mechanism: "Per-container split guest kernel, isolating kernel state per tenant without the full weight of a monolithic per-VM guest kernel."
+  multiplexing_mechanism: "Host resources are multiplexed across many elastic split-kernel containers rather than a fixed number of heavyweight guest-kernel VMs."
+  state_mechanism: "UNKNOWN (not present at abstract depth) -- no migration/checkpoint detail retrieved."
+  overhead_bottleneck: "The elasticity-vs-isolation trade-off itself: Kata-style monolithic guest kernels are slow to scale on-demand; gVisor-style host-kernel-dependent designs degrade performance from guest-host interdependency."
+  primary_tradeoff: "Splitting the guest kernel per container -> aims to gain both elasticity (fast on-demand scaling like gVisor) and isolation strength (independent from host-kernel coupling, closer to Kata), at the cost of split-kernel design/engineering complexity (exact overhead not given at abstract depth)."
+  quantitative_claims: []
+  why_useful_for_learning: "A third point on the container-isolation spectrum (monolithic guest kernel vs host-kernel-dependent sandbox vs split guest kernel) directly comparable to CofferOS (same batch) and gVisor/Kata, useful for understanding why 'secure container' architecture choices matter."
+  priority: P1
+  related: [VIRT-EUROSYS26-01]
+  relations:
+  - {type: CONTRASTS_WITH, target: VIRT-EUROSYS26-01, basis: "CofferOS keeps a single shared kernel and hardens it in Rust; SKernel instead splits the kernel per container -- two different answers to the same container-isolation-vs-performance problem."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "OpenAlex-reconstructed abstract was cut short before the mechanism/evaluation sections; author list from OpenAlex differs slightly from the official EuroSys program in one name ('Yiqun Chen' vs official 'Yu Chen') -- official program list used here. Authors Dong Du and Yubin Xia are SJTU IPADS faculty; ACM DL PDF and any preprint were inaccessible in this environment."
+
+- id: VIRT-EUROSYS26-07
+  title: "BASK: Batch And SmartNIC-offloaded KSM"
+  title_correction: null
+  authors: [Chanshin Kwak, Jaehyeon Lee, Minkyu Jung, Changjun Lee, Youngjin Kwon]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769372
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title/author metadata (no abstract text was retrievable from any accessible source), so per the record-schema hard rule this is classified CONTEXT with LOW confidence rather than the SUPPORT classification the title (SmartNIC-offloaded KSM, a VM memory-deduplication mechanism) would otherwise suggest."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T3]
+  physical_resource: DRAM
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: "UNKNOWN at the evidence depth reached; title indicates offloading Kernel Samepage Merging (KSM, a standard Linux VM memory-deduplication mechanism) batching/scanning work to a SmartNIC."
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed as described by its title, would illustrate offloading a CPU-costly VM memory-management background task (KSM page scanning/merging) to a SmartNIC, analogous in spirit to BASK's sibling KAIST papers CofferOS and MTTM (this batch)."
+  priority: P3
+  related: [VIRT-EUROSYS26-01, VIRT-EUROSYS26-08]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-01, basis: "Overlapping authors (Kwak, Jung, Kwon) and same KAIST group as CofferOS and MTTM (this batch), suggesting a shared research program on cloud VM memory/isolation efficiency."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE: confirmed real (official EuroSys program, DOI 10.1145/3767295.3769372, CC-BY open access per OpenAlex metadata) but no abstract text was available -- OpenAlex's abstract_inverted_index field is null for this record, ACM DL itself returns 403 to automated fetches, and no arXiv preprint exists. Per hard rule 2, classification is CONTEXT/LOW despite the title strongly suggesting SUPPORT; flagged for a follow-up manual read of the ACM PDF."
+
+- id: VIRT-EUROSYS26-08
+  title: "MTTM: Dynamic Fast Memory Partitioning with Bandwidth Optimization for Multi-tenant Cloud"
+  title_correction: null
+  authors: [Changjun Lee, Sangjin Choi, Youngjin Kwon]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769371
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769371
+  classification: SUPPORT
+  classification_note: "Fair-share partitioning of fast-tier (local DRAM) capacity and bandwidth among competing cloud tenants over a CXL-tiered memory system is a resource-partitioning/QoS mechanism (brief's SUPPORT keyword 'memory/resource partitioning'), not itself a new virtual-resource abstraction."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T2]
+  physical_resource: DRAM
+  logical_abstraction: "A per-tenant share of fast (local DRAM) memory capacity, dynamically re-partitioned to keep aggregate memory-tier bandwidth utilization high under multi-tenant contention"
+  problem: "Memory tiering (extending local DRAM with CXL-attached remote DRAM/NVM) helps capacity scaling, but in multi-tenant clouds, how fast-memory capacity is distributed among competing tenants directly affects the memory-request rejection rate and therefore effective bandwidth utilization -- an area the authors say is comparatively underexplored next to data-movement-across-tiers research."
+  mechanism: "MTTM dynamically partitions the fast memory tier among tenants, adjusting each tenant's fast-DRAM share based on demand so as to optimize aggregate bandwidth utilization (rather than leaving tier placement/movement as the sole lever, which prior work focused on)."
+  isolation_mechanism: "Per-tenant fast-memory capacity partitioning bounds how much one tenant's demand can starve another's access to the fast tier."
+  multiplexing_mechanism: "Local DRAM (the fast tier) is dynamically re-partitioned across tenants as demand shifts, rather than statically divided."
+  state_mechanism: "UNKNOWN at abstract depth -- no detail on how partition boundaries are tracked/moved was retrieved."
+  overhead_bottleneck: "Memory-request rejection caused by poor fast-tier capacity distribution across tenants, which the paper identifies as the binding factor for bandwidth utilization in multi-tenant tiered-memory clouds."
+  primary_tradeoff: "Dynamic fast-tier partitioning by demand -> gains higher aggregate bandwidth utilization under multi-tenant contention, at a presumed re-partitioning/tracking overhead not quantified at abstract depth."
+  quantitative_claims: []
+  why_useful_for_learning: "Shows the multi-tenant fairness/QoS layer that sits on top of CXL memory tiering/disaggregation work -- useful context for why disaggregated-memory CORE papers (e.g. Blowfish, this batch) need a partitioning policy above the raw pooling mechanism."
+  priority: P2
+  related: [VIRT-EUROSYS26-01, VIRT-EUROSYS26-07]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-01, basis: "Same KAIST group (Changjun Lee, Youngjin Kwon) as CofferOS and BASK, this batch, working on cloud VM/memory efficiency."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Abstract reconstructed via OpenAlex from ACM DOI metadata; ACM DL PDF/preprint not accessible in this environment."
+
+- id: VIRT-EUROSYS26-09
+  title: "iRoute: Local Routing Table-based Workflow Management in Serverless Computing"
+  title_correction: null
+  authors: [Yiming Li, Laiping Zhao, Zhiyuan Su, Guowei Liu, Wenhao Huang, Kang Chen, Zhaolin Duan, Jingjie Zong, Wenxin Li, Deze Zeng, Dong Zhang, Wenyu Qu]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769318
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Title describes serverless workflow routing/orchestration; this is a system that consumes serverless function sandboxes rather than a virtualization/isolation mechanism, and no abstract was retrievable to check for a hidden mechanism contribution."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: N/A
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "Represents the 'consumes serverless' side of the brief's serverless threshold rule -- workflow/routing orchestration on top of already-isolated function sandboxes, contrasted with the mechanism papers (Squeezy, SKernel) in this same venue."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE: official program confirms title/authors/DOI (CC-BY open access) but OpenAlex's abstract field is null, ACM DL is blocked (403), and no arXiv preprint was found."
+
+- id: VIRT-EUROSYS26-10
+  title: "Efficient Data Passing for Serverless Inference Workflows: A GPU-Centric Approach"
+  title_correction: null
+  authors: [Hao Wu, Yaochen Liu, Minchen Yu, Qizhen Weng, Junxiao Deng, Yue Yu, Hao Fan, Song Wu, Wei Wang, Hai Jin]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769336
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769336
+  classification: CONTEXT
+  classification_note: "The contribution is a GPU-aware data-passing path for serverless ML inference workflows (avoiding host-memory round trips), which optimizes how already-isolated serverless functions exchange data rather than proposing a new virtualization/isolation mechanism."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T6]
+  physical_resource: GPU
+  logical_abstraction: "A direct GPU-to-GPU data channel between chained serverless inference functions, replacing host-memory-mediated data passing"
+  problem: "Serverless ML inference workflows chain heterogeneous CPU and GPU functions, but current data-passing mechanisms route exchanges through host memory, and existing GPU communication libraries (NCCL, NVSHMEM, UCX) are not designed for the ephemeral, dynamically-scheduled nature of serverless functions, causing duplicate data transfers, underutilized bandwidth, and wasteful temporary storage."
+  mechanism: "The system provides a GPU-centric data-passing path purpose-built for serverless inference pipelines, avoiding the host-memory bounce and the mismatch between long-lived-process-oriented GPU communication libraries and short-lived serverless functions."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "GPU memory/bandwidth is shared across chained serverless functions via the new direct data-passing path rather than through host-memory staging."
+  state_mechanism: "Intermediate tensors/activations passed between pipeline stages are kept on GPU rather than being staged through host memory."
+  overhead_bottleneck: "Host-memory round trips and duplicate data transfers caused by using process-oriented GPU communication libraries in a serverless (ephemeral, dynamically scheduled) setting."
+  primary_tradeoff: "A serverless-specific GPU data-passing path -> gains lower data-movement overhead between inference pipeline stages, at the cost of not being a general-purpose GPU communication library (i.e. specialized to the serverless execution pattern)."
+  quantitative_claims: []
+  why_useful_for_learning: "Illustrates a concrete inefficiency (host-memory-mediated GPU data passing) created by applying general GPU communication tooling to the serverless isolation/scheduling model -- useful CONTEXT for GPU-sharing/virtualization CORE papers."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Abstract obtained via OpenAlex ACM-DOI lookup; ACM DL PDF not accessible."
+
+- id: VIRT-EUROSYS26-11
+  title: "Serverless Replication of Object Storage across Multi-Vendor Clouds and Regions"
+  title_correction: null
+  authors: [Junyi Shu, Xiaolong Huang, Gang Huang, Hong Mei, Xuanzhe Liu, Xin Jin]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769367
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Title describes a multi-cloud object-storage replication system built using serverless functions; this consumes serverless infrastructure for a storage-replication application rather than contributing a virtualization/isolation mechanism."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: N/A
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "CONTEXT example of a real cross-cloud application built on serverless infrastructure, useful for understanding what workloads motivate serverless isolation/cold-start CORE research, if the mechanism turns out to be storage-focused rather than compute-isolation-focused."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE: official program confirms title/authors/DOI (CC-BY) but OpenAlex abstract field is null, ACM DL is blocked (403), no arXiv preprint found."
+
+- id: VIRT-EUROSYS26-12
+  title: "Demystifying Serverless Costs on Public Platforms: Bridging Billing, Architecture, and OS Scheduling"
+  title_correction: null
+  authors: [Changyuan Lin, Yiyi Ma, Mohammad Shahrad]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769374
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769374
+  classification: CONTEXT
+  classification_note: "A measurement/characterization study of how public serverless platforms' billing, architecture, and OS-scheduling choices translate into cost, i.e. it explains how sandbox/VM-level scheduling decisions surface as tenant-visible cost, but does not itself contribute an isolation or virtualization mechanism."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "A serverless function invocation as billed (wall-clock time, invocation fee, usage rounding) versus as actually scheduled on the underlying sandbox/VM"
+  problem: "Public serverless platforms charge a premium per unit time relative to container/VM rental, and the paper argues that opaque billing practices -- wall-clock time allocation, invocation fees, and usage rounding -- can substantially inflate real-world serverless costs beyond what raw compute usage would suggest."
+  mechanism: "The authors bridge platform billing rules, system architecture, and OS scheduling behavior to explain where serverless cost actually comes from, i.e. connecting a tenant's bill back to underlying sandbox scheduling and rounding decisions rather than proposing a new mechanism."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "N/A (measurement/characterization paper, not a new multiplexing mechanism)"
+  state_mechanism: N/A
+  overhead_bottleneck: "Billing granularity/rounding and invocation-fee structure, which the paper argues dominates real cost more than raw compute-time usage."
+  primary_tradeoff: "N/A -- descriptive/measurement paper rather than a mechanism with an explicit trade-off."
+  quantitative_claims: []
+  why_useful_for_learning: "Directly useful CONTEXT for understanding why the sandbox-lifecycle/pool-management CORE and SUPPORT papers in this batch (e.g. Squeezy, DROPS) matter economically: it connects the low-level mechanism cost to the tenant-visible bill."
+  priority: P2
+  related: [VIRT-EUROSYS26-16]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-16, basis: "Both examine the economics/architecture of production serverless resource pools (this paper on billing, DROPS on container-pool cost) for the same class of platform."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Abstract obtained via OpenAlex ACM-DOI lookup; ACM DL PDF not accessible in this environment."
+
+- id: VIRT-EUROSYS26-13
+  title: "Not A DPU in Name Only! Unleashing RDMA-capable DPUs in Multi-Tenant Serverless Clouds with NADINO"
+  title_correction: null
+  authors: [Shixiong Qi, Songyu Zhang, K. K. Ramakrishnan, Diman Zad Tootaghaj, Hardik Soni, Puneet Sharma]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769386
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Title strongly suggests a DPU resource-sharing/virtualization mechanism for multi-tenant clouds (which the brief's T3/SUPPORT criteria would likely cover), but no abstract or body text could be retrieved, so per hard rule 2 this is classified CONTEXT/LOW rather than SUPPORT."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T9]
+  physical_resource: NIC
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: "UNKNOWN at the evidence depth reached; title indicates enabling RDMA capability of SmartNIC-class DPUs to be actually usable ('not a DPU in name only') in multi-tenant serverless cloud settings."
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed as titled, would be a direct example of DPU/SmartNIC resource virtualization for multi-tenant isolation, relevant to the same T3 branch as BASK and NutCracker (this batch)."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE: official program confirms title/authors/DOI (CC-BY) but OpenAlex abstract field is null, ACM DL is blocked (403), no arXiv preprint found. Flagged for priority follow-up given the strong CORE/SUPPORT signal in the title."
+
+- id: VIRT-EUROSYS26-14
+  title: "In-Production Characterization of an Open Source Serverless Platform and New Scaling Strategies"
+  title_correction: null
+  authors: [Nima Nasiri, Nalin Munshi, Simon D. Moser, Marius Pirvu, Vijay Sundaresan, Daryl Maier, Thatta Premnath, Norman Böwing, Sathish Gopalakrishnan, Mohammad Shahrad]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769377
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769377
+  classification: CONTEXT
+  classification_note: "A production measurement/characterization study of an open-source serverless platform plus new scaling-policy proposals; it studies scheduling/scaling behavior on top of existing isolation mechanisms rather than contributing a new one."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: UNKNOWN
+  logical_abstraction: "A serverless platform's autoscaling policy for function instances, informed by real production workload traces"
+  problem: "Public datasets characterizing modern serverless systems lack the temporal resolution and production-representativeness needed to understand how today's more complex FaaS workloads actually behave, limiting the ability to design good scaling strategies."
+  mechanism: "The authors characterize a production deployment of an open-source serverless platform and, from that characterization, propose new scaling strategies."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "UNKNOWN -- scaling-policy detail not retrieved at abstract depth."
+  state_mechanism: N/A
+  overhead_bottleneck: "Insufficient production-representative characterization data, which the paper argues has led to scaling strategies mismatched to real workload behavior."
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "CONTEXT data point on how real, complex FaaS workloads behave in production, useful background for any CORE serverless-isolation-cost paper (e.g. Squeezy, DROPS, this batch)."
+  priority: P3
+  related: [VIRT-EUROSYS26-16]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Abstract (partial, cut before the scaling-strategy detail) obtained via OpenAlex ACM-DOI lookup; ACM DL PDF not accessible."
+
+- id: VIRT-EUROSYS26-15
+  title: "DROPS: Managing Serverless Resource Pools in Microsoft Azure Functions"
+  title_correction: null
+  authors: [Ahmed Alquraan, Abdelrahman Baba, Rafael Mendes, Sameh Elnikety, Paul Batum, Yan Chen, Hamid Henry Safi, Seth Fine, Samer Al-Kiswany]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769350
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769350
+  classification: SUPPORT
+  classification_note: "The paper's contribution is a policy for sizing/managing pools of pre-warmed sandbox containers, directly bearing on the container-allocation-latency-vs-idle-cost trade-off that motivates CORE sandbox-startup mechanisms; it manages sandbox lifecycle economics rather than an application built atop already-warm functions, so it lands on the SUPPORT side of the brief's threshold rather than plain CONTEXT."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: "A pool of pre-warmed (already-initialized) sandbox containers sized dynamically to trade off cold-start latency against idle-pool cost"
+  problem: "Azure Functions keeps pools of pre-warmed containers to avoid the high latency of allocating a fresh container per invocation, but pool sizing is a hard trade-off: undersized pools cause allocation-latency spikes and missed SLOs, oversized pools waste resources; production data shows sustaining these pools is the platform's single largest cost component."
+  mechanism: "DROPS manages Azure Functions' warm-container resource pools with a sizing/management approach that responds to this trade-off, informed by production data showing pool-maintenance cost dominates the platform's cost structure."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "A shared pool of pre-warmed sandbox containers is multiplexed across incoming function invocations, sized dynamically rather than statically over-provisioned."
+  state_mechanism: "Pre-warmed containers held in a pool are the 'state' being managed; the paper's contribution is when to create/retain/discard pool members."
+  overhead_bottleneck: "Container-allocation latency (when the pool is undersized) versus wasted idle-container cost (when oversized) -- explicitly identified in production data as the platform's largest cost component."
+  primary_tradeoff: "Dynamic (vs static/over-provisioned) warm-pool sizing -> gains lower total cost for a given latency SLO, at the cost of a sizing policy that must react correctly to shifting demand."
+  quantitative_claims:
+  - "sustaining container pools is stated to be the single largest cost component of the Azure Functions platform (per abstract; exact figure not read)"
+  why_useful_for_learning: "Explains the real economic pressure (idle-warm-pool cost) that motivates fast sandbox-reclamation CORE mechanisms like Squeezy (this batch) -- ties the T2 memory-reclamation branch to production cost data."
+  priority: P2
+  related: [VIRT-EUROSYS26-05, VIRT-EUROSYS26-12]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-05, basis: "Squeezy makes VM memory reclamation for serverless sandboxes fast; DROPS manages the resulting warm-sandbox pool's size/cost -- adjacent layers of the same sandbox-lifecycle-cost problem."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Abstract obtained via OpenAlex ACM-DOI lookup; ACM DL PDF not accessible in this environment."
+
+- id: VIRT-EUROSYS26-16
+  title: "Fix: externalizing network I/O in serverless computing"
+  title_correction: null
+  authors: [Yuhan Deng, Akshay Srivatsan, Sebastian Ingino, Francis Chua, Yasmine Mitchell, Matthew Vilaysack, Keith Winstein]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769387
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://arxiv.org/abs/2511.00205
+  classification: CONTEXT
+  classification_note: "Fix proposes a deterministic serverless computation model where the platform (not the function) performs all network I/O, which is an execution/programming-model contribution for consuming serverless compute, not a virtualization or isolation-boundary mechanism."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: "A serverless computation as a deterministic procedure over well-specified data/other-computation outputs, with all network I/O externalized to the platform"
+  problem: "In conventional serverless computing, functions perform their own I/O, which couples billing to wall-clock time spent waiting on the network ('pay-for-effort') and limits the platform's ability to schedule data movement efficiently."
+  mechanism: "Fix represents each computation as a deterministic procedure whose inputs/outputs are well-specified, so that all network data movement is performed exclusively by the platform rather than the function; applications declare precisely the data needed at each stage, letting the provider schedule tasks and transfers to reduce starvation and enabling a shift from 'pay-for-effort' to 'pay-for-results' billing."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "The platform (not individual function sandboxes) owns and schedules network transfers, allowing it to multiplex network resources across functions based on declared data dependencies."
+  state_mechanism: N/A
+  overhead_bottleneck: "Wasted billed time from functions idly waiting on their own network I/O, which externalizing I/O to the platform removes from the tenant's billed critical path."
+  primary_tradeoff: "Externalizing I/O to a deterministic, platform-scheduled model -> gains 'pay-for-results' billing and platform-level scheduling of data movement, at the cost of requiring computations to be expressed as deterministic procedures over well-specified data (restricting the programming model)."
+  quantitative_claims: []
+  why_useful_for_learning: "CONTEXT example of a serverless execution/billing-model redesign that sits above the sandbox isolation layer -- useful contrast to the sandbox-level mechanism papers (Squeezy, SKernel) in this batch."
+  priority: P3
+  related: [VIRT-EUROSYS26-12]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [preprint, official-web]
+  confidence: MEDIUM
+  notes: "Full abstract read from arXiv preprint 2511.00205 (Nov 2025 cs.OS listing); official EuroSys program independently confirmed title/authors/DOI. Author Keith Winstein's group (Stanford) is known for related deterministic/accountable-computing systems work (Mosh, Salsify)."
+
+- id: VIRT-EUROSYS26-17
+  title: "FlexPipe: Adapting Dynamic LLM Serving Through Inflight Pipeline Refactoring in Fragmented Serverless Clusters"
+  title_correction: null
+  authors: [Yanying Lin, Shijie Peng, Chengzhi Lu, ChengZhong Xu, Kejiang Ye]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769316
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769316
+  classification: CONTEXT
+  classification_note: "An LLM-serving pipeline-refactoring scheduler for fragmented serverless GPU clusters; it schedules/reshapes model-parallel pipelines on top of existing sandbox and GPU-sharing mechanisms rather than contributing an isolation or virtualization mechanism itself."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: GPU
+  logical_abstraction: "An LLM-serving inference pipeline whose stage-to-resource mapping can be refactored in-flight to fit fragmented, dynamically available serverless GPU capacity"
+  problem: "LLM serving in serverless clusters faces unpredictable request patterns and resource fragmentation, and fixed pipeline configurations cannot adapt to changing workload/resource conditions, causing inefficiency."
+  mechanism: "FlexPipe restructures (refactors) an LLM-serving pipeline's stage assignment while it is running, in response to real-time workload and fragmented-resource-availability changes, rather than relying on a fixed pipeline layout."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "Fragmented serverless GPU capacity is multiplexed across LLM pipeline stages by dynamically reshaping which stages run where."
+  state_mechanism: "In-flight pipeline state (partially processed requests / model stage assignments) must be preserved across a pipeline refactor; exact mechanism not retrieved at abstract depth."
+  overhead_bottleneck: "Resource fragmentation in serverless GPU clusters combined with unpredictable request patterns, which a fixed pipeline layout cannot absorb."
+  primary_tradeoff: "In-flight pipeline refactoring -> gains adaptability to fragmented/changing GPU availability, at the cost of refactoring overhead/complexity (not quantified at abstract depth)."
+  quantitative_claims: []
+  why_useful_for_learning: "CONTEXT example of an application-level (LLM-serving) scheduler that must work around GPU fragmentation -- relevant background for GPU-sharing/virtualization CORE and SUPPORT papers (e.g. Nixie, this batch) that aim to reduce such fragmentation at a lower layer."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Abstract (paraphrased/partial per OpenAlex reconstruction) obtained via ACM-DOI lookup; ACM DL PDF not accessible."
+
+# ---- EuroSys 2026 omissions promoted to full records (not on the seed list) ----
+
+- id: VIRT-EUROSYS26-18
+  title: "Pyramid: A Secure, Resource-Efficient, and Pluggable Kubernetes for Multi-Tenancy"
+  title_correction: null
+  authors: [Xiang Li, Weijie Liu, Fabing Li, Hongliang Tian, Zheli Liu, Shoumeng Yan, Mingyu Gao]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769324
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769324
+  classification: CORE
+  classification_note: "Contribution is a new two-layer secure-container architecture (an untrusted Kubernetes layer cooperating with a separate trusted-Kubernetes layer that launches TEE-secured computations), i.e. a confidential-computing container isolation architecture, matching the brief's CORE criteria directly."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T7]
+  physical_resource: CPU core
+  logical_abstraction: "A Kubernetes pod whose actual computation runs inside a hardware TEE, orchestrated by an untrusted k8s control plane that never sees tenant secrets, with minimal changes to commercial Kubernetes"
+  problem: "Cloud operators want both hardware TEE-grade data-processing security and Kubernetes-grade efficient multi-tenant container orchestration, but combining them naively either requires intrusive changes to Kubernetes or forces trusting the orchestration layer with tenant secrets."
+  mechanism: "Pyramid puts a separate, minimal, trusted Kubernetes layer on top of an unmodified (or near-unmodified) commercial Kubernetes cluster. The untrusted lower layer keeps doing resource scheduling across tenants to maximize utilization; a carefully designed interface and protection mechanism passes only the information needed to launch the actual computation, which runs secured inside a TEE, so the untrusted layer never handles tenant secrets."
+  isolation_mechanism: "Hardware TEE isolates tenant computation/data; a protocol boundary between the trusted and untrusted Kubernetes layers ensures the untrusted (resource-scheduling) layer only ever sees information necessary to launch TEE-secured workloads, not their contents."
+  multiplexing_mechanism: "The untrusted k8s layer performs ordinary Kubernetes resource scheduling/bin-packing across tenants; TEE-secured execution is layered on top without changing that multiplexing model."
+  state_mechanism: "UNKNOWN at abstract depth -- no detail on TEE attestation/lifecycle state management retrieved."
+  overhead_bottleneck: "The performance and intrusiveness cost of prior approaches to combining TEEs with Kubernetes, which Pyramid reduces via a two-layer split rather than deep modification of the orchestrator."
+  primary_tradeoff: "A separate trusted k8s layer over an unmodified untrusted k8s -> gains minimal intrusion into commercial Kubernetes plus utilization-preserving scheduling, at the cost of maintaining a second (trusted) control-plane layer and its interface protocol."
+  quantitative_claims:
+  - "1.4x higher throughput on the data plane versus prior work, with comparable control-plane performance (per abstract; workload/baseline details not read beyond this)"
+  why_useful_for_learning: "A clean example of layering a confidential-computing (TEE) isolation boundary underneath a standard cloud-native orchestration control plane -- directly complements TrustWeave and TZ-LLM (this batch) on the T7 confidential-computing branch, and CofferOS/SKernel on the T5 container-isolation branch."
+  priority: P1
+  related: [VIRT-EUROSYS26-06, VIRT-EUROSYS26-20]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-20, basis: "Both are confidential-computing isolation-architecture papers from overlapping Ant Group-affiliated authors (Pyramid: Fabing Li, Hongliang Tian, Shoumeng Yan; TrustWeave: different authors but same TDX/TEE cloud-security theme)."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Found while scanning the full official EuroSys 2026 accepted-papers list (http://2026.eurosys.org/papers.html) for virtualization-relevant papers missed by the seed list; not itself a seed. Abstract obtained via OpenAlex ACM-DOI lookup. Authors include Ant Group's secure-container/TEE researchers (Hongliang Tian, Shoumeng Yan) previously associated with Occlum-style confidential-computing work."
+
+- id: VIRT-EUROSYS26-19
+  title: "RoPeerTo: A Datacenter-Scale Architecture for Peer-To-Peer DMA between GPUs and FPGAs"
+  title_correction: null
+  authors: [Marco Venere, Giuseppe Sorrentino, Benjamin Ramhorst, Maximilian Jakob Heer, Lucian Petrica, Dario Korolija, Marco D. Santambrogio, Davide Conficconi, Gustavo Alonso, Ken O'Brien]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3803620
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3803620
+  classification: CORE
+  classification_note: "The abstract explicitly names virtualization, address translation, and access protection as part of the peer-to-peer DMA protocol stack between GPUs and FPGAs, i.e. a new device-virtualization/mediation mechanism for accelerator-to-accelerator communication, matching the brief's T3 CORE criteria (IOMMU/passthrough-like device virtualization)."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T6]
+  physical_resource: PCIe/CXL fabric
+  logical_abstraction: "A unified, high-level API for direct GPU<->FPGA memory access over PCIe, hiding vendor/hardware specifics behind a common DMA-based memory-sharing, address-translation and access-protection protocol stack"
+  problem: "Datacenters mix GPUs (good for massively parallel ML workloads) and FPGAs (good for task-level/stream/in-network acceleration), but there is no standard, datacenter-scale way for these heterogeneous accelerators to communicate directly (peer-to-peer) without routing through host memory/CPU."
+  mechanism: "RoPeerTo provides an open-source hardware/software stack implementing peer-to-peer DMA over PCIe between GPUs and FPGAs, including protocols for DMA-based memory sharing, virtualization, address translation, and access protection, exposed through a unified high-level API that hides the underlying hardware specifics."
+  isolation_mechanism: "Access protection as part of the DMA protocol stack bounds which peer-to-peer memory regions a given device/tenant can reach."
+  multiplexing_mechanism: "Address translation lets multiple accelerator-to-accelerator DMA flows share the PCIe fabric and each device's memory space without collision."
+  state_mechanism: "UNKNOWN at abstract depth -- no detail on how translation-table/mapping state is created or torn down was retrieved."
+  overhead_bottleneck: "The CPU/host-memory bounce and associated power/latency cost of routing GPU<->FPGA data through the host in the absence of a direct peer-to-peer path."
+  primary_tradeoff: "Direct peer-to-peer DMA with virtualization/translation/protection -> gains large speedups and host-CPU/GPU power savings for communication-heavy heterogeneous pipelines, at the cost of building and maintaining a cross-vendor hardware/software DMA stack."
+  quantitative_claims:
+  - "5.61x speedup with 37.99% GPU power reduction during data transfers (workload/hardware qualifiers not further specified in the retrieved abstract)"
+  - "6.77% improvement in partial-bottleneck scenarios"
+  - "21.79x acceleration for communication-intensive distributed computing applications"
+  why_useful_for_learning: "A concrete instance of device virtualization (address translation + access protection) applied between two different accelerator types (GPU and FPGA) rather than the more usual single-device-type case -- complements Proteus (this batch) on the accelerator-virtualization branch."
+  priority: P2
+  related: [VIRT-EUROSYS26-02]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-02, basis: "Both are 2026 EuroSys accelerator-virtualization/device-mediation papers targeting FPGAs in heterogeneous datacenter settings (Proteus for FPGA-FPGA heterogeneity, RoPeerTo for GPU-FPGA peer DMA)."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Found while scanning the full official EuroSys 2026 program for virtualization-relevant papers missed by the seed list; not itself a seed. Abstract via OpenAlex ACM-DOI lookup; ACM DL PDF not accessible."
+
+- id: VIRT-EUROSYS26-20
+  title: "TrustWeave: Integrity Measurement and Attestation For Multi-Cloud LLMs"
+  title_correction: null
+  authors: [Jianchang Su, Wenhui Zhang, Yifan Zhang, Kexin Chu, Hao Guo, Youyou Lu, Wei Zhang]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3803586
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3803586
+  classification: SUPPORT
+  classification_note: "Extends attestation for Intel TDX Confidential VMs (a CORE T7 abstraction) to cover runtime integrity, not boot-time only; it deepens/explains a CORE mechanism's trust model rather than proposing a new confidential-VM abstraction itself, so SUPPORT rather than CORE."
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T8]
+  physical_resource: CPU core
+  logical_abstraction: "A Confidential VM (Intel TDX CVM) whose runtime-loaded components (e.g. dynamically loaded LLM agent modules) can be attested throughout their operational lifecycle, not just at boot"
+  problem: "Intel TDX-based Confidential VMs give strong isolation and boot-time attestation, but multi-cloud multi-agent LLM systems dynamically load new models/components across distributed services at runtime, and TDX's boot-time-only attestation cannot verify the integrity of what gets loaded afterward."
+  mechanism: "TrustWeave extends the Linux Integrity Measurement Architecture (IMA) to use TDX's Runtime Measurement Registers (RTMRs), enabling userspace attestation of dynamically loaded agent components throughout their operational lifecycle rather than only at CVM boot."
+  isolation_mechanism: "Confidential VM (TDX) hardware isolation is the base isolation boundary; TrustWeave adds a runtime integrity-measurement chain (IMA + RTMRs) on top so that boundary's trust guarantee extends past boot time."
+  multiplexing_mechanism: N/A
+  state_mechanism: "Runtime measurement state is recorded into TDX's Runtime Measurement Registers as agent components load, extending the CVM's boot-time measurement chain into an ongoing runtime attestation log."
+  overhead_bottleneck: "The gap between TDX's strong boot-time attestation and the lack of any runtime integrity guarantee for components loaded afterward -- exactly the gap multi-agent LLM systems that dynamically load models expose."
+  primary_tradeoff: "Extending IMA with TDX RTMRs for runtime attestation -> gains ongoing (not just boot-time) trust guarantees for dynamically loaded components, at the cost of extra measurement/attestation machinery layered onto the existing CVM boot-attestation flow."
+  quantitative_claims: []
+  why_useful_for_learning: "Shows a concrete limitation of confidential-VM attestation (boot-time only) and one way to extend it, directly useful context for any CORE confidential-VM/TEE paper in the corpus."
+  priority: P2
+  related: [VIRT-EUROSYS26-18]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-18, basis: "Both are 2026 EuroSys confidential-computing papers addressing trust/isolation for multi-tenant TEE-based cloud deployments (Pyramid for orchestration, TrustWeave for runtime attestation)."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Found while scanning the full official EuroSys 2026 program for virtualization-relevant papers missed by the seed list; not itself a seed. Abstract via OpenAlex ACM-DOI lookup."
+
+- id: VIRT-EUROSYS26-21
+  title: "TZ-LLM: Protecting On-Device Large Language Models with Arm TrustZone"
+  title_correction: null
+  authors: [Xunjie Wang, Jiacheng Shi, Zihan Zhao, Yang Yu, Zhichao Hua, Jinyu Gu]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769334
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769334
+  classification: SUPPORT
+  classification_note: "Applies an existing hardware TEE (Arm TrustZone secure/normal world split) to a new threat model (protecting proprietary on-device LLM weights from the device's own end user); it engineers within an existing isolation boundary's constraints (e.g. limited secure-world memory) rather than proposing a new virtualization/TEE mechanism, landing on SUPPORT."
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: "An LLM whose proprietary weights execute inside Arm TrustZone's secure world, inaccessible to the (untrusted, from the model owner's perspective) normal-world OS and end user"
+  problem: "On-device LLM deployment gives users privacy and low latency, but it also exposes the model owner's proprietary weights directly to the end user's device, risking model theft/leakage."
+  mechanism: "TZ-LLM runs (or protects) the on-device LLM's proprietary components inside Arm TrustZone's secure world, using the normal-world/secure-world isolation boundary to keep model weights out of reach of the device owner/OS."
+  isolation_mechanism: "Arm TrustZone secure-world/normal-world hardware isolation is the boundary protecting model weights from the (untrusted from the IP owner's viewpoint) device OS and user."
+  multiplexing_mechanism: N/A
+  state_mechanism: "UNKNOWN at abstract depth -- no detail retrieved on how weights are loaded into/managed within the constrained secure-world memory."
+  overhead_bottleneck: "TrustZone's secure world is a well-known resource-constrained isolation boundary (limited memory, restricted execution); running an LLM's proprietary components inside it means confronting that constraint directly, though exact numbers were not retrieved."
+  primary_tradeoff: "Protecting model weights inside TrustZone's secure world -> gains IP/theft protection against the device's own OS/user, at the cost of operating within TrustZone's characteristically limited secure-world resources (memory/compute) -- the abstract for this record was truncated before this trade-off was quantified."
+  quantitative_claims: []
+  why_useful_for_learning: "A real-world illustration of TrustZone's secure/normal-world isolation being pushed into a new, resource-hungry workload (on-device LLM inference), which usefully stress-tests the same T7 hardware-TEE mechanism that confidential-VM CORE papers rely on."
+  priority: P3
+  related: [VIRT-EUROSYS26-20]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [official-web, documentation]
+  confidence: LOW
+  notes: "Found while scanning the full official EuroSys 2026 program for virtualization-relevant papers missed by the seed list; not itself a seed. OpenAlex-reconstructed abstract was cut off after one sentence (problem statement only); mechanism/evaluation not read."
+
+- id: VIRT-EUROSYS26-22
+  title: "Practical and Scalable RDMA Connection Sharing for HPC Workload"
+  title_correction: null
+  authors: [Yuejie Wang, Tuo Fang, Biyu Peng, Yang Cheng, Xin Sun, Chengchao Xu, Yuchen Tang, Yuxin Ren, Ning Jia, Xinwei Hu, Yunfei Du, Guyue (Grace) Liu]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3769381
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3769381
+  classification: SUPPORT
+  classification_note: "A mechanism for sharing (multiplexing) RDMA NIC connections among many HPC processes without the per-packet overhead of prior software-sharing approaches -- a device-sharing primitive that explains a NIC-scaling trade-off, matching the brief's SUPPORT criteria for accelerator/device-sharing primitives."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T9]
+  physical_resource: NIC
+  logical_abstraction: "A shared RDMA connection usable by many HPC processes without each process needing its own dedicated (and memory-costly) connection"
+  problem: "RDMA is a foundational HPC communication mechanism, but per-process connection state does not scale: as connection counts rise, performance degrades and memory usage grows sharply, and prior software approaches to sharing connections among processes impose substantial per-packet overhead."
+  mechanism: "The paper studies control policies for deciding how and when to share RDMA connections among processes so as to get most of the benefit of sharing (reduced connection/memory overhead) while avoiding the substantial per-packet cost of earlier software-based sharing schemes."
+  isolation_mechanism: "UNKNOWN at abstract depth -- not stated whether/how shared connections maintain per-process protection."
+  multiplexing_mechanism: "RDMA connections are shared (multiplexed) across multiple HPC processes rather than allocating one dedicated connection per process."
+  state_mechanism: "Per-connection state is the resource being economized; the paper's control policy determines connection-sharing decisions to bound this state's growth."
+  overhead_bottleneck: "Per-connection memory/state growth and performance degradation as RDMA connection counts scale with process count."
+  primary_tradeoff: "Sharing RDMA connections via a careful control policy -> gains scalability (bounded connection/memory growth) without the earlier per-packet overhead penalty of naive software-based sharing."
+  quantitative_claims: []
+  why_useful_for_learning: "A NIC/RDMA-resource-sharing case study directly parallel to SmartNIC/DPU offload papers in this batch (BASK, NADINO) -- illustrates the general 'many tenants, one physical device' multiplexing problem at the network-interface layer."
+  priority: P3
+  related: [VIRT-EUROSYS26-07]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [official-web, documentation]
+  confidence: MEDIUM
+  notes: "Found while scanning the full official EuroSys 2026 program for virtualization-relevant papers missed by the seed list; not itself a seed. Abstract (partial) via OpenAlex ACM-DOI lookup."
+
+- id: VIRT-EUROSYS26-23
+  title: "Wayfinder: Automated Operating System Specialization"
+  title_correction: null
+  authors: [Alexander Jung, Cezar Crăciunoiu, Nikolaos Karaolidis, Hugo Lefeuvre, Daniel Oñoro Rubio, Felipe Huici, Charalampos Rotsos, Pierre Olivier]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3803589
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3803589
+  classification: CONTEXT
+  classification_note: "The retrieved abstract describes a general automated OS-configuration-specialization framework (multi-objective: performance, memory, security) without explicitly naming unikernels, VMs, or containers as the target, so despite the authors' well-known unikernel (Unikraft) background this cannot be classified CORE from the evidence actually read; ambiguous, so CONTEXT per the brief's rule."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: "An automatically-derived, specialized OS/kernel configuration tuned for a specific application's performance, memory, or security objective"
+  problem: "OS specialization (customizing kernel configuration for an application) is valuable but its configuration space is enormous, hard to evaluate, slow to test per-configuration, and prone to invalid combinations; existing automated approaches only handle feature toggling for memory/security minimization and cannot target performance objectives."
+  mechanism: "Wayfinder is an automated OS-specialization framework able to target multiple optimization objectives (not just memory/security minimization but also performance), addressing the configuration-space search problem that manual or narrowly-scoped automated approaches cannot."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: "The combinatorial size and validity constraints of modern OS configuration spaces, and the long per-configuration evaluation time this creates for prior automated specialization tools."
+  primary_tradeoff: "Automated multi-objective specialization search -> gains configurations tuned for performance as well as memory/security, at the cost of a more complex search/evaluation framework than single-objective feature-toggling tools."
+  quantitative_claims: []
+  why_useful_for_learning: "If later confirmed to target unikernel-style specialized OS images (consistent with the authors' Unikraft lineage), would be directly CORE T5 material on automatically producing minimal/specialized guest images; flagged here for a follow-up read rather than assumed."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [official-web, documentation]
+  confidence: LOW
+  notes: "Found while scanning the full official EuroSys 2026 program for virtualization-relevant papers missed by the seed list; not itself a seed. Authors (Jung, Lefeuvre, Huici, Olivier) are core Unikraft/unikernel developers, a strong prior for a CORE unikernel-specialization paper, but the abstract text actually retrieved (via OpenAlex, partial) does not itself confirm a unikernel/VM/container target, so classification follows the weaker literal evidence rather than the authorship prior; recommended for reclassification once the full paper is read."
+
+- id: VIRT-EUROSYS26-24
+  title: "NutCracker: A Compilation Framework for Hybrid DPU Architectures"
+  title_correction: null
+  authors: [Yihan Yang, Haifeng Sun, Antoine Kaufmann, Jialin Li]
+  venue: EuroSys
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3767295.3803618
+  official_url: http://2026.eurosys.org/papers.html
+  fullpaper_source: https://api.openalex.org/works/doi:10.1145/3767295.3803618
+  classification: DROP
+  classification_note: "A compiler that lets programmers target heterogeneous DPU/SmartNIC hardware with a high-level, target-independent language; the contribution is compiler portability/productivity across DPU vendors, not a resource-sharing, multiplexing, or isolation mechanism, so it does not fit CORE, SUPPORT, or CONTEXT roles and is a keyword-driven false positive on 'DPU'."
+  drop_reason: keyword_false_positive
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: NIC
+  logical_abstraction: "A single high-level, target-independent DPU program that the compiler lowers to different vendors' SmartNIC/DPU hardware"
+  problem: "SoC-based SmartNICs/DPUs can offload infrastructure services, but exploiting them requires deep hardware-specific knowledge from developers, limiting adoption."
+  mechanism: "NutCracker is a compiler framework letting programmers write DPU applications in a high-level, target-independent language; it lowers this through progressive intermediate representations with cost-guided mapping optimization to generate code for specific DPU hardware."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: "Developer effort/expertise required to hand-write hardware-specific DPU offload code."
+  primary_tradeoff: "Compiling from a high-level DPU language -> gains ~90% less developer effort with performance within 3% of hand-written code, at (implicitly) some loss of low-level control versus hand-tuned implementations."
+  quantitative_claims:
+  - "~90% reduction in developer effort versus hand-crafted implementations across eight evaluated applications, with performance within 3% of hand-crafted code, and compilation time comparable to standard toolchains such as GCC"
+  why_useful_for_learning: "Not directly useful for the virtualization corpus, but is adjacent background on programming heterogeneous DPU/SmartNIC hardware, the same hardware class that BASK and NADINO (this batch) target for cloud memory/RDMA offload."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web, documentation]
+  confidence: HIGH
+  notes: "Found while scanning the full official EuroSys 2026 program for virtualization-relevant papers missed by the seed list; recorded as DROP (not simply omitted) per instructions to record every candidate examined."
+
+# ============================= OSDI 2026 =============================
+
+- id: VIRT-OSDI26-01
+  title: "JANUS: Cross-World, Cooperative Nested Virtualization for Secure Containers"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title: the paper could not be located in the accessible portion of the official OSDI 2026 program, on arXiv, or via any other reachable source, so per the record-schema hard rule this is CONTEXT/LOW rather than the CORE classification the title (a nested-virtualization architecture for secure containers) would otherwise strongly suggest."
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: "UNKNOWN at the evidence depth reached; title indicates a cooperative nested-virtualization design spanning 'worlds' (likely secure/normal-world or L0/L1/L2 hypervisor layers) intended to secure containers."
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed as titled, would be a direct T1 CORE paper on nested virtualization for secure-container isolation, complementary to NecoFuzz (this batch, EuroSys), which fuzzes exactly the nested-virtualization interface such an architecture would rely on."
+  priority: P0
+  related: [VIRT-EUROSYS26-03]
+  relations:
+  - {type: LAYER_ABOVE, target: VIRT-EUROSYS26-03, basis: "If JANUS is indeed a cooperative nested-virtualization architecture, it would sit above the hardware-assisted nested-virtualization mechanism (VMCS/VMCB handling) that NecoFuzz tests for correctness."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE (extensive): the official OSDI 2026 technical-sessions page (usenix.org/conference/osdi26/technical-sessions) is a single very large page that this environment's fetch tool truncates at a fixed ~285,000-character limit -- consistently cutting off partway through Tuesday morning (paper #44 of an unknown total), before reaching this title; the truncation point was verified to be identical across five independent fetch attempts with different prompts/cache-busting query strings, ruling out prompt-dependent behavior. Also tried and failed: guessed USENIX presentation-page URL slugs (404), DBLP (blocked by proxy policy), ACM DL (403 to automated fetches), Semantic Scholar API (persistent 429 across ~6 attempts over 10+ minutes), Google/Bing/DuckDuckGo/Startpage/Marginalia search (blocked as disallowed/proxy domains), GitHub code/repo search (robots-disallowed), and browsing arXiv's cs.OS listing month-by-month from 2025-09 through 2026-06 plus cs.DC for 2025-12 and cs.CR for 2025-12 (none contained this title). WebSearch tool was unavailable (session budget exhausted before this task began). This and the other unresolved OSDI seeds below should be re-attempted once usenix.org is reachable without truncation."
+
+- id: VIRT-OSDI26-02
+  title: "M3U: Scalable Kernel Memory Management for Efficient Post-Copy Live Migration of High-End Virtual Machines"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); title indicates a kernel memory-management mechanism for scaling post-copy live migration to large ('high-end') VMs, which would be CORE T4 if confirmed."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T2]
+  physical_resource: DRAM
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, would be a direct complement to the EuroSys 2026 heterogeneous-processor live-migration paper (this batch) on the same T4 migration branch, addressing scale (large-memory VMs) rather than processor heterogeneity."
+  priority: P1
+  related: [VIRT-EUROSYS26-04]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS26-04, basis: "Both are 2026 live-migration papers; if confirmed, M3U addresses post-copy scalability for large VMs while the EuroSys paper addresses cross-processor feasibility -- complementary open problems in the same migration branch."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: same exhaustive and unsuccessful retrieval attempts as VIRT-OSDI26-01 (official program page truncated before this title; arXiv cs.OS/cs.DC/cs.CR browsing across ~10 months found nothing; DBLP/ACM DL/Semantic Scholar/search engines all blocked or persistently rate-limited). Flagged P0/P1 priority read by the task brief; needs a direct-access retry."
+
+- id: VIRT-OSDI26-03
+  title: "Compaction-Free Memory Defragmentation for Virtualization via Infinite Guest Physical Address Space"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); title indicates a guest-physical-address-space redesign to avoid memory-compaction cost under virtualization, which would be CORE T2 (guest physical address space is one of the brief's explicit CORE examples) if confirmed."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T1]
+  physical_resource: DRAM
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, directly extends the guest-physical-memory-virtualization branch (alongside HyperAlloc, batch1, and Squeezy, this batch) by attacking fragmentation via address-space design rather than page reclamation."
+  priority: P0
+  related: [VIRT-EUROSYS25-03, VIRT-EUROSYS26-05]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: same exhaustive and unsuccessful retrieval attempts as VIRT-OSDI26-01/02. Flagged P0 priority read by the task brief; needs a direct-access retry once usenix.org/arXiv access is unblocked."
+
+- id: VIRT-OSDI26-04
+  title: "Inside Out: A Paradigm Shift in VM Introspection"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); VM introspection is an explicit CORE T1 example in the brief, and the title claims a fundamental ('paradigm shift') redesign of it, but no content beyond the title could be verified."
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary: [T7]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, would be a priority-read foundational VM-introspection paper for the corpus's security/observability branch."
+  priority: P0
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: same exhaustive and unsuccessful retrieval attempts as the other unresolved OSDI seeds (see VIRT-OSDI26-01 note for the full list of routes tried and failed). One promising lead -- Mohammad Sina Karvandi (creator of the HyperDbg VMI/hypervisor-debugging tool, a plausible author for a VM-introspection paper) -- was followed via his known personal sites (hyperdbg.org, rayanfam.com) but neither listed a publications page or mentioned this title. Flagged P0 priority read by the task brief; needs a direct-access retry."
+
+- id: VIRT-OSDI26-05
+  title: "Blowfish: Elastic Virtual Machine Memory for Disaggregated Memory"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); the title's own framing ('elastic VM memory for disaggregated memory') matches the brief's rule that disaggregation is CORE only when a virtual resource abstraction is built over the pool, so if confirmed as titled this would be CORE T2, but no content was retrievable."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T9]
+  physical_resource: PCIe/CXL fabric
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, would directly link the memory-disaggregation/CXL branch to VM memory elasticity, complementing MTTM (this batch, EuroSys) which addresses multi-tenant fairness over a similar tiered-memory substrate."
+  priority: P0
+  related: [VIRT-EUROSYS26-08]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: same exhaustive and unsuccessful retrieval attempts as the other unresolved OSDI seeds. Flagged P0 priority read by the task brief; needs a direct-access retry."
+
+- id: VIRT-OSDI26-06
+  title: "Nixie: Efficient, Transparent Temporal Multiplexing for Consumer GPUs"
+  title_correction: null
+  authors: [Yechen Xu, Yifei Wang, Nathanael Ren, Yiran Chen, Danyang Zhuo]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: https://arxiv.org/abs/2601.11743
+  classification: CORE
+  classification_note: "Nixie's contribution is a transparent GPU temporal-multiplexing mechanism -- ensuring one application's working set fully occupies GPU memory at a time and switching between applications via explicit, coordinated migration -- which is a GPU resource-virtualization/multiplexing mechanism, not merely a scheduler over an already-virtualized GPU, matching the brief's CORE bar for accelerator virtualization."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T2]
+  physical_resource: GPU
+  logical_abstraction: "A consumer GPU whose full memory capacity is time-shared, in whole-working-set units, across multiple unmodified interactive/ML applications with virtual-address-consistent transparency"
+  problem: "Consumer machines increasingly run large ML workloads (LLMs, image generation/editing) whose memory footprints individually saturate a single consumer GPU, but existing options fail: stop-and-restart approaches (llama-swap) incur multi-second reload delays, application-specific tools (Ollama) cannot coordinate across different applications, and NVIDIA's Unified Virtual Memory (UVM) causes severe page-thrashing (4-12x slowdown), uses only one PCIe direction at a time, and requires excessive CPU pinned memory (e.g. 72 GB for three 24 GB applications)."
+  mechanism: "Nixie comprises a Shim (an LD_PRELOAD library interposing on the CUDA Runtime API in each application) and a Daemon (a centralized coordinator). On a scheduling decision, the Daemon pauses the currently-competing application, waits for its outstanding kernels, migrates its memory chunks (capped at 128 MB, subdivided into 2 MB blocks) into shared pinned memory, migrates the newly-scheduled application's chunks into GPU memory using full-duplex (simultaneous both-directions) PCIe transfer planning, then re-enables execution. CUDA virtual addresses are kept consistent across migrations via the CUDA VMM API, so applications need no modification. Scheduling uses an MLFQ-inspired policy with idleness detection (100 ms timeout) and starvation-avoiding priority inference, plus prefetching of the next-queued application's data."
+  isolation_mechanism: "Ensures at most one application's full working set is resident on the GPU at a time (rather than letting the OS/driver page piecemeal), preventing the thrashing that undermines UVM's isolation of concurrent workloads; explicitly designed for single-user, same-UID processes, not multi-tenant security isolation."
+  multiplexing_mechanism: "Whole-application-working-set temporal multiplexing of GPU memory and compute, coordinated by a central Daemon rather than left to demand-paging (UVM) or per-application heuristics (Ollama)."
+  state_mechanism: "GPU-resident memory chunks (2 MB blocks, 128 MB chunk cap) are the migrated state, moved to/from a shared CPU pinned-memory tier via a global migration plan that schedules all chunk transfers' source/destination simultaneously rather than sequentially evict-then-fetch."
+  overhead_bottleneck: "PCIe bandwidth direction (UVM only uses one direction at a time) and CPU pinned-memory footprint (UVM must back all GPU-resident data with pinned memory) are the two costs Nixie's full-duplex, working-set-aware migration is designed to cut."
+  primary_tradeoff: "Explicit, coordinated whole-working-set migration instead of demand-paged UVM -> gains up to 3.8x lower latency for interactive tasks and 66.8% less pinned-memory use at equal latency, but costs assuming single-user/same-UID trust (no multi-tenant security isolation) and targeting large, memory-saturating applications rather than many small ones (acknowledged as future work for combining with spatial multiplexing)."
+  quantitative_claims:
+  - "3.1-3.8x latency improvement over nvshare for interactive code-completion tasks under background load (W=4 setting)"
+  - "44.0-82.3% time-to-first-token reduction vs UVM/nvshare for Ollama; 29.7-36.3% for SGLang"
+  - "achieves roughly 2x UVM's PCIe bandwidth utilization, near the theoretical bidirectional maximum"
+  - "matches UVM performance while using only 33.2-40.2% of UVM's pinned memory; 66.8% overall CPU pinned-memory reduction"
+  - "on a second RTX A5000 testbed: 3.4x faster than nvshare, reaching 73% of dedicated (exclusive-GPU) performance"
+  - "ResNet-18/152 inference throughput identical to exclusive execution and to plain UVM (no regression for compute-bound, non-thrashing workloads)"
+  - "implementation size: ~10,000 lines of Rust (1,900 Shim / 7,400 Daemon / 700 shared)"
+  why_useful_for_learning: "A clean, fully-read case study of GPU temporal multiplexing built as an explicit migration mechanism rather than relying on demand-paged virtual memory (UVM), directly showing the isolation/multiplexing/state-movement mapping the brief asks every CORE paper to be read through."
+  priority: P0
+  related: []
+  relations:
+  - {type: CONTRASTS_WITH, target: "NVIDIA Unified Virtual Memory (UVM) / nvshare / TGS (baselines)", basis: "Nixie is explicitly designed and evaluated against demand-paging (UVM/nvshare) and priority-scheduling (TGS) alternatives for consumer-GPU multiplexing, with quantitative comparisons for all three."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [preprint]
+  confidence: HIGH
+  notes: "Read via arXiv preprint 2601.11743 (submitted 2026-01-16), which supplied full abstract, architecture, evaluation, and limitations; the arXiv record itself carries no explicit 'accepted at OSDI 2026' note, so the OSDI venue/session placement is taken on the strength of the exact title match to the seed list rather than independently confirmed in the official USENIX program (which this environment could not fetch past its first ~44 papers). DOI/official_url left UNKNOWN for this reason; should be filled in once the official program is reachable."
+
+- id: VIRT-OSDI26-07
+  title: "uShell: A Microkernel-based FPGA Shell Architecture"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); a microkernel-based FPGA 'shell' (the infrastructure layer multiplexing an FPGA between application logic regions) would be CORE T6/T3 if confirmed, directly analogous to the brief's FPGA-virtualization criterion."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T3]
+  physical_resource: FPGA
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, would be a direct complement to Proteus and RoPeerTo (this batch, EuroSys) on the FPGA-virtualization branch, specifically addressing the shell/multiplexing-infrastructure layer rather than cross-vendor heterogeneity or peer-to-peer DMA."
+  priority: P1
+  related: [VIRT-EUROSYS26-02, VIRT-EUROSYS26-19]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: same exhaustive and unsuccessful retrieval attempts as the other unresolved OSDI seeds. Flagged priority read by the task brief; needs a direct-access retry."
+
+- id: VIRT-OSDI26-08
+  title: "Virtualizing eBPF with Late-Binding"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); the title's own framing (virtualizing an in-kernel extension mechanism) suggests a new isolation/multi-tenancy layer for eBPF itself, which is closer to SUPPORT (multi-tenant BPF-as-a-service infrastructure) than a classic VM/hypervisor CORE topic, pending actual content."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, would extend the corpus's isolation/multi-tenancy branch to in-kernel extension frameworks (eBPF) rather than VMs/containers -- relevant background for gpu_ext (an arXiv preprint found during this search, 'Extensible OS Policies for GPUs via eBPF', a related but distinct paper)."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: same exhaustive and unsuccessful retrieval attempts as the other unresolved OSDI seeds; a related but distinct arXiv preprint ('gpu_ext: Extensible OS Policies for GPUs via eBPF', cs.OS Dec 2025) was found during the search but is a different paper by different authors, not this one."
+
+- id: VIRT-OSDI26-09
+  title: "vBOIDs: Taming Chaos via Coarse-Grained Scheduling Abstraction for Containers"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); a new coarse-grained container-scheduling abstraction sits closer to the brief's T9 resource-management/multi-tenancy SUPPORT territory than to a new isolation boundary, but this is a guess pending actual content -- kept CONTEXT per the hard rule regardless."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, would inform how coarser scheduling granularity trades off against per-container control, relevant background for any CORE container-isolation paper needing a scheduling story (e.g. SKernel, CofferOS, this batch)."
+  priority: P2
+  related: [VIRT-EUROSYS26-01, VIRT-EUROSYS26-06]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: same exhaustive and unsuccessful retrieval attempts as the other unresolved OSDI seeds. This is one of the two titles the task explicitly flagged as needing a careful layer call (alongside Arca); that call could not be made without the actual text."
+
+- id: VIRT-OSDI26-10
+  title: "Continuation-Centric Computing with Arca"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); 'continuation-centric computing' sounds like a general execution-model contribution (possibly for serverless/checkpoint-restore) rather than a virtualization mechanism per se, but the layer call the task asked for could not be made without the text."
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary: [T8]
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If continuations are used as a checkpoint/restore or migration primitive, would connect directly to the T4 migration/checkpoint branch; if purely a language/runtime construct, more likely CONTEXT or DROP -- undetermined without the text."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: same exhaustive and unsuccessful retrieval attempts as the other unresolved OSDI seeds. This is the second of the two titles the task explicitly flagged as needing a careful layer call (alongside vBOIDs); that call could not be made without the actual text."
+
+- id: VIRT-OSDI26-11
+  title: "Rethinking Process Snapshots for Near-Warm Serverless Cold Starts"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); process-snapshot mechanisms for cold-start reduction are exactly the brief's 'mechanism that makes isolation cheap' CORE/SUPPORT case (snapshot/restore), but no content was retrievable to confirm or characterize the mechanism."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T8]
+  physical_resource: DRAM
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, would be a direct complement to Squeezy and DROPS (this batch, EuroSys) on the serverless-sandbox-startup-cost branch, attacking cold start via snapshotting rather than memory reclamation or pool sizing."
+  priority: P1
+  related: [VIRT-EUROSYS26-05, VIRT-EUROSYS26-15]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: same exhaustive and unsuccessful retrieval attempts as the other unresolved OSDI seeds. A related but distinct arXiv preprint ('Taming Serverless Cold Starts Through OS Co-Design', Holmes/Dinis/Honcharuk/Fried/Belay, MIT CSAIL, arXiv:2509.14292) was found during the search and covers the same problem area (serverless cold starts, OS-level mechanism) but has a different title and was not confirmed to be the same paper, so it was not used to fill this record; flagged in possible_omissions instead."
+
+# ---- OSDI 2026 Operational Systems track (OPERATIONAL_REFERENCE) ----
+
+- id: VIRT-OSDI26-12
+  title: "What Are You (M)Waiting For: The Hidden Cost of Idle in the Hyperscale Cloud"
+  title_correction: null
+  authors: [Yun Wang, Xingguo Jia, Ben Luo, Kenan Liu, Shengdong Dai, Jingdong Han, Weihao Chen, Yicheng Gu, Xingzi Yu, Yibin Shen, Jiesheng Wu, Zhengwei Qi, Haibing Guan]
+  venue: OSDI
+  year: 2026
+  publication_type: OPERATIONAL_REFERENCE
+  doi: UNKNOWN
+  official_url: https://www.usenix.org/conference/osdi26/technical-sessions
+  fullpaper_source: https://www.usenix.org/conference/osdi26/technical-sessions
+  classification: CORE
+  classification_note: "The paper's mechanism (mwait-sched) is a hypervisor-level vCPU idle-state scheduling/passthrough redesign -- a direct T1 CPU-virtualization mechanism -- even though its publication_type is Operational Systems and so it is excluded from regular-research statistics per the brief."
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "A vCPU whose idle (mwait) state is scheduled deterministically by the hypervisor so that idle time behaves predictably under oversubscription, instead of the guest's own mwait instruction directly controlling physical-core residency"
+  problem: "Idle-passthrough mechanisms, in particular mwait-passthrough (letting a guest's idle/mwait instruction act close to bare metal), work well in 1:1 (dedicated-core) VM placements but break down in oversubscribed hyperscale production environments: an idle vCPU using mwait-passthrough can monopolize a physical core in a way that degrades the latency of other, co-located, actually-busy workloads."
+  mechanism: "The authors introduce mwait-sched, which reconciles bare-metal-like idle performance with predictable CPU multiplexing by replacing raw mwait-passthrough with deterministic, timer-based emulation of idle states combined with fine-grained classification of what kind of 'idle' a vCPU is actually in, so the hypervisor's scheduler can make informed decisions about reclaiming that core time."
+  isolation_mechanism: "Deterministic, timer-based idle emulation bounds how long an ostensibly-idle vCPU can hold a physical core via mwait, preventing it from degrading colocated tenants' latency -- a performance-isolation mechanism specific to the idle/mwait path."
+  multiplexing_mechanism: "Physical cores are time-multiplexed across vCPUs under oversubscription; mwait-sched's fine-grained idle classification lets the scheduler decide when an 'idle' vCPU's core time can safely be given to another tenant versus when the vCPU needs to keep near-bare-metal idle-wake latency."
+  state_mechanism: "Per-vCPU idle-classification state (what kind of idle the vCPU is in) drives the timer-based emulation decision; exact data structures not given at this evidence depth."
+  overhead_bottleneck: "Idle vCPUs monopolizing physical cores under mwait-passthrough in oversubscribed settings, degrading colocated application latency -- identified as a 'hidden cost of idle' in hyperscale fleets."
+  primary_tradeoff: "Deterministic timer-based idle emulation with fine-grained classification -> gains predictable CPU multiplexing under oversubscription without sacrificing bare-metal-like idle-wake responsiveness, at the cost of replacing simple mwait-passthrough with a more complex hypervisor-mediated idle path."
+  quantitative_claims: []
+  why_useful_for_learning: "A production-scale (Alibaba-affiliated authorship) illustration of why a seemingly simple hardware-passthrough optimization (mwait-passthrough) breaks under the multi-tenant oversubscription that virtualization exists to enable -- directly useful CORE/operational context for any CPU-virtualization paper discussing idle-state or passthrough trade-offs."
+  priority: P1
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN
+  evidence_kinds: [official-web, program-only]
+  confidence: MEDIUM
+  notes: "Full author list and a solid mechanism-level description (problem, mwait-sched, deterministic timer-based emulation, fine-grained idle classification) were obtained directly from the official USENIX OSDI 2026 technical-sessions program page (within its accessible first ~44 entries, session 'Kernel Scheduling and Tail Latency', explicitly marked 'Operational Systems Paper'); the full paper PDF/abstract text itself was not reached, so no quantitative claims are recorded. Authors include SJTU faculty (Zhengwei Qi, Haibing Guan) and Alibaba engineers (Jiesheng Wu), consistent with a hyperscale-cloud operational paper."
+
+- id: VIRT-OSDI26-13
+  title: "DVLA: Dynamic VM Lifetime Aware Scheduling for Drifting Lifetime Distributions and Long-Lived VM Placement Debt"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: OPERATIONAL_REFERENCE
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); a VM-lifetime-aware placement/scheduling policy is a T9 resource-management mechanism constrained by virtualization semantics (matching the brief's SUPPORT criteria) if confirmed, but no content was retrievable."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T1]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, would be directly comparable to VMR2L (batch1, EuroSys 2025), another VM-placement/rescheduling paper, but addressing lifetime-distribution drift and accumulated placement debt rather than fragmentation."
+  priority: P2
+  related: [VIRT-EUROSYS25-02]
+  relations:
+  - {type: SAME_BRANCH, target: VIRT-EUROSYS25-02, basis: "Both are VM placement/scheduling papers addressing long-run fleet-management problems (VMR2L: CPU fragmentation via migration; DVLA, if confirmed: lifetime-distribution drift and placement debt)."}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: this title (one of the three seeded Operational Systems track papers) was not among the ~44 papers this environment could retrieve from the official OSDI 2026 technical-sessions page before it was truncated; not found via arXiv cs.OS/cs.DC browsing either. publication_type is nonetheless set to OPERATIONAL_REFERENCE per the task's explicit instruction that these three seeds belong to that track, independent of how much content could be verified."
+
+- id: VIRT-OSDI26-14
+  title: "Stop Pretending to Be Busy: A Case for Serverless Paradigms in Co-Located Batch Workloads"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: OSDI
+  year: 2026
+  publication_type: OPERATIONAL_REFERENCE
+  doi: UNKNOWN
+  official_url: UNKNOWN
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Could not get past the title (see access-failure note); title suggests applying the serverless execution model to opportunistic batch workloads co-located with latency-sensitive tenants, which reads as a CONTEXT-level application of serverless/co-location ideas rather than a new isolation mechanism, but this is unconfirmed."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "If confirmed, would be a real-world operational data point on using serverless-style isolation/scheduling for batch workloads sharing hosts with latency-sensitive tenants -- background for the same oversubscription problem 'What Are You (M)Waiting For' (this batch) addresses at the vCPU-idle level."
+  priority: P2
+  related: [VIRT-OSDI26-12]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: []
+  confidence: LOW
+  notes: "ACCESS FAILURE: this title (one of the three seeded Operational Systems track papers) was not among the ~44 papers this environment could retrieve from the official OSDI 2026 technical-sessions page before it was truncated; not found via arXiv browsing either. publication_type is nonetheless set to OPERATIONAL_REFERENCE per the task's explicit instruction."

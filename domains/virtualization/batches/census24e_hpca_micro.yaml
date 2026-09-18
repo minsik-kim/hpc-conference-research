@@ -1,0 +1,2083 @@
+papers:
+- id: VIRT-HPCA24-01
+  title: 'Data Enclave: A Data-Centric Trusted Execution Environment'
+  title_correction: null
+  authors:
+  - Yuanchao Xu
+  - James Pangia
+  - Chencheng Ye
+  - Yan Solihin
+  - Xipeng Shen
+  venue: HPCA
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: http://yuanchaoxu6.github.io/files/HPCA2024_DataEnclave.pdf
+  classification: CORE
+  classification_note: The contribution is a new data-centric TEE abstraction (independently-lived 'data
+    enclaves' decoupled from SGX enclave lifecycle) that redefines the trust/isolation boundary for inter-enclave
+    sharing, i.e. confidential-computing isolation architecture is the paper's main contribution.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T2
+  physical_resource: DRAM
+  logical_abstraction: Independently-lived 'data enclave' objects that any number of authenticated SGX
+    enclaves can attach to with asymmetric read/write permissions
+  problem: Existing enclave TEEs bind data lifecycle to a single enclave, forcing slow software encryption
+    or inflexible sharing schemes for legitimate inter-enclave data exchange.
+  mechanism: Introduces 'data enclaves' as separate cryptographically-isolated containers with their own
+    AES counter-mode keys, integrity trees and access-control metadata cached in a 32-entry structure
+    in the memory controller; an Authenticator enclave verifies measurements before granting attach permissions,
+    and 'attachable integrity trees' let multiple data enclaves compose under an SGX enclave's Merkle
+    root to bound on-chip root-register pressure.
+  isolation_mechanism: Per-data-enclave AES-CTR keys and MACs/integrity trees give cryptographic isolation;
+    TLB-enforced access control faults on non-SGX or unauthorized-enclave accesses; measurement-based
+    authentication blocks rogue-enclave impersonation and replica attacks.
+  multiplexing_mechanism: N-to-M attach relationships let many enclaves share one data enclave's physical
+    DRAM region directly in place, instead of each enclave holding a private encrypted copy.
+  state_mechanism: Data enclave state (ciphertext, counters, MAC/integrity-tree nodes) lives in DRAM regions
+    outside any one enclave's private EPC; a data-enclave cache in the memory controller tracks PFN ranges/IDs/permissions,
+    and attachable trees move state between an independent root and a hosting SGX enclave's root as needed.
+  overhead_bottleneck: Integrity-tree management once many data enclaves exceed the MEE's limited on-chip
+    root-register capacity, forcing tree sealing/spilling to DRAM.
+  primary_tradeoff: Decoupling data from enclave lifecycle -> gains 1-3 orders of magnitude faster inter-enclave
+    sharing and 20-179% application throughput over scalable SGX, but costs new hardware (data-enclave
+    cache, extra root registers) and a new attach-authentication protocol surface.
+  quantitative_claims:
+  - 'synthetic producer-consumer inter-enclave sharing: up to 2000x latency speedup vs scalable SGX (4KB
+    messages, gem5, x86-64 4GHz single core)'
+  - 'IOZone random read: 1.5-3.2x bandwidth vs scalable SGX (16KB records)'
+  - 'recommender system (64 users): 1.6-2.1x throughput vs scalable SGX'
+  - 'Redis 100% search workload: 81-179% throughput improvement vs scalable SGX'
+  - 'SPEC CPU microbenchmarks: 13.1% average improvement (hybrid design) vs SGXv1'
+  - 'on-chip storage added: 1,984 bytes'
+  why_useful_for_learning: Shows how page/enclave-centric TEE isolation becomes the bottleneck for legitimate
+    multi-tenant data sharing, and one concrete redesign (decoupled data ownership) that trades new hardware
+    for that flexibility.
+  priority: P1
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: HIGH
+  notes: Read the author-hosted camera-ready PDF; exact DOI not confirmed (IEEE Xplore document 10476466
+    blocked from direct retrieval).
+- id: VIRT-HPCA24-02
+  title: 'Salus: Efficient Security Support for CXL-Expanded GPU Memory'
+  title_correction: null
+  authors:
+  - Rahaf Abdullah
+  - Hyokeun Lee
+  - Huiyang Zhou
+  - Amro Awad
+  venue: HPCA
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: https://hzhou.wordpress.ncsu.edu/files/2024/02/Salus_HPCA_24_Camera_Ready.pdf
+  classification: SUPPORT
+  classification_note: Salus optimizes the security-metadata cost of GPU memory encryption/integrity when
+    GPU memory is expanded over CXL; it hardens an existing memory-encryption mechanism rather than building
+    a new virtual/tenant-facing GPU or memory abstraction, so it is background for CORE CXL/GPU-memory
+    papers rather than CORE itself.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T2
+  - T3
+  physical_resource: GPU HBM/GDDR plus CXL-attached expansion memory
+  logical_abstraction: A single encrypted GPU address space spanning fast on-package memory and slower
+    CXL-expansion memory without re-encryption on migration
+  problem: Dynamic page migration between GPU device memory and CXL-expansion memory forces expensive
+    re-encryption/re-MACing under conventional per-tier security metadata, causing up to a 2.04x slowdown
+    from security overhead alone.
+  mechanism: Computes encryption pads and MACs from a page's permanent CXL address regardless of its current
+    physical tier; restructures counter blocks so each 256B interleaving chunk shares a major counter
+    (Interleaving-Friendly Split Counters), collapses minor counters into MACs during transfer, and fetches
+    security-metadata blocks lazily only on access via a CXL-to-GPU address mapping table with per-GPC
+    caches.
+  isolation_mechanism: Standard counter-mode encryption plus a Bonsai Merkle Tree for integrity/freshness
+    over untrusted off-chip memory; the GPU chip is the trust boundary and all off-chip memory (device
+    or CXL) is untrusted.
+  multiplexing_mechanism: N/A for tenants; the mechanism multiplexes security-metadata bandwidth across
+    CXL and device-memory channels via interleaved 256B chunks and a hashed mapping table with 128-entry
+    per-GPC caches.
+  state_mechanism: Security metadata (counters, MACs, integrity tree) is keyed to the permanent CXL address
+    and moves with fine-grained dirty tracking; no re-encryption occurs when pages physically migrate
+    between HBM and CXL.
+  overhead_bottleneck: Security-metadata traffic between heterogeneous memory tiers, previously fetched
+    for every access regardless of need.
+  primary_tradeoff: Unifying the security domain across tiers removes migration re-encryption cost but
+    adds an address-remapping/caching layer, and only pays off once GPU memory is itself expanded over
+    an untrusted CXL fabric.
+  quantitative_claims:
+  - 'IPC improvement: +29.94% geometric mean, up to +190.43% (GPGPU-Sim v4.0, Volta-like GPU, 80 SMs,
+    868 GB/s HBM, Rodinia/Parboil/Lonestar/Pannotia)'
+  - 'security metadata traffic: reduced to 47.79% of baseline'
+  - 'CXL bandwidth overhead: 14.92% lower than conventional design'
+  - 'baseline security-only slowdown observed: 2.04x from data-movement re-encryption'
+  why_useful_for_learning: Explains the security cost that CXL-based GPU memory expansion (device/memory
+    disaggregation) adds on top of ordinary GPU memory encryption -- relevant background whenever a CORE
+    paper virtualizes or pools GPU memory over CXL.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: HIGH
+  notes: null
+- id: VIRT-HPCA24-03
+  title: Supporting Secure Multi-GPU Computing with Dynamic and Batched Metadata Management
+  title_correction: null
+  authors:
+  - Seonjin Na
+  - Jungwoo Kim
+  - Sunho Lee
+  - Jaehyuk Huh
+  venue: HPCA
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: https://seonjinna.github.io/assets/pdf/hpca24_slides.pdf
+  classification: SUPPORT
+  classification_note: The contribution is workload-aware pad-table/MAC management that lowers the cost
+    of an existing multi-GPU interconnect security mechanism; it hardens accelerator interconnect security
+    rather than creating a new virtual GPU or multi-tenant abstraction.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T3
+  physical_resource: GPU-to-GPU interconnect (NVLink-class) and GPU HBM
+  logical_abstraction: An authenticated, replay-protected multi-GPU interconnect whose per-pair security-metadata
+    storage is reallocated online to match communication intensity
+  problem: Securing inter-GPU transfers with fixed private pad tables and per-block MACs costs 19.5% average
+    performance, dominated by per-block security metadata traffic and pad management that ignores actual,
+    skewed and time-varying GPU-pair communication patterns.
+  mechanism: Dynamically resizes/allocates per-GPU-pair pad-table entries based on observed communication
+    intensity instead of static per-pair reservations, and batches 16-64 data blocks under a single MAC
+    to amortize authentication metadata.
+  isolation_mechanism: Authenticated encryption (confidentiality+integrity) over the multi-GPU interconnect
+    with replay protection via sender IDs and counters, so a receiver only accepts the latest version
+    of data from a given sender.
+  multiplexing_mechanism: Shared pad-table capacity is time-multiplexed across communicating GPU pairs
+    by tracking which pairs are currently 'hot' (69.2% of gathered data concentrates in short intervals)
+    and reallocating storage to them.
+  state_mechanism: Pad-table entries and batched-MAC state live per-GPU at the memory-controller/interconnect
+    interface and are reshuffled online as communication patterns shift.
+  overhead_bottleneck: Authenticated en/decryption (8.2%) plus security metadata traffic (11.3%) dominate
+    the 19.5% baseline overhead.
+  primary_tradeoff: Dynamic, workload-aware pad/MAC management cuts overhead from 19.5% to 7.9%, at the
+    cost of runtime monitoring logic and batching latency that must be hidden behind communication.
+  quantitative_claims:
+  - 'overall secure multi-GPU overhead: reduced from 19.5% to 7.9% (11.6 percentage-point improvement
+    over private per-pair pad tables)'
+  - 'security metadata traffic: 20% reduction'
+  - 'latency hiding: 59.6% improvement from better pad-table allocation'
+  why_useful_for_learning: Shows the interconnect-security cost analogous to Salus's memory-security cost,
+    but for the GPU-to-GPU fabric itself -- relevant to any CORE paper on secure multi-GPU or accelerator
+    virtualization.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: Read only the authors' own conference slide deck; IEEE Xplore/ACM DL blocked and no author-hosted
+    full PDF was located after three routes, so mechanism/results are as presented in slides, not the
+    full paper text.
+- id: VIRT-HPCA24-04
+  title: 'DockerSSD: Containerized In-Storage Processing and Hardware Acceleration for Computational SSDs'
+  title_correction: null
+  authors:
+  - Donghyun Gouk
+  - Miryeong Kwon
+  - Hanyeoreum Bae
+  - Myoungsoo Jung
+  venue: HPCA
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: https://ee.kaist.ac.kr/en/research-achieve/prof-myoungsoo-jungs-research-team-develops-dockerssd-a-smart-ssd-that-can-be-utilized-as-independent-server-without-computer/
+  classification: CORE
+  classification_note: The contribution is embedding OS-level (Docker) container virtualization plus a
+    'virtual firmware' layer directly into an SSD's own embedded compute, i.e. a genuinely new device-level
+    container-isolation architecture, matching the brief's 'container isolation architecture is CORE'
+    rule applied to storage hardware.
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary:
+  - T3
+  physical_resource: NVMe SSD embedded compute/firmware
+  logical_abstraction: A Docker-compatible OS-level virtualization environment plus a 'virtual firmware'
+    layer that lets standard containerized applications run directly inside an SSD's own embedded processor
+  problem: Computational/in-storage-processing SSDs expose proprietary vendor interfaces, forcing applications
+    to be rewritten per device and preventing portable, standardized, or safely multi-tenant in-storage
+    processing.
+  mechanism: Embeds Docker (OS-level virtualization) into SSD firmware together with a lightweight virtual-firmware
+    layer that reproduces a host-like execution environment for containers on the drive's embedded processor,
+    and exposes cross-node access to computational SSDs over Ethernet-over-NVMe for disaggregated/pooled
+    storage.
+  isolation_mechanism: Container-level OS isolation (namespaces/cgroups via Docker) between concurrently-running
+    in-storage applications, mediated by the virtual-firmware layer instead of the vendor's raw proprietary
+    firmware API.
+  multiplexing_mechanism: The SSD's embedded compute and DRAM are time/space-shared across containers
+    the same way a host OS shares a CPU across containers, relocated onto the storage device itself.
+  state_mechanism: Container images/state are managed by the embedded Docker runtime; network-attached
+    (Ethernet-over-NVMe) access lets an ISP-capable SSD be treated as an independent, disaggregated compute-storage
+    node.
+  overhead_bottleneck: Virtualization/container-runtime overhead inside a resource-constrained embedded
+    SSD controller, traded against eliminating vendor lock-in.
+  primary_tradeoff: Standardizing SSD compute behind Docker plus virtual firmware gains portable, hardware-agnostic
+    in-storage applications and disaggregation, but costs some of the raw efficiency of vendor-specific
+    bare-metal firmware.
+  quantitative_claims:
+  - 'execution acceleration: up to 2x vs conventional host-side processing (KAIST press-release figure)'
+  - 'power consumption: up to 2x reduction vs conventional host-side processing (KAIST press-release figure)'
+  - 'I/O-intensive workloads: up to 2.0x performance improvement (2025 extended arXiv report by the same
+    authors, arXiv:2506.06769)'
+  - 'distributed LLM inference: up to 7.9x improvement (same extended arXiv report)'
+  why_useful_for_learning: A concrete, unusual instance of the 'container isolation architecture is CORE'
+    rule applied to a non-CPU device (an SSD's own embedded processor), showing OS-level virtualization
+    pushed all the way into storage firmware.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN
+  evidence_kinds:
+  - official-web
+  - preprint
+  confidence: MEDIUM
+  notes: The HPCA 2024 paper text itself sits behind IEEE Xplore; pieced together from the KAIST press
+    release (mechanism + 2x/2x figures) and a 2025 arXiv extended report (2506.06769) by the same author
+    team describing the same DockerSSD mechanism plus SSD disaggregation (I/O and LLM-inference figures);
+    numbers above are attributed to their respective source and not verified against the original conference
+    PDF.
+- id: VIRT-HPCA24-05
+  title: A Quantum Computer Trusted Execution Environment
+  title_correction: null
+  authors:
+  - Theodoros Trochatos
+  - Chuanqi Xu
+  - Sanjay Deshpande
+  - Yao Lu
+  - Yongshan Ding
+  - Jakub Szefer
+  venue: HPCA
+  year: 2024
+  publication_type: UNKNOWN
+  doi: 10.1109/LCA.2023.3325852
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: https://arxiv.org/abs/2308.03897
+  classification: CORE
+  classification_note: The contribution is a hardware trusted-execution-environment architecture (obfuscating
+    decoy pulses plus tamper-resistant in-refrigerator hardware) protecting a user's quantum circuit from
+    a hostile cloud host, i.e. confidential-computing isolation architecture extended to a new physical
+    domain.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T10
+  physical_resource: Superconducting-qubit analog control electronics inside a cloud quantum computer's
+    dilution refrigerator
+  logical_abstraction: A trusted execution boundary around a user's quantum circuit and its analog control
+    pulses, treating the cloud quantum-computing provider itself as a potentially hostile host
+  problem: Cloud-hosted quantum computers expose users' proprietary quantum circuits and embedded input
+    data -- encoded as analog control pulses that cannot simply be encrypted the way digital data can
+    -- to the cloud provider itself.
+  mechanism: Users add software-generated 'decoy' obfuscating pulses to their circuit; dedicated tamper-resistant
+    hardware inside the dilution refrigerator attenuates/removes the decoy pulses before they reach the
+    physical qubits, so only that trusted in-refrigerator hardware, not the cloud host's classical control
+    stack, ever sees the true circuit.
+  isolation_mechanism: Physical/analog obfuscation plus tamper-resistant hardware placed inside the untrusted
+    host's own refrigerator, acting as a hardware root of trust for a control path that has no encryption
+    primitive.
+  multiplexing_mechanism: N/A (single-user protection design, not resource sharing).
+  state_mechanism: Obfuscation/de-obfuscation state (the decoy-pulse pattern) is generated by the user
+    and only ever decoded by the trusted in-refrigerator hardware; nothing migrates.
+  overhead_bottleneck: Fidelity loss from the decoy-pulse/attenuation pipeline, measured via variational
+    distance between protected and unprotected circuit output distributions.
+  primary_tradeoff: Protecting an inherently analog, unencryptable control path gains the first hardware
+    TEE for a quantum computer, at the cost of some circuit fidelity and new tamper-resistant hardware
+    physically inside the provider's own refrigerator.
+  quantitative_claims:
+  - 'variational distance between protected and unprotected circuit output distributions: 0.16-0.26'
+  why_useful_for_learning: Extends the TEE/confidential-computing concept -- one of this batch's expected
+    strong 2024 yield areas -- to a physical-analog domain with no encryption primitive available, clarifying
+    what 'trusted execution' must mean when the protected artifact is a control waveform rather than digital
+    memory.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN
+  evidence_kinds:
+  - preprint
+  - program-only
+  confidence: MEDIUM
+  notes: Presented at HPCA 2024 in the retrospective 'Best of CAL' session (Session 5C); the original
+    publication is IEEE Computer Architecture Letters 2023 (DOI 10.1109/LCA.2023.3325852) -- an invited
+    reprint of already-published work, not a fresh HPCA-reviewed submission. Retained and classified here
+    as instructed for archival, already-published work presented at the venue, but excluded from the HPCA
+    2024 regular-research population count (see excluded_by_pubtype); publication_type left UNKNOWN because
+    no schema value cleanly names an invited 'Best of Journal' reprint.
+- id: VIRT-HPCA24-06
+  title: 'LibPreemptible: Enabling Fast, Adaptive, and Hardware-Assisted User-Space Scheduling'
+  title_correction: arXiv preprint 2308.02896 uses the working title 'Towards Fast, Adaptive, and Hardware-Assisted
+    User-Space Scheduling'
+  authors:
+  - Yueying Li
+  - Nikita Lazarev
+  - David Koufaty
+  - Yijun Yin
+  - Andy Anderson
+  - Zhiru Zhang
+  - G. Edward Suh
+  - Kostis Kaffes
+  - Christina Delimitrou
+  venue: HPCA
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: https://arxiv.org/abs/2308.02896
+  classification: SUPPORT
+  classification_note: LibPreemptible builds hardware-assisted preemptive user-level thread scheduling
+    on ordinary Linux threads/processes; it is a CPU-multiplexing mechanism directly analogous to vCPU
+    preemption/harvesting inside a hypervisor, useful to explain CORE CPU-virtualization trade-offs, but
+    it does not itself create a VM, container, or other virtual-resource abstraction.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T1
+  physical_resource: CPU core
+  logical_abstraction: Preemptible user-level threads scheduled with microsecond time quanta on top of
+    ordinary Linux threads, using hardware interrupts instead of kernel-mediated scheduling
+  problem: Microsecond-scale, highly dispersive datacenter request latencies are hurt by thread over-subscription
+    (50-500 threads/core); prior user-space preemption (e.g. Shinjuku) needs privileged APIC access and
+    heavy kernel bypass, hurting security/portability and scaling poorly with core count.
+  mechanism: Uses Intel Sapphire Rapids UINTR (user interrupts) so a dedicated per-core timer thread can
+    directly interrupt a worker thread without kernel mediation (SENDUIPI to a receiver's UPID via a UITT
+    entry); LibUtimer gives 3-microsecond-resolution user-space timers, and an adaptive controller adjusts
+    each thread's time quantum from load, queue depth and a tail-latency index.
+  isolation_mechanism: Interrupt senders are restricted to trusted timer threads inside the same security
+    domain, narrowing the attack surface that native UINTR would otherwise expose.
+  multiplexing_mechanism: A single physical core's cycles are time-sliced across co-located latency-critical
+    and best-effort user-level threads via preemption at quanta as fine as 5 microseconds, letting a latency-critical
+    thread reclaim the core almost immediately.
+  state_mechanism: Per-thread scheduling state (deadline, quantum, queue position) is kept in user space;
+    UINTR posted-interrupt descriptors and a customized fcontext library with pooled memory carry the
+    actual context-switch state.
+  overhead_bottleneck: Preemption cost (~1 microsecond per preemption combining sender+receiver work)
+    and deployment overhead (below 1-1.2% tail-latency overhead at 20-89% load).
+  primary_tradeoff: Hardware-assisted, kernel-bypass preemption gains 10x better tail latency than Shinjuku
+    with only ~3% extra application code, but depends on a specific new CPU feature (UINTR) and restricts
+    who may send interrupts to preserve security.
+  quantitative_claims:
+  - 'tail latency: 10x better than Shinjuku across bimodal, exponential and dynamic workloads (Intel Sapphire
+    Rapids, 56 CPUs/112 threads, 1.7GHz fixed)'
+  - 'throughput: 22% higher than Shinjuku under workload A1, 33% higher under workload C'
+  - 'co-location (MICA+Zlib), fixed 30us quantum: LC tail latency reduced 3.2-4.4x (to 33us at 55kRPS)'
+  - 'co-location, fixed 5us quantum: 18.5x improvement (to 8us)'
+  - 'user-interrupt IPC latency: 0.734us average vs 29.688us (eventFD) and 15.325us (signals)'
+  - 'integration cost: 3% extra code; 3-7 hours to add to MICA/Zlib/an RPC service'
+  why_useful_for_learning: A process/thread-level analogue of vCPU preemption and CPU-harvesting policies
+    used inside VMMs; shows what fine-grained, hardware-assisted preemption costs and buys at the OS-thread
+    layer, directly informing CPU-multiplexing trade-offs made one layer up inside a hypervisor.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: Read the arXiv preprint (2308.02896); authors, mechanism (UINTR-based LibPreemptible) and venue-program
+    placement match the HPCA 2024 program entry exactly, only the title differs (see title_correction).
+- id: VIRT-HPCA24-07
+  title: 'MINOS: Distributed Consistency and Persistency Protocol Implementation & Offloading to SmartNICs'
+  title_correction: null
+  authors:
+  - Antonis Psistakis
+  - Fabien Chaix
+  - Josep Torrellas
+  venue: HPCA
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: https://iacoma.cs.uiuc.edu/iacoma-papers/hpca24_1.pdf
+  classification: DROP
+  classification_note: MINOS offloads an existing distributed consistency/persistency protocol's write
+    path onto a fixed SmartNIC accelerator; there is no virtual-resource abstraction, tenant isolation,
+    or device-sharing/virtualization mechanism -- the SmartNIC is used as a dedicated offload target,
+    not virtualized or partitioned.
+  drop_reason: keyword_false_positive
+  taxonomy_primary: T3
+  taxonomy_secondary: []
+  physical_resource: SmartNIC (BlueField-class) and host CPU cache/coherence fabric
+  logical_abstraction: N/A -- no virtual resource abstraction is introduced; this is a distributed-systems
+    protocol implementation and offload paper.
+  problem: Existing distributed-data-persistency (DDP) model descriptions lack detailed algorithms for
+    a concrete offload-capable implementation.
+  mechanism: Implements five persistency models on the CPU (MINOS-B) and augments a SmartNIC with host-NIC
+    cache coherence plus dual FIFOs (volatile/durable) to run the entire write-protocol on the NIC (MINOS-O),
+    removing the host CPU from the write path.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: PCIe-bound sequential message transmission dominates (51-73% of write time).
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 'latency: 2-3x reduction (MINOS-O vs MINOS-B)'
+  - 'throughput: 2-3x improvement (MINOS-O vs MINOS-B)'
+  - 'microservice end-to-end latency: 35% reduction (5-node CloudLab cluster, YCSB, BlueField2 SmartNIC
+    parameters)'
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - official-web
+  confidence: HIGH
+  notes: DROP -- surfaced under the SmartNIC/DPU retrieval keyword; recorded here as a keyword false positive
+    per the batch protocol.
+- id: VIRT-HPCA24-08
+  title: 'Ursa: Lightweight Resource Management for Cloud-Native Microservices'
+  title_correction: null
+  authors:
+  - Yanqi Zhang
+  - Zhuangzhuang Zhou
+  - Sameh Elnikety
+  - Christina Delimitrou
+  venue: HPCA
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: https://people.csail.mit.edu/delimitrou/papers/2024.hpca.ursa.pdf
+  classification: CONTEXT
+  classification_note: Ursa is an analytical replica/CPU-allocation scheduler for existing Kubernetes
+    microservices; it consumes container isolation as a substrate and never changes it, matching the brief's
+    'generic microservice/Kubernetes scheduling' CONTEXT bucket.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T8
+  physical_resource: CPU core
+  logical_abstraction: Per-microservice-replica CPU allocations computed from an analytical latency model,
+    running over unmodified Kubernetes containers
+  problem: ML-driven microservice resource managers need tens of thousands of training samples, cannot
+    track frequent service updates, and add inference latency on the critical path.
+  mechanism: Decomposes an end-to-end SLA into per-microservice latency budgets via mixed-integer programming
+    after empirically finding the CPU-utilization threshold that avoids backpressure, then lightly profiles
+    each service to map budgets to replica counts.
+  isolation_mechanism: N/A -- relies on Kubernetes' existing container isolation; does not modify it.
+  multiplexing_mechanism: N/A beyond ordinary container/replica scheduling.
+  state_mechanism: N/A
+  overhead_bottleneck: N/A (this paper is itself an overhead-reduction technique for resource-management
+    decisions, not a system with its own resource overhead to report).
+  primary_tradeoff: An analytical model instead of ML gains 128-208x less profiling data and much lower
+    control-plane latency, at the cost of some SLA-violation slack versus a fully-trained ML policy under
+    easy conditions.
+  quantitative_claims:
+  - 'exploration samples: 440-600 vs 10,000 for ML baselines (128-208x fewer)'
+  - 'SLA violation rate: 0.1-8.5% vs 9.1-51.9% for ML-driven approaches (Sinan, Firm)'
+  - 'control-plane latency: 0.5ms vs 345.8ms (Sinan) and 21.7ms (Firm)'
+  why_useful_for_learning: 'Illustrates the CONTEXT category directly: a scheduler that consumes, but
+    does not change, container isolation -- useful background for why multi-tenant SLOs matter but not
+    itself a virtualization mechanism.'
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: null
+- id: VIRT-HPCA24-09
+  title: 'LightPool: A NVMe-oF-based High-performance and Lightweight Storage Pool Architecture for Cloud-Native
+    Distributed Database'
+  title_correction: null
+  authors:
+  - Jiexiong Xu
+  - Yiquan Chen
+  - Yijing Wang
+  - Wenhui Shi
+  - Guoju Fang
+  - Yi Chen
+  - Huasheng Liao
+  - Yang Wang
+  - Hai Lin
+  - Zhen Jin
+  - Qiang Liu
+  - Wenzhi Chen
+  venue: HPCA
+  year: 2024
+  publication_type: INDUSTRY_TRACK
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: UNKNOWN
+  classification: SUPPORT
+  classification_note: LightPool pools per-node local NVMe capacity into a cluster-wide block-storage
+    resource over NVMe-oF, scheduled by Kubernetes; it is storage disaggregation/pooling exposed through
+    a scheduler rather than a new virtual storage abstraction with per-tenant isolation, matching the
+    brief's disaggregation-without-a-virtual-abstraction SUPPORT rule.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T9
+  physical_resource: NVMe SSD (local, per-node)
+  logical_abstraction: A cluster-wide pooled block-storage resource assembled from each node's local NVMe
+    drives and exposed over NVMe-over-Fabrics, scheduled by Kubernetes
+  problem: Cloud-native distributed databases using purely local storage leave cluster-wide storage badly
+    imbalanced (~40% utilization); existing storage-disaggregation designs add latency and data-redundancy
+    costs.
+  mechanism: Pools local NVMe capacity across cluster nodes and serves cross-node access via NVMe-oF,
+    with Kubernetes handling unified scheduling/allocation and an optimized local-access fast path that
+    avoids redundant data copies.
+  isolation_mechanism: N/A beyond Kubernetes' existing scheduling isolation.
+  multiplexing_mechanism: Physical NVMe capacity across nodes is exposed as one pooled resource that Kubernetes
+    allocates to pods/containers, decoupling a pod's storage placement from any one node's local disk.
+  state_mechanism: Data stays on the owning node's physical NVMe; only access paths are virtualized/pooled
+    via NVMe-oF, the pooling layer itself does not migrate data.
+  overhead_bottleneck: Remote-access latency versus local access (2.1-3.5us local vs 55.2-67.3us remote).
+  primary_tradeoff: Pooling local disks into one cluster resource raises storage utilization (~40% to
+    ~65%) and improves bandwidth/throughput vs a disaggregation baseline (OpenEBS), but remote accesses
+    still cost tens of microseconds more than local ones.
+  quantitative_claims:
+  - 'cluster storage utilization: ~40% to ~65% after pooling'
+  - 'local access latency overhead: ~2.1-3.5 microseconds'
+  - 'remote access latency overhead: ~55.2-67.3 microseconds'
+  - 'bandwidth vs OpenEBS: up to 190.9% improvement'
+  - 'throughput vs OpenEBS: 6.9% improvement (production deployment)'
+  why_useful_for_learning: 'A concrete instance of storage-resource pooling/disaggregation exposed through
+    a scheduler -- illustrates the CXL/disaggregation threshold trap applied to storage rather than memory:
+    a shared pool but not a new virtual storage abstraction with per-tenant isolation.'
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: HPCA 2024 Industry Track paper (Session 9); full text sits behind IEEE Xplore/ACM DL (blocked
+    after two routes). Summarized from a Zhejiang University ARC-lab Chinese-language press release describing
+    the same system with matching quantitative figures; treat numbers as approximate pending the original
+    PDF.
+- id: VIRT-HPCA24-10
+  title: 'GRIT: Enhancing Multi-GPU Performance with Fine-Grained Dynamic Page Placement'
+  title_correction: null
+  authors:
+  - Yueqi Wang
+  - Bingyao Li
+  - Aamer Jaleel
+  - Jun Yang
+  - Xulong Tang
+  venue: HPCA
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: https://libingyao.github.io/assets/files/GRIT_HPCA24.pdf
+  classification: DROP
+  classification_note: GRIT optimizes NUMA-style page placement for a single application spanning multiple
+    GPUs under unified virtual memory; there is no tenant isolation or virtual-GPU abstraction, so this
+    is a keyword false positive on 'multi-GPU'/'unified virtual memory', not a virtualization paper.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: GPU HBM across multiple NVLink-connected GPUs
+  logical_abstraction: N/A -- single job's unified virtual address space across GPUs, no multi-tenant
+    abstraction.
+  problem: Multi-GPU systems suffer NUMA-like overhead when data is shared across GPUs; no single placement
+    scheme (on-touch migration, access-counter migration, page duplication) is best for every application
+    or phase.
+  mechanism: A Fault-Aware Initiator monitors page faults to detect an unsuitable placement scheme; a
+    Page Attribute Table (with a hardware PA-Cache) tracks per-page access patterns; Neighboring-Aware
+    Prediction extends a chosen scheme to adjacent pages in groups of 8-512.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A (single job across GPUs, not multiple tenants)
+  state_mechanism: N/A
+  overhead_bottleneck: Page-table-walk latency during scheme changes; PA-Table/PA-Cache overhead is negligible
+    (0.15% footprint, 0.04% L1 area).
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 60% improvement over on-touch migration (4-GPU system, 64 CUs/GPU, 300GB/s NVLink, BFS/BS/C2D/FIR/GEMM/MM/SC/ST
+    plus VGG16/ResNet18)
+  - 27% improvement over Griffin (state of the art)
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: DROP -- surfaced under 'GPU sharing'/unified-virtual-memory retrieval keywords; recorded as a
+    keyword false positive per the batch protocol (single-application multi-GPU memory placement, not
+    multi-tenant GPU virtualization).
+- id: VIRT-HPCA24-11
+  title: 'RELIEF: Relieving Memory Pressure In SoCs Via Data Movement-Aware Accelerator Scheduling'
+  title_correction: null
+  authors:
+  - Sudhanshu Gupta
+  - Sandhya Dwarkadas
+  venue: HPCA
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: https://www.cs.rochester.edu/u/sgupta45/docs/hpca2024.pdf
+  classification: DROP
+  classification_note: RELIEF is a deadline-aware scheduling policy for data forwarding between producer/consumer
+    accelerators in a single heterogeneous SoC; it optimizes one application's accelerator chain, with
+    no tenant isolation or virtual-accelerator abstraction.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: Heterogeneous SoC accelerators (image/RNN engines)
+  logical_abstraction: N/A -- single-application accelerator-chain scheduling, not a shared/virtual resource.
+  problem: Accelerator schedulers are oblivious to hardware data-forwarding mechanisms (peer-to-peer DMA,
+    scratchpad-to-scratchpad), causing unnecessary main-memory contention; RNN applications can spend
+    up to 75% of execution time moving data between accelerators.
+  mechanism: A least-laxity scheduler prioritizes 'forwarding nodes' to keep data live in a producer's
+    local memory, with an is_feasible() laxity check to avoid deadline misses, inside a centralized hardware
+    manager orchestrating inter-accelerator data movement.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A (single-application task chain, not multiple tenants)
+  state_mechanism: N/A
+  overhead_bottleneck: Main-memory traffic/contention from unnecessary data round-trips through DRAM instead
+    of direct accelerator-to-accelerator forwarding.
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 50% more data forwards than HetSched (state of the art) at high contention
+  - 32% and 18% lower main-memory traffic and energy vs HetSched
+  - 14% more task deadlines met on average (gem5-SALAM, ARM Cortex-A7 manager, 7 image/RNN accelerators,
+    LPDDR5-6400)
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: DROP -- surfaced under 'accelerator sharing'/device-virtualization retrieval keywords; recorded
+    as a keyword false positive (single-job accelerator-chain scheduling, no tenancy).
+- id: VIRT-HPCA24-12
+  title: 'Data Motion Acceleration: Chaining Cross-Domain Multi Accelerators'
+  title_correction: null
+  authors:
+  - Shu-Ting Wang
+  - Hanyang Xu
+  - Amin Mamandipoor
+  - Rohan Mahapatra
+  - Byung Hoon Ahn
+  - Soroush Ghodrati
+  - Krishnan Kailas
+  - Mohammad Alian
+  - Hadi Esmaeilzadeh
+  venue: HPCA
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: https://research.ibm.com/publications/data-motion-acceleration-chaining-cross-domain-multi-accelerators
+  classification: DROP
+  classification_note: DMX reduces data-movement and format-conversion overhead for one application chained
+    across heterogeneous domain-specific accelerators; it is single-job interoperability plumbing, not
+    a virtual/shared accelerator abstraction or tenant-isolation mechanism.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: Heterogeneous domain-specific accelerators (DSAs) in a datacenter node
+  logical_abstraction: N/A -- single-job cross-accelerator data-movement optimization.
+  problem: Real datacenter applications chain heterogeneous accelerators (compression, encryption, video
+    coding, ML, etc.), and the data-movement/reformatting overhead between them can outweigh the accelerators'
+    own compute benefit.
+  mechanism: DMX is a cross-stack hardware/software solution minimizing data transfers between accelerators,
+    accelerating data-format conversion, and enabling direct communication between different domain accelerators.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A (single-job accelerator chain, not multiple tenants)
+  state_mechanism: N/A
+  overhead_bottleneck: Data movement and format conversion between chained heterogeneous accelerators.
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 'latency: 8.2x improvement'
+  - 'throughput: 13.6x improvement'
+  - 'energy efficiency: 5.2x improvement (five applications, multi-accelerator system)'
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: DROP -- surfaced under 'accelerator/device virtualization' retrieval keywords; recorded as a
+    keyword false positive. Read only the IBM Research publication abstract page, not the full PDF (IEEE
+    Xplore/ACM DL blocked).
+- id: VIRT-HPCA24-13
+  title: Computational CXL-Memory Solution for Accelerating Memory-Intensive Applications
+  title_correction: null
+  authors:
+  - Joonseop Sim
+  - Soohong Ahn
+  - Taeyoung Ahn
+  - Seungyong Lee
+  - Myunghyun Rhee
+  - Jooyoung Kim
+  - Kwangsik Shin
+  - Donguk Moon
+  - Euiseok Kim
+  - Kyoung Park
+  venue: HPCA
+  year: 2024
+  publication_type: UNKNOWN
+  doi: UNKNOWN
+  official_url: https://www.hpca-conf.org/2024/program/main.php
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Every source located describes a single-host CXL near-memory compute engine for
+    generic memory-intensive applications, with no mention of multi-tenant sharing, VM/guest abstraction,
+    or isolation; kept as CONTEXT rather than DROP because the actual paper text could not be read (access
+    failure), per hard rule 2.
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: CXL-attached computational memory device
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (secondary sources indicate a computational-memory/near-memory-processing device for
+    accelerating memory-bound applications over CXL)
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'Access failure: IEEE Xplore/ACM DL/ResearchGate/Semantic Scholar all blocked or gave only bibliographic
+    metadata after 3+ routes attempted; this is a ''Best of CAL'' retrospective session item (originally
+    IEEE CAL 2022, IEEE Xplore doc 9969883), so it is also excluded from the HPCA 2024 regular-research
+    population count (see excluded_by_pubtype) independent of its classification here.'
+- id: VIRT-MICRO24-01
+  title: Hardware-Assisted Virtualization of Neural Processing Units for Cloud Platforms
+  title_correction: null
+  authors:
+  - Yuqi Xue
+  - Yiqi Liu
+  - Lifeng Nai
+  - Jian Huang
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://arxiv.org/abs/2408.04104
+  classification: CORE
+  classification_note: The paper's entire contribution is a new virtual-NPU (vNPU) abstraction plus an
+    ISA extension (NeuISA) and hypercall-based hypervisor/para-virtualized-driver stack for multiplexing
+    a physical NPU across cloud tenants -- textbook accelerator virtualization, the exact CORE example
+    the brief lists for T6.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T1
+  - T9
+  physical_resource: NPU (TPUv4-class matrix engines/ME and vector engines/VE)
+  logical_abstraction: 'vNPU: a per-tenant virtual NPU with a user-chosen ratio of matrix (ME) and vector
+    (VE) engines, exposed to a guest VM via a para-virtualized driver and SR-IOV-style passthrough after
+    setup'
+  problem: Individual ML inference workloads cannot fully utilize an NPU's matrix and vector engines because
+    their demand ratios differ, and existing systems lack fine-grained NPU virtualization, architectural
+    support for concurrent multi-tenant execution, or the ability to dynamically schedule around VLIW
+    ISA rigidity.
+  mechanism: 'NeuISA decouples each VLIW instruction stream into independent micro-Tensor Operators (uTops:
+    ME-uTops needing one ME slot plus VE slots, or VE-only uTops) organized into dependency groups; a
+    uTop scheduler tracks per-vNPU contexts and dynamically allocates ME/VE slots, harvesting idle compute
+    units from under-utilized vNPUs for others; a host-kernel vNPU manager and guest para-virtualized
+    driver issue hypercalls for vNPU lifecycle, with SR-IOV PCIe passthrough used for steady-state guest-device
+    communication.'
+  isolation_mechanism: Hierarchical memory segmentation with fixed-size SRAM/HBM segments (2MB/1GB) and
+    address-translation-by-offset; hardware-isolated mode gives dedicated MEs/VEs per vNPU (spatial partitioning),
+    software-isolated mode uses temporal sharing with priority-based preemptive scheduling; the IOMMU
+    enforces DMA remapping for guest memory isolation.
+  multiplexing_mechanism: A compile-time allocator picks each vNPU's ME:VE ratio from profiled workload
+    activity ratios (m, v), and at runtime the uTop scheduler harvests idle MEs/VEs from a vNPU that isn't
+    fully using its allocation and hands them to another vNPU's ready uTops.
+  state_mechanism: On a harvesting context switch, register-file contents and systolic-array partial sums
+    are saved to SRAM (256-cycle overhead for a 128x128 array); the vNPU execution table mapping groups
+    to uTop code addresses stays on-chip; nothing crosses host/guest boundary except via the para-virtualized
+    driver's hypercalls.
+  overhead_bottleneck: Context-switch/harvesting preemption overhead (0.01%-10.63% depending on workload
+    pair) and NeuISA compilation overhead (typically <1%, up to 8.8% when a matmul partitions its reduction
+    dimension).
+  primary_tradeoff: Splitting VLIW execution into independently schedulable uTops gains dynamic, harvestable
+    NPU multi-tenancy at negligible (0.04% of a TPUv4 chip) hardware cost, but requires a new ISA layer
+    (NeuISA) and compiler backend, and only pays off when tenants' ME/VE demand ratios are imbalanced
+    enough to leave idle capacity to harvest.
+  quantitative_claims:
+  - 'p95 tail latency: 4.6x improvement over V10, 1.56x average reduction (TPUv4-class simulator, 4 ME/4
+    VE per core, 128x128 systolic arrays, 1.2TB/s HBM, MLPerf v2.1 models)'
+  - 'average latency: 1.33x better than PREMA, 1.12x better than V10'
+  - 'throughput: up to 1.41x improvement in high-contention collocation'
+  - 'ME/VE utilization: 1.26x/1.2x improvement over PREMA'
+  - 'LLaMA-13B collocation: 1.6x throughput boost when paired with a compute-intensive workload'
+  - 'hardware area cost: 0.04% of a TPUv4 chip'
+  - 'context-switch overhead: 256 cycles for a 128x128 systolic array'
+  why_useful_for_learning: A clean, modern example of accelerator virtualization built from first principles
+    (new ISA + hypervisor stack + IOMMU-backed isolation), directly comparable to GPU MIG/MPS but for
+    NPUs, and a strong anchor for the batch's expected 'accelerator partitioning hardware' yield.
+  priority: P0
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: HIGH
+  notes: Read the arXiv preprint (2408.04104); MICRO 2024 program lists this as a Best Paper Runner-up
+    in Session 1A ('Virtual Memory/Virtualization').
+- id: VIRT-MICRO24-02
+  title: 'Elastic Translations: Fast virtual memory with multiple translation sizes'
+  title_correction: null
+  authors:
+  - Stratos Psomadakis
+  - Chloe Alverti
+  - Vasileios Karakostas
+  - Christos Katsakioris
+  - Dimitrios Siakavaras
+  - Konstantinos Nikas
+  - Georgios Goumas
+  - Nectarios Koziris
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://www.cslab.ece.ntua.gr/~knikas/files/papers/2024-micro-et.pdf
+  classification: CORE
+  classification_note: Although framed as general TLB-coalescing, the paper explicitly manages the contiguous
+    bit in KVM's nested (stage-2) page tables during nested faults and caches coalesced 2D GVA-to-HPA
+    translations in the TLB, i.e. it directly improves nested/two-stage address translation under virtualization
+    -- this is the pure-virtual-memory threshold trap's exception, not the false positive itself.
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary:
+  - T1
+  physical_resource: CPU TLB / page-table hierarchy (host and nested/guest)
+  logical_abstraction: Intermediate-size (64KiB, 32MiB) coalesced TLB translations, including coalesced
+    2D guest-virtual-to-host-physical (GVA->HPA) nested translations
+  problem: Modern memory-intensive workloads suffer heavy TLB-miss overhead; classic huge pages (2MiB/1GiB)
+    become scarce under memory fragmentation, and the intermediate translation sizes ARMv8-A/RISC-V TLB
+    coalescing can offer are left unused, including in virtualized (KVM nested-paging) execution where
+    fragmentation is worse.
+  mechanism: Elastic Translations (ET) opportunistically sets the ARMv8-A/RISC-V contiguous bit to coalesce
+    16 contiguous page-table entries into one TLB entry (Transparent Contig-Bit Management); CoalaPaging
+    allocates aligned, contiguous physical pages across page faults without large synchronous allocations;
+    CoalaKhugepaged asynchronously promotes regions via migration exploiting partial contiguity; a Leshy
+    profiler uses the ARMv8-A Statistical Profiling Extension to sample TLB misses and pick translation
+    sizes. Under KVM, the same contiguous-bit management is applied to nested page tables during nested
+    faults, letting the TLB cache coalesced 2D GVA->HPA translations.
+  isolation_mechanism: N/A for security; nested-paging isolation between guest and host address spaces
+    is KVM's existing EPT/stage-2 mechanism, which ET's contiguous-bit management operates within rather
+    than replaces.
+  multiplexing_mechanism: N/A (single-guest TLB-efficiency mechanism, not resource sharing across tenants).
+  state_mechanism: Coalesced translation state lives in ordinary page-table entries (contiguous bits)
+    and is cached in the TLB as usual; under virtualization the same state exists at both stage-1 (guest)
+    and stage-2 (nested/KVM) page tables.
+  overhead_bottleneck: TLB miss rate under fragmentation, when only intermediate-size (not full huge-page)
+    contiguity is available.
+  primary_tradeoff: Exploiting intermediate translation sizes instead of only 2MiB/1GiB huge pages gains
+    large native and virtualized speedups even under heavy fragmentation, at the cost of extra page-table/allocator
+    bookkeeping (CoalaPaging/CoalaKhugepaged) and a hardware profiling extension dependency.
+  quantitative_claims:
+  - 'native, non-fragmented, 32MiB-beneficiary workloads (BTree, SVM, Hashjoin, GUPS): up to 39% over
+    THP'
+  - 'virtualized execution: 30% average, up to 150% over THP for large workloads (KVM nested paging)'
+  - 'under 99% memory fragmentation, 32MiB-beneficiary workloads: 12% average, up to 20% over THP'
+  - 'hardware: Ampere Altra N1, 80 cores, 256GiB per socket; workloads: SPEC CPU (astar, omnetpp), PARSEC
+    (canneal), custom microbenchmarks'
+  why_useful_for_learning: A rare case where a 'pure virtual memory' paper genuinely earns CORE status
+    by directly targeting nested/stage-2 page tables under KVM and reporting virtualized-execution results
+    -- a template for correctly applying the brief's nested-translation exception rather than reflexively
+    dropping every TLB paper at an architecture venue.
+  priority: P1
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: HIGH
+  notes: Read the author-hosted camera-ready PDF (NTUA CSLab).
+- id: VIRT-MICRO24-03
+  title: 'Distributed Page Table: Harnessing Physical Memory as an Unbounded Hashed Page Table'
+  title_correction: null
+  authors:
+  - Osang Kwon
+  - Yongho Lee
+  - Junhyeok Park
+  - Sungbin Jang
+  - Byungchul Tak
+  - Seokin Hong
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or paper text after 4+ routes (IEEE Xplore, ACM DL,
+    dblp/computer.org listing, two author lab pages) -- classified CONTEXT with TITLE_ONLY evidence per
+    hard rule 2, not from the title's apparent single-level hashed-page-table framing.
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: DRAM (host physical memory used as page-table storage)
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (title indicates a hashed, distributed page-table structure over physical memory, MICRO
+    Session 1A 'Virtual Memory/Virtualization')
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'Access failure: computer.org/dl.acm.org paywalled with no abstract shown; IEEE Xplore blocked;
+    the COMPASS-Lab and CLODIS-Lab author publication pages list only the citation, no abstract or PDF
+    link. Flagged in batch_observations as a likely pure-virtual-memory candidate that could not be confirmed
+    either way.'
+- id: VIRT-MICRO24-04
+  title: 'HyperTEE: A Decoupled TEE Architecture with Secure Enclave Management'
+  title_correction: null
+  authors:
+  - Yunkai Bai
+  - Peinan Li
+  - Yubiao Huang
+  - Michael C. Huang
+  - Shijun Zhao
+  - Lutan Zhao
+  - Fengwei Zhang
+  - Dan Meng
+  - Rui Hou
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://cse.sustech.edu.cn/faculty/~zhangfw/paper/hypertee-micro25.pdf
+  classification: CORE
+  classification_note: The contribution is a new TEE architecture that physically separates enclave-management
+    logic onto dedicated isolated cores, removing it from the untrusted OS/hypervisor -- a fundamental
+    redesign of the confidential-computing isolation boundary, squarely CORE T7.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: []
+  physical_resource: CPU cores (dedicated Enclave Management Subsystem cores) and enclave DRAM
+  logical_abstraction: 'Two hardware subsystems: a Computing Subsystem (CS) running enclaves at full performance,
+    and an isolated Enclave Management Subsystem (EMS) that alone executes all enclave-management primitives
+    (attestation, page allocation, swapping)'
+  problem: Existing TEEs (SGX, TDX, SEV) run enclave-management tasks inside the untrusted OS/hypervisor
+    layer, exposing attestation keys and control structures to controlled-channel and microarchitectural
+    side-channel attacks that can compromise the whole platform, not just one enclave.
+  mechanism: HyperTEE physically separates enclave management (EMS, on dedicated isolated cores) from
+    enclave computation (CS, on ordinary cores), connected only via a trusted call gate (EMCall) and a
+    unidirectional mailbox that prevents CS from reading EMS memory; a hardware bitmap enforces per-page
+    access control, per-enclave dedicated page tables live in protected enclave memory, and a page-ownership
+    table prevents inter-enclave memory conflicts.
+  isolation_mechanism: Hardware-enforced unidirectional isolation between CS and EMS; enclave memory-pool
+    obfuscation and EMS-randomized page-swap selection defend against controlled-channel attacks that
+    would otherwise infer secrets from OS-visible page-fault/swap patterns.
+  multiplexing_mechanism: N/A beyond ordinary multi-enclave scheduling on the CS; the EMS itself is a
+    dedicated, non-shared management resource.
+  state_mechanism: Attestation keys, enclave page tables and management metadata live only in EMS-protected
+    memory, never in the general OS/hypervisor's address space; encrypted shared-memory channels with
+    access controls let CS and EMS (or two enclaves) communicate without software encryption round-trips.
+  overhead_bottleneck: Memory-allocation primitives are the slowest path (6.3-49.7% per-request latency
+    increase) due to EMS-CS communication and the EMS cores' weaker compute capability; this is tolerable
+    because such primitives are called infrequently in real workloads.
+  primary_tradeoff: Physically decoupling enclave management from computation removes an entire class
+    of controlled-channel/side-channel attack on shared management state, at the cost of dedicating some
+    cores to the EMS and adding EMCall/mailbox communication latency for management operations.
+  quantitative_claims:
+  - 'enclave workload overhead: 2.0% average (FPGA prototype, TSMC 7nm)'
+  - 'non-enclave workload overhead: 1.9% average'
+  - 'hardware area overhead: <1% of SoC (0.25% for a 64-core configuration)'
+  - 'memory allocation latency increase: 6.3-49.7% per request'
+  - 'cryptographic operation overhead: 7.8% without a dedicated crypto engine, 0.1% with one'
+  - 'encrypted shared-memory communication speedup: 4.0x-50x for DNN inference/network applications vs
+    software encryption'
+  why_useful_for_learning: A concrete architectural answer to 'what part of a TEE can the untrusted hypervisor
+    still see', directly extending the CORE confidential-computing literature (SGX/TDX/SEV) with a management-plane
+    isolation redesign.
+  priority: P1
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: PDF filename says 'micro25' but its own header confirms MICRO 2024 (57th) as the publication
+    venue/year; this matches the MICRO 2024 program listing (Session 1C, Security Architecture) exactly
+    on title and authors.
+- id: VIRT-MICRO24-05
+  title: A Case for Speculative Address Translation with Rapid Validation for GPUs
+  title_correction: Author preprint/slides refer to the system as 'Avatar'
+  authors:
+  - Junhyeok Park
+  - Osang Kwon
+  - Yongho Lee
+  - Seongwook Kim
+  - Gwangeun Byeon
+  - Jihun Yoon
+  - Prashant J. Nair
+  - Seokin Hong
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://www.cs.cmu.edu/~18742/papers/Park2024.pdf
+  classification: DROP
+  classification_note: Avatar speculates and validates single-level GPU virtual-to-physical translations
+    (standard UVM between a CPU host and a discrete GPU); it contains no nested translation, guest-physical
+    addressing, or hypervisor/multi-tenant GPU virtualization content, matching the brief's pure_virtual_memory
+    drop rule exactly.
+  drop_reason: pure_virtual_memory
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: GPU GMMU/TLB hierarchy
+  logical_abstraction: N/A -- single-level GPU virtual address space, no guest/nested abstraction.
+  problem: GPU address translation causes up to 34.5% performance degradation and near-1000-cycle latency
+    increases under heterogeneous CPU-GPU UVM; prior contiguity-based techniques (Page Promotion, CoLT,
+    SnakeByte) capture only 21.8-27.6% of a 53% theoretical maximum speedup and degrade under memory oversubscription.
+  mechanism: CAST tracks per-PC virtual-to-physical address offsets in a Mapping Offset Detection table
+    and speculatively computes a physical address on an L1 TLB miss so memory fetch can start immediately;
+    CAVA embeds compressed page metadata (VPN, permissions) into cache sectors for in-cache validation
+    of the speculated address; EAF (Early TLB Fill) converts validated speculative translations into real
+    TLB entries before the page walk completes.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: L1 TLB miss rate and page-walk latency under oversubscription; addressed via speculation
+    rather than isolation/virtualization mechanisms.
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 'average performance improvement: 37.2% (GPGPU-Sim v4.0, RTX3070-like baseline, 20 workloads)'
+  - 'speculation accuracy: 90.3%; coverage: 73.4% of L1 TLB misses'
+  - 'vs Page Promotion/CoLT/SnakeByte: +14.9%/+10.1%/+16.3%'
+  - 'under 130% memory oversubscription: +14.3% vs prior techniques'
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: DROP -- pure virtual-memory false positive at an architecture venue, explicitly required to be
+    recorded by the batch protocol; MICRO Session 3A ('GPU Microarchitecture I').
+- id: VIRT-MICRO24-06
+  title: 'SUV: Static analysis guided Unified Virtual Memory'
+  title_correction: null
+  authors:
+  - Pratheek B
+  - Guilherme Cox
+  - Jan Vesely
+  - Arkaprava Basu
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://www.csa.iisc.ac.in/~arkapravab/papers/MICRO24_SUV.pdf
+  classification: DROP
+  classification_note: SUV is a compiler-guided prefetch/pinning scheme for a single CUDA process's GPU
+    Unified Virtual Memory; it contains no nested translation, guest-physical addressing, or multi-tenant/hypervisor
+    content, matching the brief's pure_virtual_memory drop rule exactly.
+  drop_reason: pure_virtual_memory
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: GPU HBM plus host DRAM (single-process UVM)
+  logical_abstraction: N/A -- single-process unified virtual address space, no guest/tenant abstraction.
+  problem: Standard GPU UVM relies on reactive, runtime-only page faults and migrations, causing severe
+    thrashing and slowdowns once GPU memory is oversubscribed; prior tree-prefetching/access-counter approaches
+    are myopic to higher-level program semantics.
+  mechanism: 'Static analysis of CUDA kernels drives four techniques: access-density-based pinning of
+    data structures to HBM vs DRAM; temporal working-set management that reserves HBM only for a kernel''s
+    currently-active data; iterative kernel prefetching that brings in the next loop iteration''s data
+    while evicting the expired one; and hardware access counters as a fallback for pointer-chase/''unknown''
+    access patterns.'
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: Page-fault/thrashing overhead under memory oversubscription; ~5-second added compile
+    time is the tool's own overhead.
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 'runtime reduction under 15-50% oversubscription: 44-74% geomean improvement vs UVM baseline (RTX
+    3090 24GB, Ryzen 7950X, PCIe 4.0, Polybench/Rodinia/Tango/HecBench)'
+  - 'page faults at 50% oversubscription: 37-100% reduction'
+  - 'PCIe traffic: 81% less than a static-count baseline, 77% less than an access-counter baseline'
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: DROP -- pure virtual-memory false positive at an architecture venue, explicitly required to be
+    recorded by the batch protocol; MICRO Session 3A ('GPU Microarchitecture I').
+- id: VIRT-MICRO24-07
+  title: 'STAR: Sub-Entry Sharing-Aware TLB for Multi-Instance GPU'
+  title_correction: null
+  authors:
+  - Bingyao Li
+  - Yueqi Wang
+  - Tianyu Wang
+  - Lieven Eeckhout
+  - Jun Yang
+  - Aamer Jaleel
+  - Xulong Tang
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://arxiv.org/pdf/2404.18361
+  classification: SUPPORT
+  classification_note: STAR improves the one hardware structure (the shared L3 TLB) that NVIDIA's Multi-Instance
+    GPU (MIG) leaves unpartitioned across otherwise-isolated GPU instances; per the brief's threshold
+    trap it is SUPPORT rather than CORE because it optimizes an existing vGPU partitioning scheme's shared
+    resource rather than creating the virtual-GPU abstraction itself.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T2
+  physical_resource: GPU L3 TLB (shared across MIG instances)
+  logical_abstraction: Dynamically shared TLB entries across multiple MIG-instance base addresses, while
+    preserving MIG's per-instance compute/cache/memory-controller isolation
+  problem: NVIDIA MIG partitions SMs, local memory, L1/L2 caches and memory controllers per GPU instance,
+    but the L3 TLB remains shared, so co-running MIG instances suffer TLB contention and under-utilize
+    each entry's 16 sub-entries (each mapping a 64KB page within an aligned 1MB range) before eviction.
+  mechanism: STAR allocates 8 sub-entries per base address (supporting 2-address sharing per TLB entry)
+    in sequential (contiguous) or stride (interleaved) layouts depending on observed access pattern, dynamically
+    switching an entry between shared and non-shared states as demand changes; layout bits and address-identifier
+    bits track which base address owns which sub-entries.
+  isolation_mechanism: Relies on MIG's existing hardware partitioning of SMs/local memory/caches/memory
+    controllers for isolation; STAR only changes how the L3 TLB's own capacity is shared, reverting an
+    entry to exclusive access once an instance's demand exceeds its allotted sub-entries.
+  multiplexing_mechanism: TLB capacity is multiplexed by letting two MIG instances' base addresses share
+    sub-entries within one L3 TLB entry when each uses fewer than 8 of the 16 sub-entries, instead of
+    statically partitioning TLB entries per instance.
+  state_mechanism: Layout/sharing state (2 layout bits, 16 address-identifier bits, a second base address
+    field, 2 metadata bits -- 50 bits total per entry) lives directly in the L3 TLB entry; nothing migrates
+    across instances.
+  overhead_bottleneck: L3 TLB contention/low sub-entry utilization under multi-instance MIG workloads
+    before STAR's dynamic sharing.
+  primary_tradeoff: Sharing sub-entries dynamically across MIG instances gains substantial TLB hit-rate
+    and performance improvement at only 1.4% L3 TLB area overhead, at the cost of a sequential-check latency
+    penalty when looking up a shared entry's second base address.
+  quantitative_claims:
+  - 'average performance improvement: 30.2% across multi-tenant (multi-instance) workloads, up to 51.3%
+    (HHM category)'
+  - 'L3 TLB hit-rate improvement: 28.8% average'
+  - 'hardware area overhead: 1.4% of the original L3 TLB (22nm)'
+  - 'combined with MASK (state-of-the-art dynamic partitioning): additional 17.6% improvement (orthogonal
+    gains)'
+  why_useful_for_learning: 'A precise illustration of the GPU-sharing threshold trap: it operates entirely
+    inside an existing MIG vGPU partition scheme, showing what is left unisolated (a shared L3 TLB) even
+    after spatial GPU virtualization and how to fix just that gap without touching the virtualization
+    abstraction itself.'
+  priority: P1
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: Read the arXiv preprint (2404.18361, 'Improving Multi-Instance GPU Efficiency via Sub-Entry Sharing
+    TLB Design'); authors, venue and mechanism match the MICRO 2024 Session 3A listing exactly, only the
+    title differs.
+- id: VIRT-MICRO24-08
+  title: 'CacheCraft: Enhancing GPU Performance under Memory Protection through Reconstructed Caching'
+  title_correction: null
+  authors:
+  - Soyoung Park
+  - Hojung Namkoong
+  - Boyeol Choi
+  - Michael B. Sullivan
+  - Jungrae Kim
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or paper text after 3+ routes (IEEE Xplore, ACM DL,
+    author lab publications page/slides link only); classified CONTEXT with TITLE_ONLY evidence per hard
+    rule 2. 'Memory protection' most likely refers to ECC/reliability protection (the same authors publish
+    GPU ECC work) rather than tenant security, but this could not be confirmed.
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: GPU DRAM/cache hierarchy
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (title indicates GPU cache reconstruction to recover performance lost to some form
+    of memory protection, MICRO Session 3A 'GPU Microarchitecture I')
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'Access failure: IEEE Xplore/ACM DL paywalled with no abstract shown; the Scalable Architecture
+    Lab publications page lists only a PDF/slides link (PDF paywalled, slides in .pptx not fetchable as
+    text) with no abstract text.'
+- id: VIRT-MICRO24-09
+  title: Low-overhead General-purpose Near-Data Processing in CXL Memory Expanders
+  title_correction: null
+  authors:
+  - Hyungkyu Ham
+  - Jeongmin Hong
+  - Geonwoo Park
+  - Yunseon Shin
+  - Okkyun Woo
+  - Wonhyuk Yang
+  - Jinhoon Bae
+  - Eunhyeok Park
+  - Hyojin Sung
+  - Euicheol Lim
+  - Gwangsun Kim
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://arxiv.org/abs/2404.19381
+  classification: DROP
+  classification_note: M2NDP is a single-host near-data-processing architecture for a CXL memory expander;
+    it builds no virtual/shared resource abstraction over the CXL memory for multiple tenants or VMs,
+    so per the brief's disaggregation rule this is SUPPORT-or-lower at best and, with zero multi-tenant
+    framing anywhere in the paper, is dropped as unrelated to virtualization.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: CXL memory expander
+  logical_abstraction: N/A -- single-host near-data-processing engine, no virtual/pooled abstraction for
+    multiple tenants.
+  problem: Prior CXL near-data-processing approaches are application-specific and impractical; CPU/GPU
+    cores are not cost-efficient for memory-bound workloads, and CXL.io/PCIe-based communication introduces
+    microsecond-scale latency unsuitable for fine-grained offload.
+  mechanism: M2func is a CXL.mem-compatible low-latency host-to-NDP-controller communication mechanism;
+    M2uthread provides lightweight microthreads for concurrent kernel execution with minimal resource
+    overhead inside the CXL memory expander.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: Host-to-CXL-controller communication latency, addressed via the CXL.mem protocol
+    instead of CXL.io/PCIe.
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 'speedup: up to 128x for individual workloads, 14.5x overall vs CPU/GPU hosts with passive CXL memory'
+  - 'energy reduction: up to 87.9% for specific workloads, 80.3% overall'
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: DROP -- surfaced under 'CXL/device pooling' retrieval keywords; recorded as a false positive
+    (single-host near-memory compute, not virtualization).
+- id: VIRT-MICRO24-10
+  title: 'PIM-MMU: A Memory Management Unit for Accelerating Data Transfers in Commercial PIM Systems'
+  title_correction: null
+  authors:
+  - UNKNOWN (KAIST-affiliated authors; full list not confirmed from accessible sources)
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://arxiv.org/abs/2409.06204
+  classification: DROP
+  classification_note: PIM-MMU accelerates DRAM<->PIM data transfers for a single-tenant UPMEM-class PIM
+    system; it explicitly does not address virtualization, multi-tenant isolation, or nested address translation,
+    so despite the 'MMU' name it is not a virtualization paper.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: DRAM and PIM (UPMEM-class) address spaces
+  logical_abstraction: N/A -- single-tenant DRAM/PIM address-space data-transfer acceleration, no guest/virtual
+    abstraction.
+  problem: Memory-bus-integrated PIM systems require explicit CPU-driven transfers between separate DRAM
+    and PIM address spaces, causing high CPU utilization, suboptimal PIM throughput from coarse-grained
+    software scheduling, and degraded DRAM throughput from locality-centric (not MLP-centric) memory mapping.
+  mechanism: A Data Copy Engine offloads DRAM<->PIM transfers (with on-the-fly transposition) from the
+    CPU; a PIM-aware Memory Scheduler exploits mutually-exclusive PIM transfer addresses to reorder for
+    channel/bank-level parallelism; a Heterogeneous Memory Mapping Unit maintains separate MLP-centric
+    (DRAM) and locality-centric (PIM) address mappings.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: CPU-driven transfer overhead and suboptimal scheduling/mapping in the baseline
+    UPMEM-style transfer path.
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 'DRAM<->PIM throughput: 4.1x average, up to 6.9x (Intel Xeon Gold 5222, DDR4-3200 DRAM, UPMEM-PIM
+    DIMMs, PrIM benchmarks)'
+  - 'end-to-end speedup: 2.2x average, up to 4.0x on PrIM benchmarks'
+  - 'hardware area: 0.85mm2 (0.37% CPU die increase)'
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  confidence: MEDIUM
+  notes: DROP -- surfaced under 'address-translation offload'/'MMU' retrieval keywords; recorded as a
+    false positive (single-tenant PIM data-transfer accelerator, not virtualization). Full author list
+    not independently confirmed; program page not re-scraped for this specific line item.
+- id: VIRT-MICRO24-11
+  title: 'StarNUMA: Mitigating NUMA Challenges with Memory Pooling'
+  title_correction: null
+  authors:
+  - Albert Cho
+  - Alexandros Daglis
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://faculty.cc.gatech.edu/~adaglis3/files/papers/starnuma_micro24.pdf
+  classification: DROP
+  classification_note: StarNUMA adds a CXL-attached shared memory pool to mitigate intra-node NUMA latency/bandwidth
+    penalties on a single large multi-socket server; it is single-node data placement, not a multi-tenant
+    elastic guest-physical memory abstraction, so per the brief's disaggregation rule it does not qualify
+    as virtualization.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: CXL-attached shared memory pool across a multi-socket server
+  logical_abstraction: N/A -- single-node NUMA data-placement optimization, not a per-tenant virtual memory
+    abstraction.
+  problem: Large NUMA systems show 4-10x latency disparity between local and remote memory; 'vagabond
+    pages' shared across many sockets have no good home socket, making per-socket placement ineffective
+    and costly multi-hop traversals common.
+  mechanism: StarNUMA adds a centralized CXL-attached memory pool reachable in a single high-bandwidth
+    CXL hop from every socket, implemented as a Type-3 multi-headed device with directory-based MESI coherence
+    (180ns latency vs 360ns for 2-hop NUMA access), and uses hardware-supported TLB invalidation during
+    page migration to avoid costly inter-processor interrupts.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A (single-node shared-memory placement, not multi-tenant sharing)
+  state_mechanism: N/A
+  overhead_bottleneck: TLB shootdowns during page migration; mitigated by hardware-supported invalidation
+    (3k cycles per page) and one dedicated OS core (~0.2% overhead).
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 'average memory access time reduction: 48% (16-socket HPE Superdome FLEX-inspired system, GAP/GenomicsBench/Masstree/TPCC)'
+  - 'average speedup: 1.54x geomean, up to 2.17x (TC)'
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: DROP -- surfaced under 'CXL/device pooling' retrieval keywords; recorded as a false positive
+    (single-node NUMA memory pooling, not a multi-tenant virtual abstraction).
+- id: VIRT-MICRO24-12
+  title: 'NeoMem: Hardware/Software Co-Design for CXL-Native Memory Tiering'
+  title_correction: null
+  authors:
+  - Zhe Zhou
+  - Yiqi Chen
+  - Tao Zhang
+  - Yang Wang
+  - Ran Shu
+  - Shuotao Xu
+  - Peng Cheng
+  - Lei Qu
+  - Yongqiang Xiong
+  - Jie Zhang
+  - Guangyu Sun
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://arxiv.org/abs/2403.18702
+  classification: DROP
+  classification_note: NeoMem is a single-host hot-page-detection and promotion mechanism for CXL-tiered
+    memory; it explicitly does not address virtualization or multi-tenant scenarios, so it does not meet
+    the brief's bar for a virtual memory-pool abstraction.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: CXL-attached tiered memory
+  logical_abstraction: N/A -- single-host memory-tiering hot-page detection, no per-tenant abstraction.
+  problem: Existing memory-tiering hot-page detection (PTE-scan, hint-fault monitoring, PMU sampling)
+    trades resolution for overhead or cannot distinguish LLC misses from TLB misses, hurting classification
+    accuracy.
+  mechanism: A hardware profiler (NeoProf) inside the CXL memory controller uses a Count-Min Sketch to
+    detect hot pages without per-page counters, plus state monitors for bandwidth/read-write ratio; a
+    Linux kernel daemon dynamically adjusts promotion thresholds from access-frequency distribution, bandwidth
+    utilization, ping-pong severity and error bounds.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: FPGA-prototype profiling latency (~430ns), expected to shrink on an ASIC CXL controller.
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 'geomean speedup: 32-67% over existing tiering solutions (PEBS, PTE-scan, TPP, AutoNUMA, first-touch
+    NUMA; DeathstarBench/PageRank/XSBench/GUPS/Silo/Btree/SPEC-2017)'
+  - 'hardware overhead: 2.3x2.3mm2 at TSMC 22nm, 152.2mW'
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: DROP -- surfaced under 'CXL/device pooling' retrieval keywords; recorded as a false positive
+    (single-host memory tiering, not virtualization).
+- id: VIRT-MICRO24-13
+  title: 'Demystifying a CXL Type-2 Device: A Heterogeneous Cooperative Computing Perspective'
+  title_correction: null
+  authors:
+  - Houxiang Ji
+  - Srikar Vanavasam
+  - Yang Zhou
+  - Qirong Xia
+  - Jinghan Huang
+  - Yifan Yuan
+  - Ren Wang
+  - Pekon Gupta
+  - Bhushan Chitlur
+  - Ipoom Jeong
+  - Nam Sung Kim
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: UNKNOWN
+  classification: DROP
+  classification_note: This is a characterization study of a single CXL Type-2 device's cache-coherent
+    host/device memory-access performance, applied to single-host Linux features (zswap, ksm); it builds
+    no virtualized or shared memory abstraction across multiple hosts or tenants.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T2
+  taxonomy_secondary: []
+  physical_resource: CXL Type-2 accelerator device and its device/host memory
+  logical_abstraction: N/A -- microbenchmark characterization of a single device's memory-access paths.
+  problem: CXL Type-2 devices (cache-coherent accelerators) are commercially available but their real
+    performance characteristics across device-to-host, device-to-device-memory, and host-to-device-memory
+    paths are not well understood.
+  mechanism: Microbenchmark characterization of a CXL Type-2 device's three access paths, compared against
+    emulated CXL Type-2, CXL Type-3, and PCIe devices; two applications (Linux zswap compressed-RAM swap,
+    and ksm memory deduplication) are built on top to demonstrate practical use.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: Host-device communication latency compared across PCIe, emulated CXL, and native
+    CXL Type-2 paths.
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 'Redis tail latency increase: 4.5-10.3x (CPU-based) and up to 8.1x (PCIe-based) vs a CXL-Type-2-based
+    implementation that practically eliminates the tail-latency increase'
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: DROP -- surfaced under 'CXL/device pooling' retrieval keywords; recorded as a false positive
+    (single-device characterization study, not virtualization). Full paper text paywalled; summarized
+    from a secondary description.
+- id: VIRT-MICRO24-14
+  title: 'Ghost Arbitration: Mitigating Interconnect Side-Channel Timing Attacks in GPU'
+  title_correction: null
+  authors:
+  - UNKNOWN (KAIST-affiliated authors per program listing; full list not independently confirmed from
+    accessible sources)
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not obtain the abstract or paper text after 3+ routes (IEEE Xplore, ACM DL/ResearchGate,
+    KAIST lab site); classified CONTEXT with TITLE_ONLY evidence per hard rule 2 -- unable to confirm
+    whether the threat model is cross-tenant/multi-tenant GPU sharing (which would make it a genuine side-channel-in-a-VM/shared-GPU-setting
+    SUPPORT case) or a single-user attacker/victim pair.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: []
+  physical_resource: GPU network-on-chip / interconnect arbiter
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (title indicates a defense against timing side-channel attacks that exploit GPU interconnect
+    arbitration, MICRO Session 8A 'Side-Channel Attacks/Defenses')
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: null
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'Access failure: IEEE Xplore/ResearchGate gave only bibliographic metadata, no abstract; the
+    KAIST CSNL lab page only confirms acceptance, no PDF or abstract. Flagged in batch_observations as
+    an unresolved side-channel-at-an-architecture-venue candidate: could not confirm whether it is a genuine
+    cross-tenant-GPU false positive or a real VM/MIG-isolation-relevant SUPPORT case like Veiled Pathways.'
+- id: VIRT-MICRO24-15
+  title: 'IvLeague: Side Channel-resistant Secure Architectures Using Isolated Domains of Dynamic Integrity
+    Trees'
+  title_correction: null
+  authors:
+  - Md Hafizul Islam Chowdhury
+  - Fan Yao
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: http://hafizul-islam.com/files/ivleague.pdf
+  classification: CORE
+  classification_note: 'The paper''s contribution is fixing a genuine isolation flaw in secure-enclave
+    architectures (SGX-style): a single global integrity tree implicitly shares metadata across security
+    domains, letting one enclave infer another''s activity; the fix (TreeLings) is itself a new enclave-isolation
+    mechanism, matching the brief''s confidential-computing/isolation-architecture CORE criterion.'
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: []
+  physical_resource: Off-chip DRAM protected by a secure processor's integrity-tree hardware
+  logical_abstraction: 'Per-domain ''TreeLings'': fixed-size (64MB) integrity subtrees with independent
+    on-chip roots, replacing one global integrity tree shared by all enclaves'
+  problem: Secure processors (e.g. SGX) verify off-chip memory with one global tree-based integrity structure,
+    but memory accesses in one enclave unavoidably exercise integrity-tree nodes shared with other domains;
+    the paper demonstrates a MetaLeak attack extracting an RSA private exponent from a victim enclave
+    at 91.6% accuracy purely from this shared-metadata timing side channel.
+  mechanism: The global integrity tree is split into 4,096 fixed-size 64MB TreeLings, each with its own
+    on-chip root register, dynamically allocated to security domains so that no domain's memory accesses
+    ever touch another domain's tree nodes; IvLeague-Invert maps pages to intermediate tree nodes to shorten
+    verification paths, and IvLeague-Pro relocates frequently-accessed pages closer to their TreeLing's
+    root.
+  isolation_mechanism: Physical partitioning of the integrity-tree metadata itself into per-domain TreeLings
+    with independent roots eliminates the shared-node timing channel that MetaLeak exploited; this is
+    isolation at the level of a shared security metadata structure, not just of the protected data.
+  multiplexing_mechanism: TreeLings are dynamically allocated to domains from a fixed pool of 4,096, so
+    the number of domains supported is bounded by TreeLing count rather than by on-chip root-register
+    capacity alone.
+  state_mechanism: Each domain's on-chip root register anchors its own TreeLing; TreeLing utilization
+    stays above 99.5% with 16MB memory overhead for the scheme.
+  overhead_bottleneck: 'Shorter/composed verification paths cost extra tree-walk overhead relative to
+    one large flat tree, especially for large working sets (Large configuration: -13.2% to -17.4% before
+    the Invert/Pro optimizations).'
+  primary_tradeoff: Splitting one shared, timing-observable integrity tree into isolated per-domain TreeLings
+    closes the MetaLeak side channel entirely, but a naive split costs 2.7-17.4% performance depending
+    on working-set size; the Invert/Pro extensions recover this to a net 5-19% speedup over the flat-tree
+    baseline.
+  quantitative_claims:
+  - 'MetaLeak attack: 91.6% accuracy extracting an RSA private exponent via shared integrity-tree metadata
+    timing'
+  - 'IvLeague-Basic: -2.7%/-5.5%/-17.4% (Small/Medium/Large) vs flat global tree (45nm, 0.355mm2 hardware
+    cost)'
+  - 'IvLeague-Pro: +5% to +19% (14% average) vs flat global tree'
+  - 'TreeLing utilization: >99.5%, 16MB memory overhead'
+  why_useful_for_learning: Demonstrates that even a supposedly-isolated enclave architecture can leak
+    through a shared, isolation-adjacent hardware structure (the integrity tree), and shows the general
+    pattern -- partition the shared metadata itself -- for closing such gaps; directly extends the CORE
+    TEE literature (SGX/TDX/SEV, HyperTEE, Data Enclave in this same batch).
+  priority: P1
+  related:
+  - VIRT-MICRO24-04
+  - VIRT-HPCA24-01
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-MICRO24-04
+    basis: Both fix a shared/central management or metadata structure (EMS mailbox vs integrity-tree)
+      that leaks information across otherwise-isolated enclave/TEE domains on the same physical processor.
+  - type: SAME_BRANCH
+    target: VIRT-HPCA24-01
+    basis: Both extend SGX-class enclave isolation with a new structural mechanism (data enclaves vs TreeLings)
+      addressing a limitation of the stock SGX integrity/sharing model.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: Read the author-hosted camera-ready-style PDF (hafizul-islam.com).
+- id: VIRT-MICRO24-16
+  title: 'Veiled Pathways: Investigating Covert and Side Channels Within GPU Uncore'
+  title_correction: null
+  authors:
+  - Yuanqing Miao
+  - Yingtian Zhang
+  - Dinghao Wu
+  - Danfeng Zhang
+  - Gang Tan
+  - Rui Zhang
+  - Mahmut Taylan Kandemir
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://faculty.ist.psu.edu/wu/papers/Veiled-Pathways.pdf
+  classification: SUPPORT
+  classification_note: The paper demonstrates covert/side channels that bypass NVIDIA MPS isolation and,
+    via unpartitioned PCIe bandwidth, even MIG isolation between GPU instances -- a direct security evaluation
+    of the GPU virtualization boundary's actual guarantees, informing (but not itself proposing) a GPU
+    virtualization mechanism, hence SUPPORT rather than CORE.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T7
+  physical_resource: 'GPU ''uncore'' components: DRAM frequency-scaling logic, NVENC/NVDEC/NVJPEG codec
+    engines, PCIe link'
+  logical_abstraction: N/A (this is a security evaluation of MPS/MIG's existing isolation guarantees,
+    not a new abstraction).
+  problem: Prior GPU security research focuses on GPU 'core' components (compute units, cache, interconnect);
+    the 'uncore' domain -- DRAM frequency scaling and video/image codec engines -- is understudied and
+    was assumed safe from cross-tenant leakage.
+  mechanism: 'Four leakage channels are identified: GPU DRAM frequency-scaling duration encodes information
+    from kernel-launch spacing; NVENC/NVDEC/NVJPEG engine utilization correlates with workload properties
+    (resolution, frame rate) and can be modulated to signal; PCIe bandwidth is unpartitioned across MIG
+    instances and can carry a contention-based covert channel.'
+  isolation_mechanism: 'Directly evaluates (and finds gaps in) NVIDIA''s existing isolation mechanisms:
+    MPS logical-resource isolation between co-located processes is bypassed by uncore channels, and even
+    MIG''s physical instance isolation is bypassed via the shared, unpartitioned PCIe link.'
+  multiplexing_mechanism: The channels exploit GPU uncore resources (DRAM frequency controller, codec
+    engines, PCIe link) that remain shared/unpartitioned even when compute, cache and memory controllers
+    are partitioned by MIG.
+  state_mechanism: N/A (attack demonstration, not a new virtualization state mechanism).
+  overhead_bottleneck: N/A
+  primary_tradeoff: N/A
+  quantitative_claims:
+  - 'DRAM-frequency covert channel: 0.5 bit/s (RTX 3080)'
+  - 'NVENC utilization channel: 0.5 bit/s; NVDEC: 2 bit/s (RTX 3080)'
+  - 'NVJPEG utilization channel: 2 bit/s (A100)'
+  - 'PCIe covert channel bypassing MIG isolation: 6.8 kbps at 0.033 error rate (A100, no root access required)'
+  - 'website-fingerprinting side-channel accuracy: 89.17% (40 sites, 5 Hz sampling), 98.33% combined with
+    memory-allocation traces'
+  why_useful_for_learning: A concrete demonstration that vGPU isolation (MPS/MIG) is incomplete once 'uncore'
+    resources are considered, directly relevant to evaluating the real isolation guarantees of any CORE
+    GPU-virtualization paper's design.
+  priority: P2
+  related:
+  - VIRT-MICRO24-07
+  relations:
+  - type: CONTRASTS_WITH
+    target: VIRT-MICRO24-07
+    basis: STAR improves a shared GPU structure (L3 TLB) within MIG's isolation model for performance;
+      Veiled Pathways shows other shared, unpartitioned GPU uncore structures (PCIe, codec engines, DRAM
+      frequency control) break that same isolation model for security -- two views of what MIG does and
+      does not actually partition.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: Read the author-hosted PDF (Penn State, faculty.ist.psu.edu/wu).
+- id: VIRT-MICRO24-17
+  title: 'Mosaic: Harnessing the Micro-Architectural Resources of Servers in Serverless Environments'
+  title_correction: null
+  authors:
+  - Jovan Stojkovic
+  - Esha Choukse
+  - Enrique Saurez
+  - Inigo Goiri
+  - Josep Torrellas
+  venue: MICRO
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://microarch.org/micro57/program/
+  fullpaper_source: https://jovans2.github.io/files/Mosaic_MICRO.pdf
+  classification: CORE
+  classification_note: Mosaic's contribution is a new hardware isolation/partitioning mechanism -- tagged
+    'chunks' and per-function 'tiles' carved out of the L2/L2-TLB/LLC/branch-predictor structures, with
+    hardware-enforced ownership tags -- purpose-built to give serverless functions genuine microarchitectural-state
+    isolation and reuse across context switches; this is resource-partitioning hardware for multi-tenancy,
+    the exact CORE pattern the brief flags as an expected 2024 yield area.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T5
+  - T8
+  physical_resource: CPU core (L2 cache, L2 TLB, LLC, BTB, branch-predictor table)
+  logical_abstraction: Per-function 'tiles' -- fixed-size hardware chunks of L2/L2-TLB/LLC/BTB/branch-predictor
+    capacity -- that persist a function's microarchitectural state across context switches and are tagged
+    so other functions cannot see or evict them
+  problem: Serverless functions are small (average 2.9MB LLC footprint vs 15MB available) but oversubscribed
+    serverless hosts interleave many functions' executions on the same cores, so frequent context switches
+    destroy microarchitectural state before it can be reused, causing up to 4x response-time degradation
+    from 'cold' structures; server-class caches/TLBs/branch predictors are simply oversized for this workload
+    mix.
+  mechanism: MosaicCPU partitions oversized structures into fixed-size physical 'chunks' and assigns collections
+    of chunks ('tiles') to individual functions, tagged so each function accesses only its own chunks;
+    on a context switch, a preempted function's chunks are put into low-voltage mode instead of being
+    evicted, retaining state; MosaicScheduler profiles functions online, models cache/TLB/BTB miss trends
+    offline, and uses a random-forest classifier (92% accuracy) to predict per-function optimal tile sizes
+    from only 8-10 invocations, then schedules functions preferentially onto cores that already hold their
+    tile state.
+  isolation_mechanism: Hardware tags on each chunk record which function owns it; a function can only
+    access its own tagged chunks, and a coherence-protocol extension with FuncID tags supports the sharing
+    needed for multi-threaded or concurrent invocations of the same function without leaking state to
+    unrelated functions.
+  multiplexing_mechanism: A per-core hardware States Table tracks which functions currently hold state
+    in which structure (FuncID, allocated/required chunks, LRU bits); on a miss the LRU function's chunks
+    are evicted and reassigned, and idle tiles drop into low-voltage mode rather than being powered normally,
+    multiplexing both capacity and power across co-resident functions.
+  state_mechanism: A function's microarchitectural state (cache lines, TLB entries, branch-predictor history)
+    is retained in its dedicated, tagged chunks across preemptions instead of being flushed; the States
+    Table is the on-chip record of where each function's state currently lives.
+  overhead_bottleneck: Chunk write-back on eviction (500-600ns average, up to 1.5-2us worst case); voltage-rail
+    switching adds a fixed 5-cycle latency per chunk on context switch.
+  primary_tradeoff: Hardware-partitioning oversized structures into tagged, retainable per-function tiles
+    gains large tail-latency and throughput improvements at oversubscription with only 1.06% core-storage
+    overhead, but requires new tagged/partitionable cache-family hardware plus an online profiling and
+    scheduling co-design to pick tile sizes correctly.
+  quantitative_claims:
+  - 'p99 tail latency: 74.6% reduction on average (64.8-79.9% range) vs an Intel-Sapphire-Rapids-class
+    baseline (16 cores, 3.6GHz, 2MB L2, 1.875MB LLC slice)'
+  - 'average latency: 59.6% reduction'
+  - 'sustainable throughput: 225% improvement on average across functions'
+  - 'power consumption: 22% average reduction (up to 46% for some functions); 80% improvement in energy-delay
+    product'
+  - 'datacenter scale (1000+ servers): 10-24% fewer servers needed than a Baseline+Manycore alternative'
+  - 'storage overhead: 43.5KB per core (1.06% of core storage, 0.42% core area)'
+  - 'profiling cost: 8-10 function invocations to set optimal tile sizes, 92% classifier accuracy'
+  why_useful_for_learning: 'A CPU-side counterpart to GPU MIG/vGPU partitioning: shows how to give serverless
+    multi-tenancy real hardware isolation and state retention in shared microarchitectural structures,
+    directly the kind of accelerator/CPU partitioning-hardware result this batch specifically expected
+    for 2024.'
+  priority: P1
+  related:
+  - VIRT-MICRO24-07
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-MICRO24-07
+    basis: Both partition a normally-shared microarchitectural structure (L3 TLB for MIG GPU instances;
+      L2/LLC/TLB/BTB for serverless functions) to give genuine per-tenant isolation/state retention within
+      an existing multi-tenancy model.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: HIGH
+  notes: Read the author-hosted camera-ready PDF (jovans2.github.io).
+venue_populations:
+- venue: HPCA
+  year: 2024
+  official_source: https://www.hpca-conf.org/2024/program/main.php (full session-by-session program),
+    cross-checked against https://openaccept.org/c/sys/hpca/ (410 submitted, 75 accepted, 18.29% acceptance
+    rate)
+  main_track_paper_count: 75
+  count_basis: Manually enumerated all 81 non-keynote/non-panel items listed on the official HPCA 2024
+    program page (Sessions 1A-10C across 3 days). Of these, 3 are explicitly labelled 'Industry Track'
+    (Session 9) and 3 more (Session 5C, 'Best of CAL') are retrospective presentations of already-published
+    IEEE Computer Architecture Letters papers, not fresh HPCA submissions. 81 - 3 - 3 = 75, which matches
+    openaccept.org's independently-tabulated historical statistic (75 accepted of 410 submitted) exactly,
+    confirming the regular-research population is 75 and the program's other 6 listed items are industry-track
+    or CAL-reprint sessions layered on top.
+- venue: MICRO
+  year: 2024
+  official_source: https://microarch.org/micro57/program/ (full session-by-session program), cross-checked
+    against https://openaccept.org/c/sys/micro/ (497 submitted, 113 accepted, 22.74% acceptance rate)
+  main_track_paper_count: 113
+  count_basis: Manually enumerated all 113 non-keynote items listed on the official MICRO 2024 (57th)
+    program page (Sessions 1A-11C across 3 days). This matches openaccept.org's independently-tabulated
+    historical statistic (113 accepted of 497 submitted) exactly with no separate industry track to subtract;
+    MICRO does not run a distinct industry-submission track the way HPCA does, so industry-authored papers
+    (e.g. SOPHGO BM1684X, SambaNova SN40L) are counted as ordinary regular-research papers.
+possible_omissions: []
+possible_expansion: []
+excluded_by_pubtype:
+- title: A Quantum Computer Trusted Execution Environment
+  venue: HPCA 2024
+  actual_type: Best of CAL retrospective session (Session 5C) reprint of an already-published IEEE Computer
+    Architecture Letters 2023 paper (DOI 10.1109/LCA.2023.3325852); invited presentation of prior work,
+    not a fresh HPCA 2024 submission.
+  evidence: https://www.hpca-conf.org/2024/program/main.php (Session 5C 'Best of CAL'); https://arxiv.org/abs/2308.03897
+- title: 'Unleashing the Potential of PIM: Accelerating Large Batched Inference of Transformer-Based Generative
+    Models'
+  venue: HPCA 2024
+  actual_type: Best of CAL retrospective session (Session 5C) reprint; not a fresh HPCA 2024 submission.
+    Not virtualization-relevant, so not given its own paper record.
+  evidence: https://www.hpca-conf.org/2024/program/main.php (Session 5C 'Best of CAL')
+- title: Computational CXL-Memory Solution for Accelerating Memory-Intensive Applications
+  venue: HPCA 2024
+  actual_type: Best of CAL retrospective session (Session 5C) reprint of an already-published IEEE Computer
+    Architecture Letters 2022 paper (IEEE Xplore doc 9969883); invited presentation of prior work, not
+    a fresh HPCA 2024 submission.
+  evidence: https://www.hpca-conf.org/2024/program/main.php (Session 5C 'Best of CAL')
+- title: An LPDDR-based CXL-PNM Platform for TCO-Efficient GPT Inference
+  venue: HPCA 2024
+  actual_type: Industry Track (Session 9); kept in mind as INDUSTRY_TRACK category but not given its own
+    paper record since it has no virtualization content (single-host CXL-PNM inference accelerator).
+  evidence: https://www.hpca-conf.org/2024/program/main.php (Session 9 'Industrial Track')
+- title: Enterprise-Class Cache Compression Design
+  venue: HPCA 2024
+  actual_type: Industry Track (Session 9); no virtualization content, not given its own paper record.
+  evidence: https://www.hpca-conf.org/2024/program/main.php (Session 9 'Industrial Track')
+access_failures:
+- title: 'Distributed Page Table: Harnessing Physical Memory as an Unbounded Hashed Page Table'
+  what_was_tried: IEEE Xplore (doc 10764439, paywalled); ACM DL/computer.org (paywalled, no abstract shown);
+    the COMPASS-Lab (Kyungpook Natl Univ) and CLODIS-Lab author publication pages (citation only, no abstract
+    or PDF link); targeted web searches for abstract text (no results beyond bibliographic listings).
+  best_evidence_obtained: Full title, author list, session placement (MICRO 2024 Session 1A, 'Virtual
+    Memory/Virtualization') from the official program page and author lab publication pages.
+- title: 'CacheCraft: Enhancing GPU Performance under Memory Protection through Reconstructed Caching'
+  what_was_tried: IEEE Xplore (paywalled); ACM DL (paywalled, abstract not exposed); Scalable Architecture
+    Lab (authors' own) publications page (PDF link paywalled, slides link is a .pptx not extractable as
+    text); Semantic Scholar (blocked by robots.txt); targeted web searches (only bibliographic metadata
+    returned).
+  best_evidence_obtained: Full title, author list, venue/session (MICRO 2024 Session 3A, 'GPU Microarchitecture
+    I') from the official program page and lab site.
+- title: 'Ghost Arbitration: Mitigating Interconnect Side-Channel Timing Attacks in GPU'
+  what_was_tried: IEEE Xplore (paywalled); ResearchGate (metadata only, no abstract); the KAIST CSNL lab
+    homepage (confirms acceptance only, no PDF/abstract); targeted web searches (only bibliographic metadata
+    and an unrelated NVBleed paper returned).
+  best_evidence_obtained: Title, session placement (MICRO 2024 Session 8A, 'Side-Channel Attacks/Defenses')
+    from the official program page; authorship not independently confirmed beyond the program page's own
+    listing.
+- title: Supporting Secure Multi-GPU Computing with Dynamic and Batched Metadata Management
+  what_was_tried: IEEE Xplore and ACM DL (paywalled); no author-hosted full PDF located after searching
+    author homepages/NSF PAR mirrors.
+  best_evidence_obtained: The authors' own HPCA 2024 conference slide deck (seonjinna.github.io/assets/pdf/hpca24_slides.pdf),
+    which gave problem/mechanism/results detail at DESIGN depth but not the full paper text.
+- title: 'LightPool: A NVMe-oF-based High-performance and Lightweight Storage Pool Architecture for Cloud-Native
+    Distributed Database'
+  what_was_tried: IEEE Xplore and ACM DL/Semantic Scholar (paywalled/metadata only); no author-hosted
+    PDF located.
+  best_evidence_obtained: A Zhejiang University ARC-lab Chinese-language press release describing the
+    same system with matching quantitative figures (utilization, latency, bandwidth), used at ABSTRACT_INTRO
+    depth.
+- title: 'Data Motion Acceleration: Chaining Cross-Domain Multi Accelerators'
+  what_was_tried: IEEE Xplore and ACM DL (paywalled).
+  best_evidence_obtained: The IBM Research publication abstract page (research.ibm.com), giving problem/mechanism/top-line
+    quantitative results at ABSTRACT_INTRO depth.
+- title: 'Demystifying a CXL Type-2 Device: A Heterogeneous Cooperative Computing Perspective'
+  what_was_tried: IEEE Xplore and ACM DL (paywalled, abstract not exposed); author personal pages (Ipoom
+    Jeong, Houxiang Ji -- citation only, no abstract).
+  best_evidence_obtained: A secondary description (via web search snippet aggregation) of the paper's
+    three characterized access paths and its zswap/ksm case studies with top-line Redis tail-latency numbers,
+    at ABSTRACT_INTRO depth.
+seed_corrections: []
+batch_observations: 'This is a from-scratch 2024 census with no seed list, so ''seed_corrections'' is
+  intentionally empty.
+
+
+  Enumeration completeness: BOTH venues'' full programs were enumerated from the official program pages
+  (hpca-conf.org/2024/program/main.php: 81 listed items across Sessions 1A-10C plus keynotes/panel; microarch.org/micro57/program/:
+  113 listed items across Sessions 1A-11C plus keynotes), and every title in both lists was individually
+  screened against the brief''s virtualization-relevance keyword list (VM, hypervisor, vCPU, nested virtualization,
+  guest, live migration, SR-IOV, IOMMU, passthrough, virtio, container, sandbox, TEE/SEV-SNP/TDX/SGX/CCA,
+  GPU sharing/MIG/MPS, FPGA, SmartNIC/DPU, serverless, multi-tenancy, oversubscription, partitioning,
+  interference, nested/two-level page tables, address-translation offload). This was closer-to-exhaustive
+  title screening than possible for the ACM-DL-heavy 2024 venues in earlier batches, because both hpca-conf.org
+  and microarch.org publish complete, freely-fetchable program pages (unlike EuroSys/SOSP''s accepted-papers.html-plus-dblp
+  approach in batch census24a, and unlike dblp itself, which returned ROBOTS_DISALLOWED for both conf/hpca/hpca2024.html
+  and conf/micro/micro2024.html on every attempt this batch, exactly as it did for SOSP in a prior batch).
+  Both venues'' program-derived counts (81 HPCA gross listed items, 113 MICRO listed items) were independently
+  cross-checked against openaccept.org''s historical acceptance-rate table, which gave exactly 75/410
+  (18.29%) for HPCA 2024 and exactly 113/497 (22.74%) for MICRO 2024 -- the MICRO figure matches the raw
+  program-page count with no adjustment needed, while the HPCA figure requires subtracting 3 Industry
+  Track papers (Session 9) and 3 ''Best of CAL'' retrospective reprints (Session 5C) from the 81 gross
+  listed items to land exactly on 75, which is treated as strong independent confirmation that both the
+  HPCA and MICRO enumerations are complete and that the ''Best of CAL'' items are correctly identified
+  as non-regular-submission content.
+
+
+  Candidate screening depth: every title flagged by the keyword list above was chased to at least one
+  non-paywalled source (author homepage, lab page, arXiv, institutional repository, press release, or
+  conference slide deck) before classification; 7 candidates (listed in access_failures) could not be
+  read beyond bibliographic metadata after 3+ attempted routes each and are recorded per hard rule 2 as
+  CONTEXT/TITLE_ONLY/LOW rather than guessed from title, even where the title alone strongly suggests
+  a likely classification (e.g. ''Distributed Page Table'' and ''CacheCraft ... under Memory Protection''
+  both read, on title alone, as probable pure-virtual-memory or reliability-not-security papers, but this
+  was not confirmed and so was not used to classify them DROP).
+
+
+  Pure-virtual-memory false positives explicitly screened and dropped (drop_reason: pure_virtual_memory),
+  per the brief''s mandated first-class deliverable: (1) ''A Case for Speculative Address Translation
+  with Rapid Validation for GPUs'' (Avatar, MICRO 2024) -- confirmed by reading the full paper that it
+  addresses only single-level GPU virtual memory (CPU-host-to-discrete-GPU UVM), with no nested translation,
+  guest-physical addressing, or hypervisor/multi-tenant content. (2) ''SUV: Static analysis guided Unified
+  Virtual Memory'' (MICRO 2024) -- confirmed single-process GPU UVM prefetch/pinning via static analysis,
+  no nested/hypervisor/multi-tenant content. By contrast, ''Elastic Translations: Fast virtual memory
+  with multiple translation sizes'' (MICRO 2024), despite an almost identical single-level-sounding title
+  and appearing in the same ''Virtual Memory/Virtualization'' session, was read in full and found to explicitly
+  manage KVM''s nested (stage-2) page-table contiguous bit during nested faults and to report virtualized-execution
+  speedups (30% average, up to 150%) -- this is the brief''s stated nested-translation exception rather
+  than the false-positive pattern, so it was classified CORE rather than DROP; this pair is flagged as
+  the batch''s clearest illustration of why each such title must actually be read rather than pattern-matched.
+
+
+  Side-channel-attack false positives and near-misses explicitly screened: ''SegScope: Probing Fine-grained
+  Interrupts via Architectural Footprints'' (HPCA 2024) was checked via its public proof-of-concept README
+  and confirmed to target a single-OS/bare-metal or single-cloud-instance threat model (KASLR breaking,
+  website fingerprinting) with no cross-VM or hypervisor-detection component, so it was not given a paper
+  record (it does not meet even the low bar of ''uses a VM as the attack setting''). Two side-channel
+  papers were read in full and found to be genuinely virtualization-relevant rather than false positives:
+  ''IvLeague'' (MICRO 2024) attacks and then repairs a shared-metadata leak between isolated SGX-style
+  enclave domains on one processor (classified CORE, since the fix is itself a new enclave-isolation mechanism),
+  and ''Veiled Pathways'' (MICRO 2024) demonstrates that GPU ''uncore'' covert/side channels bypass both
+  MPS and MIG''s existing GPU-virtualization isolation guarantees (classified SUPPORT, since it evaluates
+  but does not itself propose a new vGPU abstraction). One side-channel paper, ''Ghost Arbitration'' (MICRO
+  2024, GPU interconnect timing attacks), could not be read past its title/venue after 3 routes and is
+  recorded as an access failure with an explicit note that its true classification (genuine multi-tenant-GPU
+  false positive vs. a Veiled-Pathways-like real isolation finding) remains unresolved.
+
+
+  Other threshold calls made, applying the same bar intended for 2025/2026: (1) GPU-sharing papers that
+  operate strictly within an existing MIG/MPS partition scheme without creating the virtual-GPU abstraction
+  themselves (STAR''s shared-L3-TLB fix) were held to SUPPORT, consistent with the brief''s explicit MIG/MPS
+  threshold rule, even though STAR''s subject matter (a shared hardware structure inside a virtualized
+  GPU) is otherwise very CORE-adjacent. (2) ''Mosaic'' (MICRO 2024) was pushed to CORE rather than SUPPORT
+  because its contribution is a genuinely new hardware partitioning/isolation mechanism (tagged, retainable
+  per-function cache/TLB/BTB ''tiles'') purpose-built for serverless multi-tenancy, not merely a scheduling
+  policy over an existing isolation mechanism -- this is judged analogous to the brief''s ''container
+  isolation architecture is CORE'' rule extended to microarchitectural cache/TLB partitioning, and is
+  flagged for auditor attention as the batch''s second-most aggressive taxonomy call after DockerSSD.
+  (3) ''DockerSSD'' was classified CORE as a container-isolation-architecture paper applied to SSD firmware
+  (OS-level virtualization plus a ''virtual firmware'' layer embedded in the drive''s own embedded processor)
+  even though its full paper text could not be read (IEEE Xplore paywalled); the classification rests
+  on a KAIST press release plus a 2025 arXiv extended report by the same authors describing an unambiguous
+  Docker/OS-level-virtualization mechanism, so evidence_depth is marked DESIGN (not FULL) and confidence
+  MEDIUM rather than HIGH. (4) CXL/disaggregation papers with no multi-tenant or per-VM virtual-abstraction
+  claim (StarNUMA, NeoMem, M2NDP/''Low-overhead ... CXL Memory Expanders'', PIM-MMU, ''Demystifying a
+  CXL Type-2 Device'', GRIT, RELIEF, ''Data Motion Acceleration'') were all held to DROP (no_virtualization_relation)
+  as single-host/single-job resource-placement or data-movement optimizations, consistent with the same
+  CXL/disaggregation threshold used in the batch1 calibration file and in census24a/b; LightPool (HPCA
+  Industry Track) was the one storage-disaggregation paper that crossed into SUPPORT because it is explicitly
+  a cluster-wide pooled resource exposed through a scheduler across nodes, not a single-host optimization.
+  (5) ''MINOS'' (SmartNIC-offloaded distributed consistency protocol) and ''GRIT''/''RELIEF''/''Data Motion
+  Acceleration'' (single-job multi-accelerator scheduling/placement papers) were held to DROP (keyword_false_positive
+  / no_virtualization_relation respectively) despite surfacing under the SmartNIC/DPU and accelerator-sharing
+  retrieval keywords, because none of them virtualizes, partitions, or isolates the device among multiple
+  tenants -- each uses a fixed hardware target for one workload or protocol. (6) The three ''Best of CAL''
+  retrospective-session papers (Quantum TEE, PIM-for-LLM-inference, Computational CXL-Memory) were treated
+  as archival-but-non-submission content per the brief''s ''invited/industry-vendor presentation'' exclusion
+  category: still classified and recorded when virtualization-relevant (Quantum TEE: CORE; Computational
+  CXL-Memory: CONTEXT/access-limited), but excluded from the HPCA 2024 regular-research population count
+  and listed in excluded_by_pubtype, with publication_type left as UNKNOWN because no schema enum value
+  cleanly names an invited reprint of already-published work. (7) As expected by the batch brief, the
+  genuine 2024 CORE yield at these two architecture venues concentrated almost exactly where predicted:
+  confidential computing/TEE hardware (Data Enclave, HyperTEE, IvLeague, the Quantum TEE Best-of-CAL reprint)
+  and accelerator/CPU partitioning hardware for multi-tenancy (the NPU virtualization paper, STAR, Mosaic),
+  with device/IOMMU-style virtualization contributing one strong hit (DockerSSD) and comparatively little
+  from plain CXL pooling once papers lacking any multi-tenant virtual abstraction were screened out.'

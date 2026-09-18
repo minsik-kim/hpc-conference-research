@@ -1,0 +1,1257 @@
+papers:
+- id: VIRT-SOCC24-05
+  title: 'uIO: Lightweight and Extensible Unikernels'
+  title_correction: null
+  authors:
+  - Masanori Misono
+  - Peter Okelmann
+  - Charalampos Mainas
+  - Pramod Bhatotia
+  venue: SoCC
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3698038.3698518
+  official_url: https://dl.acm.org/doi/10.1145/3698038.3698518
+  fullpaper_source: https://dse.in.tum.de/wp-content/uploads/2024/10/socc24-uIO.pdf
+  classification: CORE
+  classification_note: 'The contribution IS an in-process isolation/extensibility mechanism for unikernels:
+    a hardware(MPK)- and language(eBPF)-isolated ''uIO context'' that shares the unikernel''s single address
+    space, letting Unikraft load and run auxiliary code at runtime without breaking the unikernel''s single-address-space/no-process
+    model.'
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary:
+  - T7
+  physical_resource: CPU core
+  logical_abstraction: A schedulable, address-space-sharing execution context inside a unikernel that
+    can safely load and run external position-independent code (debugging/monitoring/management tools)
+    at runtime
+  problem: Unikernels trade compile-time specialization (small image, fast boot, single address space)
+    for runtime extensibility, so production auxiliary tasks (debugging, monitoring, reconfiguration)
+    that assume a process/OS boundary cannot run inside them.
+  mechanism: uIO adds a host-side process (managing a virtual filesystem uIO-fs and console uIO-console
+    over VirtIO) and an in-unikernel 'uIO context' thread sharing the guest's single address space. External
+    ELF objects are dynamically loaded, relocated and executed inside this context via a load-and-call
+    model (no fork/exec); Memory Protection Keys give the uIO context read-only access to application
+    memory by default (explicit permission changes needed to write), and an eBPF-based sandboxed interpreter
+    (bounds checks, loop detection, 1M-instruction cap) is offered as a software-only isolation alternative
+    when MPK is unavailable.
+  isolation_mechanism: 'Two alternative in-process isolation domains for the loaded auxiliary code: (1)
+    hardware MPK-based read-only-by-default memory domain requiring explicit permission grants to write
+    into the unikernel''s memory, and (2) a language-based eBPF sandbox with static/dynamic safety checks;
+    an instruction sanitizer additionally enforces W^X to block time-of-check-to-time-of-use attacks on
+    loaded code.'
+  multiplexing_mechanism: N/A at the physical-resource level (single guest); the uIO context is multiplexed
+    onto the unikernel's own cooperative/thread scheduler as one more schedulable entity sharing the single
+    address space.
+  state_mechanism: Host-side uIO-fs/uIO-console state lives in the QEMU-side VirtIO backend; guest-side,
+    the loaded auxiliary program's code/data live in the shared unikernel address space, access-controlled
+    via MPK domain tags; nothing migrates, this is a runtime-extensibility mechanism, not a checkpoint/migration
+    one.
+  overhead_bottleneck: Program loading and relocation cost (dominated by ELF parsing/symbol resolution
+    when uncached) and VirtIO-9p filesystem I/O overhead relative to VirtIO-blk.
+  primary_tradeoff: Sharing a single address space with hardware/language-based intra-process isolation
+    domains -> keeps the unikernel's small image size and fast boot, but costs a weaker isolation boundary
+    than a separate process (isolation is by MPK domain / eBPF sandbox, not by page-table-separated address
+    space) and a modest steady-state performance and memory-footprint overhead.
+  quantitative_claims:
+  - 'baseline integration overhead: 2.1-6.2% for Nginx and Redis, negligible for SQLite (Unikraft-ported
+    apps, Intel Xeon Gold 5317, 1 vCPU/1 GiB VM, QEMU 7.2.0+KVM)'
+  - 'overhead with auxiliary operations running: 4.2-8.2% for ls/perf-style commands; up to 31% when tracing
+    busy functions in Redis'
+  - MPK isolation adds <1.9% overhead over the unisolated uIO* baseline
+  - 'console round-trip latency: 18.6 microseconds average, +1.1 microseconds under heavy Nginx load'
+  - 'program load time: 79.1 microseconds uncached vs 31.1 microseconds cached (61% reduction)'
+  - 'memory footprint increase: 0.12-0.33 MB in-unikernel, 0.23-1.55 MB total including host components
+    (~0.1% of a 1 GiB VM)'
+  - 'image size increase: 60-190 KB over baseline Unikraft'
+  - 'VirtIO-9p filesystem overhead vs VirtIO-blk: 17% on reads, 74% on writes'
+  why_useful_for_learning: A clean, concrete case study of in-process isolation applied inside a unikernel
+    (MPK-vs-eBPF trade-off), directly comparable to Intel-MPK-based intra-process sandboxes and to LightZone's
+    ARM64 in-process isolation mechanism.
+  priority: P1
+  related:
+  - VIRT-MIDDLEWARE24-15
+  relations:
+  - type: ALTERNATIVE
+    target: VIRT-MIDDLEWARE24-15
+    basis: Both build in-process isolation domains for untrusted/auxiliary code sharing an address space
+      with a trusted body of code -- uIO uses x86 MPK (or eBPF) inside a unikernel guest, LightZone uses
+      ARM64 TTBR/PAN switching for regular multi-threaded processes; alternative hardware primitives for
+      the same isolation-domain-count/switch-cost trade-off.
+  - type: SAME_BRANCH
+    target: SURE (SoCC 2024)
+    basis: Both are unikernel-architecture papers in the same SoCC 2024 session; SURE applies Unikraft
+      to serverless sandbox isolation while uIO makes Unikraft runtime-extensible without breaking its
+      isolation model.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: HIGH
+  notes: 'Rescue pass: retrieved the author-hosted full PDF at dse.in.tum.de (TUM Systems Research Group,
+    Bhatotia''s group), which mirrors the SoCC 2024 camera-ready. Read abstract, problem, design/architecture,
+    isolation mechanism and full evaluation (figures 4-9). Superseded prior TITLE_ONLY/CONTEXT/LOW stub
+    in census24b.yaml.'
+- id: VIRT-SOCC24-06
+  title: Securing a Multiprocessor KVM Hypervisor with Rust
+  title_correction: internal/system name in the paper is 'KrustVM'
+  authors:
+  - Yu-Hsun Chiang
+  - Wei-Lin Chang
+  - Shih-Wei Li
+  - Jan-Ting Du
+  venue: SoCC
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3698038.3698562
+  official_url: https://dl.acm.org/doi/10.1145/3698038.3698562
+  fullpaper_source: https://liswei.sh/files/socc24chiang.pdf
+  classification: CORE
+  classification_note: The contribution is a retrofitted KVM hypervisor (KrustVM) whose trusted computing
+    base is a small Rust component (Rcore) running at Arm EL2 that deprivileges the host Linux kernel
+    to EL1 and mediates VM exits/memory access via stage-2 page tables -- a hypervisor-correctness/confidentiality
+    mechanism, squarely CORE T7.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T1
+  physical_resource: CPU core
+  logical_abstraction: A VM whose confidentiality and integrity hold even if the (deprivileged, C-language)
+    host Linux kernel is fully compromised, on a commodity multiprocessor Arm KVM host
+  problem: KVM's trusted computing base is large, complex, unsafe C code; memory-safety bugs there break
+    every hosted VM's confidentiality/integrity, and Rust's ecosystem lacks concurrency/locking primitives
+    suited to low-level, multiprocessor hypervisor code, so a naive Rust port would still need large amounts
+    of unchecked unsafe code.
+  mechanism: Rather than rewriting all of KVM, the authors carve out a small Rust 'Rcore' (3.8K safe +
+    0.2K unsafe Rust LOC) that runs at Arm EL2, interposes every VM exit, and manages Arm stage-2 page
+    tables and SMMU page tables for memory/DMA access control, while the (untrusted) host Linux kernel
+    is deprivileged to EL1. To make this safe on a multiprocessor, they build KMutex, a custom lock type
+    using Reference Getter Functions that leverages Rust's type/lifetime system to enforce lock ordering
+    and rule out deadlocks at compile time even under concurrent multi-vCPU/multi-core access.
+  isolation_mechanism: Rcore executes in EL2 (hypervisor mode); VM execution state is kept in Rcore-private
+    memory the deprivileged host kernel (EL1) cannot reach; stage-2 page tables enforce guest-physical
+    isolation and SMMU/IOMMU page tables block DMA attacks from the host; Rust's ownership/type system
+    plus KMutex give compile-time data-race and deadlock freedom for the concurrent hypervisor code itself.
+  multiplexing_mechanism: Standard KVM multiprocessor vCPU scheduling is retained; Rcore's contribution
+    is not multiplexing capacity but mediating every VM-exit/memory-management event underneath that scheduling
+    with a safe, deprivileging boundary.
+  state_mechanism: Per-VM confidential state (page tables, execution context) is held in Rcore's EL2-private
+    memory, invisible to the deprivileged EL1 host kernel; nothing is migrated -- this is a within-host
+    confidentiality boundary, not a live-migration mechanism.
+  overhead_bottleneck: Grant/revoke hypercall overhead on networking-heavy paths (e.g. TCP_RR, Memcached)
+    and stage-2 page faults, which grow with the number of concurrently running VMs.
+  primary_tradeoff: A minimal, formally-motivated Rust TCB with compile-time race/deadlock freedom ->
+    gains strong confidentiality/integrity guarantees against a compromised host kernel with mostly-modest
+    (mostly <10%) overhead vs mainline KVM, but costs a slightly larger TCB than an equivalent hand-written
+    C design (HypSec) due to Rust language-feature overhead, plus the engineering cost of building custom
+    safe concurrency primitives (KMutex) since Rust's stock ecosystem does not fit low-level hypervisor
+    code.
+  quantitative_claims:
+  - 'overall overhead vs mainline KVM: within ~10% for most benchmarks (Kernbench, Hackbench, Apache,
+    YCSB-Redis; Raspberry Pi 4, quad-core Cortex-A72, 4GB RAM, 2 vCPU/1GB guest)'
+  - higher overhead on networking benchmarks (TCP_RR, Memcached) attributed to grant/revoke hypercall
+    cost
+  - 'TCB size: Rcore = 3.8K safe Rust + 0.2K unsafe Rust + 10K C (crypto library) vs HypSec-5.15 baseline
+    = 3.4K C'
+  - Miri (Rust interpreter/model checker) found no undefined behavior in Rcore
+  - 'multi-VM scaling: performance degrades as concurrent VM count increases, attributed to stage-2 page
+    faults'
+  why_useful_for_learning: A concrete, measured case study of using a safe systems language to shrink
+    and verify a hypervisor's confidentiality-critical TCB, directly comparable to the C-based HypSec/SeKVM
+    lineage and to later hypervisor-correctness work such as an Android hypervisor test-oracle paper.
+  priority: P1
+  related: []
+  relations:
+  - type: EXTENSION
+    target: HypSec / SeKVM (Arm KVM confidential hypervisor line)
+    basis: The paper directly implements and benchmarks against 'HypSec-5.15', a C-based implementation
+      of the same EL2-Rcore/deprivileged-host design; KrustVM is a Rust re-implementation of that same
+      architecture, aimed at eliminating memory-safety bugs in the C TCB.
+  - type: SAME_BRANCH
+    target: Android hypervisor test-oracle paper (SOSP 2025)
+    basis: Both address correctness/trust of a commodity hypervisor's TCB (one via a safe-language rewrite
+      with compile-time guarantees, the other via testing); complementary approaches to the same hypervisor-correctness
+      problem in taxonomy T7.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: HIGH
+  notes: 'Rescue pass: retrieved the author-hosted full PDF from Shih-Wei Li''s own publications page
+    (liswei.sh/files/socc24chiang.pdf), reached via his faculty homepage (liswei.sh, redirected from a
+    stale shihweili.github.io alias) -> /pubs/ page. Read abstract, problem, KMutex/Rcore design, isolation
+    mechanism, full evaluation and code-metric comparison against HypSec-5.15. Superseded prior TITLE_ONLY/CONTEXT/LOW
+    stub in census24b.yaml.'
+- id: VIRT-SOCC24-07
+  title: Towards Swap-Free, Continuous Ballooning for Fast, Cloud-Based Virtual Machine Migrations
+  title_correction: null
+  authors:
+  - Kevin Alarcón Negy
+  - Tycho Nightingale
+  - Hakim Weatherspoon
+  - Zhiming Shen
+  venue: SoCC
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3698038.3698543
+  official_url: https://dl.acm.org/doi/10.1145/3698038.3698543
+  fullpaper_source: UNKNOWN (abstract obtained via Princeton institutional repository record)
+  classification: CORE
+  classification_note: The contribution is a production Linux balloon-driver modification plus a user-space
+    'continuous ballooning' program that makes ballooning safe to use during the two scenarios where it
+    was previously too risky (giant memory spikes and in-flight live migration) -- a direct VM memory-virtualization/live-migration
+    mechanism, CORE T2/T4.
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary:
+  - T4
+  physical_resource: DRAM
+  logical_abstraction: A guest-physical memory reservation that can be safely deflated/inflated by a continuously-running
+    balloon even while the VM is being live-migrated or experiencing multi-hundred-GB memory spikes, without
+    swapping or OOM-killing the guest
+  problem: Ballooning speeds up VM migration and improves consolidation by shrinking a VM's memory footprint
+    before/during transfer, but it risks the guest swapping or hitting an out-of-memory error; this makes
+    it infeasible to run ballooning during exactly the two high-risk moments where it is most wanted --
+    large memory spikes and live migration -- forcing operators to forgo it there even though one production
+    customer migrates nested cloud VMs tens of thousands of times a month.
+  mechanism: The authors make minimal changes to the Linux kernel's balloon driver and add a user-space
+    'continuous ballooning' program that runs alongside it in a non-overcommitted deployment context,
+    coordinating balloon inflation/deflation so that neither a sudden multi-hundred-GB memory spike nor
+    an in-progress live migration can push the guest into swapping or an OOM condition; the mechanism
+    is designed to survive an unbounded sequence of successive migrations.
+  isolation_mechanism: N/A (single-tenant guest memory-safety mechanism, not a multi-tenant isolation
+    boundary)
+  multiplexing_mechanism: Guest-physical memory is deflated (returned toward the host) and reinflated
+    on demand via the modified balloon driver, timed by the continuous ballooning program to stay ahead
+    of both organic memory-spike growth and the extra memory pressure that live migration itself creates.
+  state_mechanism: Balloon target/size state lives in the guest kernel's balloon driver and is coordinated
+    in real time by the user-space continuous-ballooning program during migration; the paper does not
+    report moving this state across hosts itself (only ordinary VM memory content moves, via the surrounding
+    live-migration mechanism it is designed to be safely compatible with).
+  overhead_bottleneck: The steady-state cost of running continuous ballooning (extra driver/monitoring
+    work) traded against migration-time savings; the paper reports this cost stays low (at most 8%) even
+    while handling the two previously off-limits high-risk scenarios.
+  primary_tradeoff: Making ballooning safe to run continuously, including during live migration, in a
+    non-overcommitted setting -> gains substantial migration speedups and OOM/swap-free operation for
+    memory-intensive giant VMs, at the cost of at most 8% overhead and applicability being scoped to non-overcommitted
+    deployments rather than the classic overcommitted-consolidation use case for ballooning.
+  quantitative_claims:
+  - 'overhead: at most 8% added by continuous ballooning across the evaluated scenarios'
+  - 'migration speedup: at least 52% faster migration for giant VMs running memory-intensive applications'
+  - 'scale tested: VM memory reaching almost 600 GB'
+  - 'robustness: survives an indefinite/unlimited number of sequential migrations and memory spikes of
+    hundreds of gigabytes without swapping or OOM errors (per abstract)'
+  why_useful_for_learning: A rare production-deployment data point (a real cloud customer migrating VMs
+    tens of thousands of times a month) on why classic ballooning is normally avoided at exactly the moments
+    it would help most, complementing the CORE HyperAlloc/Squeezy line of academic VM-memory-elasticity
+    mechanisms with an operational, already-shipped fix to the same class of risk (OOM/swap during de/inflation).
+  priority: P1
+  related:
+  - VIRT-EUROSYS25-03
+  - VIRT-EUROSYS26-05
+  relations:
+  - type: ALTERNATIVE
+    target: VIRT-EUROSYS25-03
+    basis: HyperAlloc replaces virtio-balloon/virtio-mem with a shared page-frame allocator interface
+      to make de/inflation fast and DMA-safe; this paper instead keeps the classic balloon-driver protocol
+      but makes it safe to run continuously (including during migration) by adding real-time coordination
+      logic -- two different fixes to the same 'ballooning is risky/slow' problem.
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS26-05
+    basis: Squeezy attacks slow VM memory reclamation for serverless FaaS VMs by making the guest kernel
+      aware of hotplugged-vs-ordinary memory; this paper attacks the safety (OOM/swap) of ballooning-based
+      deflation for live-migrated cloud VMs -- both are 2024-2026 responses to the same underlying VM-memory-elasticity
+      design space the brief highlights as a lineage (HyperAlloc/Squeezy).
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: 'Rescue pass: ACM DL still returns 403. Found the FULL official abstract (verbatim, including
+    the concrete numbers above) via Princeton University''s institutional research-output repository (collaborate.princeton.edu),
+    which lists co-author Kevin Alarcon Negy''s incoming Princeton lectureship; this is an official abstract
+    record (evidence priority 3), not the PDF body, so evidence_depth is capped at ABSTRACT. Also checked
+    Hakim Weatherspoon''s Cornell homepage (only a stale 2021 publication list) and the Cornell CS7490
+    course/systems-lunch page (confirmed a Jan 2025 talk by Kevin Negy but no paper details beyond title/authors).
+    Design/mechanism/evaluation-section-level detail (exact experimental setup, migration protocol internals)
+    was not read and should not be assumed beyond what the abstract states.'
+- id: VIRT-SOCC24-08
+  title: 'PCLive: Pipelined Restoration of Application Containers for Reduced Service Downtime'
+  title_correction: null
+  authors:
+  - Shiv Bhushan Tripathi
+  - Debadatta Mishra
+  venue: SoCC
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3698038.3698545
+  official_url: https://dl.acm.org/doi/10.1145/3698038.3698545
+  fullpaper_source: https://www.cse.iitk.ac.in/users/shivbt/publications/socc_24/PCLive_SoCC24.pdf
+  classification: CORE
+  classification_note: The contribution is a new container checkpoint/restore mechanism (pipelined, dependency-aware
+    restoration built on modified CRIU+runC) that directly attacks live-migration downtime, not an application
+    that merely uses containers -- CORE T4/T5.
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary:
+  - T5
+  physical_resource: DRAM
+  logical_abstraction: A migrating application container whose destination-side restore begins and makes
+    progress before all of its checkpointed memory state has arrived, instead of waiting for a complete
+    one-shot state transfer
+  problem: 'Standard container live migration checkpoints/restores with CRIU using ''one-shot restore'':
+    the destination rebuilds the entire container state only after the full memory image has arrived,
+    and the paper shows memory-state processing dominates restoration time (99.5% across settings), inflating
+    downtime far beyond VM-migration levels because containers'' OS-level state (namespaces, process tree,
+    cgroups, per-process memory/FDs) is complex and interdependent, making naive iterative rebuilding
+    non-trivial.'
+  mechanism: 'PCLive modifies CRIU and runC to restore state in dependency order as it streams in during
+    pre-copy: global state (namespaces, process tree, cgroups, files) is rebuilt first, then per-process
+    state (memory, file descriptors) is rebuilt iteratively per pre-copy round instead of waiting for
+    the final round. Two variants trade freeze time for completeness: PCLive does a full iterative rebuild
+    across all state dependencies, while PCLiveG begins restoring as soon as only the global state has
+    arrived, minimizing freeze time; a ''delayed restoration'' option further caps memory overhead (~5%)
+    by deferring less-critical state.'
+  isolation_mechanism: N/A (a checkpoint/restore migration mechanism, not a tenant-isolation boundary)
+  multiplexing_mechanism: N/A (single-container migration mechanism; does not multiplex a shared physical
+    resource across tenants)
+  state_mechanism: Container state is checkpointed and pre-copied iteratively from source to destination
+    (standard CRIU pre-copy with deduplication across iterations); PCLive's contribution is restoring
+    that arriving state at the destination in dependency order (global state, then per-process memory/FDs)
+    as it streams in, rather than only after the last iteration completes.
+  overhead_bottleneck: Memory-state processing dominates restoration time (99.5% of it), so pipelining
+    exactly that stage is where the gains come from; the resource cost of doing so shows up as extra CPU/memory
+    kept live during the pipelined restore window.
+  primary_tradeoff: Restoring container state in dependency order as it arrives, instead of after a complete
+    transfer -> gains large restoration-time and downtime reductions, at the cost of additional CPU/memory
+    overhead during the migration window (more for the minimal-freeze-time PCLiveG variant) and the engineering
+    complexity of correctly ordering interdependent OS-level state.
+  quantitative_claims:
+  - 'memory-state processing share of restoration time: 99.5% across all evaluated settings'
+  - 'restoration time reduction: up to 38x/38.8x for read-intensive workloads vs baseline CRIU one-shot
+    restore, 5.4x for write-intensive workloads'
+  - 'service downtime reduction: 2.7x for read-intensive workloads (e.g. Redis+YCSB, 1 Gbps), 18% for
+    write-intensive workloads'
+  - 'resource overhead, write-intensive case: +4% CPU, +23% memory vs baseline'
+  - 'PCLiveG overhead: ~100 MB extra memory, 13.5-21.8% CPU increase'
+  - 'downtime improvement at 10 Gbps network: 5.4x vs baseline'
+  - 'workloads: Redis+YCSB (2M records), MySQL via BenchBase, Graph500'
+  why_useful_for_learning: A concrete, measured example of why container checkpoint/restore migration
+    is structurally slower than VM live migration (complex interdependent OS-level state vs a flat guest-physical
+    address space) and of pipelining as the fix, directly comparable to CRIU-based FaaS snapshot-restore
+    mechanisms.
+  priority: P1
+  related: []
+  relations:
+  - type: USES_MECHANISM_FROM
+    target: CRIU (Checkpoint/Restore In Userspace)
+    basis: PCLive is implemented as a modification to CRIU and runC, restructuring CRIU's restore path
+      from a single-shot operation into a pipelined, dependency-ordered one.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - artifact
+  - code
+  - official-web
+  confidence: HIGH
+  notes: 'Rescue pass: ACM DL 403. Located the first author''s personal site (via his IIT Kanpur advisor
+    Debadatta Mishra''s student list -> shivbt Wix site) which links the official SoCC''24 conference
+    slide deck (PCLive_SoCC24.pdf, read in full for mechanism/eval detail) and the open-source artifact
+    (github.com/shivbt/PCLive, README read for corroborating numbers). Slides + code README give design
+    and evaluation-level detail equivalent to reading the paper''s own figures/results section, but the
+    ACM proceedings PDF itself was not read, so evidence_kinds is [artifact, code, official-web] rather
+    than [paper].'
+- id: VIRT-SOCC24-09
+  title: 'ConMonitor: Lightweight Container Protection with Virtualization and VM Functions'
+  title_correction: null
+  authors:
+  - Shaowen Xu
+  - Qihang Zhou
+  - Zhicong Zhang
+  - Xiaoqi Jia
+  - Donglin Liu
+  - Heqing Huang
+  - Haichao Du
+  - Zhenyu Song
+  venue: SoCC
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3698038.3698520
+  official_url: https://dl.acm.org/doi/10.1145/3698038.3698520
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Access to full text/abstract still could not be obtained after 5 further distinct
+    routes in this rescue pass; per the record schema's hard rule, a paper that cannot be read past the
+    title/authors stays CONTEXT/LOW rather than being classified from the title (even though the title
+    names virtualization/VM functions explicitly, which is a strong CORE T7/T5 prior).
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T5
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN in detail; title indicates using hardware virtualization (likely Intel VMFUNC / EPT-switching,
+    given the co-authors' prior related work 'Lightweight kernel isolation with virtualization and VM
+    functions') to add a lightweight protection/monitoring boundary around containers.
+  mechanism: UNKNOWN - access failure, see notes
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: If confirmed, would be a direct VMFUNC/EPT-switching-based container-isolation
+    mechanism comparable to sMVX/LightZone-style in-process or intra-VM isolation primitives.
+  priority: P2
+  related:
+  - VIRT-MIDDLEWARE24-15
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'Rescue pass access failure, routes tried: (1) ACM DL direct doi -> 403 (confirmed again in this
+    pass); (2) co-author Qihang Zhou''s personal homepage (qihang1994.github.io) -> lists the exact citation
+    but no abstract/PDF; (3) co-author Shaowen Xu''s alphaXiv researcher profile -> citation + citation-count
+    metadata only, no abstract/PDF; (4) ResearchGate publication page (id 385976211, located via Haichao
+    Du''s ResearchGate contributions listing) -> repeated 429 rate-limiting, never rendered; (5) a CityU
+    HK homepage guess for co-author Heqing Huang (cs.cityu.edu.hk/~heqhuang) -> resolved to an unrelated
+    person''s GitHub redirect. Also could not use WebSearch further in this pass (session search budget
+    exhausted) or Semantic Scholar/OpenAlex APIs (persistent 429s throughout the session, consistent with
+    the prior agent''s notes). Should be revisited with institutional ACM access or once ResearchGate
+    rate-limiting clears.'
+- id: VIRT-SOCC24-10
+  title: 'Faascale: Scaling MicroVM Vertically for Serverless Computing with Memory Elasticity'
+  title_correction: null
+  authors:
+  - Xinmin Zhang
+  - Qiang He
+  - Hao Fan
+  - Song Wu
+  venue: SoCC
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3698038.3698512
+  official_url: https://dl.acm.org/doi/10.1145/3698038.3698512
+  fullpaper_source: UNKNOWN (design reconstructed from the authors' own public artifact repositories;
+    ACM proceedings PDF not read)
+  classification: CORE
+  classification_note: 'The authors'' own public artifact repositories confirm the contribution is exactly
+    what the title says: a Firecracker-microVM host-kernel modification that dynamically resizes (''vertically
+    scales'') a running microVM''s memory allocation for a serverless runtime -- a VM memory-elasticity
+    mechanism, CORE T2, in the same design space as HyperAlloc/Squeezy-style guest-hypervisor memory de/inflation.'
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary:
+  - T5
+  - T8
+  physical_resource: DRAM
+  logical_abstraction: A Firecracker microVM's memory allocation that can be grown/shrunk vertically at
+    runtime to match a serverless function's actual working-set size, instead of being fixed at cold-start
+    size
+  problem: 'UNKNOWN in the paper''s own words (full text not read); reconstructed from the artifact: Firecracker
+    microVMs used for serverless functions are typically sized statically at launch, which either wastes
+    memory when a function''s working set is smaller than provisioned or throttles/OOMs it when demand
+    grows, and neither outcome is elastic to the function''s actual runtime memory demand.'
+  mechanism: 'A companion ''Puffer'' serverless runtime (built on vHive, integrating Knative + firecracker-containerd)
+    uses ''Faascale technology'' to dynamically adjust the memory allocation of its Firecracker microVMs
+    at runtime (vertical scaling). This is implemented via a modified guest-facing Firecracker VMM (repo:
+    firecracker-faascale, Rust) together with a modified host Linux kernel (linux-5.14.2-faascale-host,
+    explicitly described by the authors as ''the host hypervisor to support Faascale-Memory'') and a modified
+    guest kernel (linux-5.10-faascale), i.e. a coordinated guest+VMM+host-kernel memory-hotplug/reclamation
+    path analogous in spirit to ballooning/hotplug-based VM memory elasticity, purpose-built for the microVM/Firecracker
+    setting.'
+  isolation_mechanism: UNKNOWN in detail from artifacts alone; presumably retains standard Firecracker
+    KVM-based microVM isolation (jailer + minimal device model) while adding the memory-elasticity path.
+  multiplexing_mechanism: Host DRAM is time-shared across concurrently running microVMs by growing/shrinking
+    each microVM's guest-physical memory allocation vertically in response to the hosted function's actual
+    demand, rather than reserving a fixed allocation per microVM for its whole lifetime.
+  state_mechanism: 'Elasticity state spans three coordinated components per the artifact split: guest
+    kernel (linux-5.10-faascale), the Firecracker VMM (firecracker-faascale), and the host kernel (linux-5.14.2-faascale-host,
+    ''host hypervisor to support Faascale-Memory'') -- i.e. guest-physical memory mapping/backing state
+    is tracked and adjusted across all three layers, consistent with a hotplug-or-balloon-style de/inflation
+    path rather than a single-sided mechanism.'
+  overhead_bottleneck: UNKNOWN (not read from the paper text; the decisive cost trade-off of the vertical-scaling
+    mechanism itself was not available from the artifact descriptions).
+  primary_tradeoff: UNKNOWN in the paper's own framing; structurally, vertical microVM memory scaling
+    trades the simplicity of a fixed-size microVM for the complexity of a coordinated guest/VMM/host-kernel
+    elasticity path, in exchange for better memory utilization/consolidation for serverless workloads
+    with variable working sets.
+  quantitative_claims: []
+  why_useful_for_learning: 'Directly instantiates the brief''s flagged VM-memory-elasticity lineage (HyperAlloc,
+    EuroSys25; Squeezy, EuroSys26) at the microVM/serverless layer: same underlying problem (fast, safe
+    VM memory de/inflation) applied to Firecracker instead of full KVM VMs, letting a learner compare
+    mechanisms across the VM-weight spectrum.'
+  priority: P1
+  related:
+  - VIRT-EUROSYS25-03
+  - VIRT-EUROSYS26-05
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS25-03
+    basis: HyperAlloc gives full KVM VMs fast, DMA-safe memory de/inflation via a hypervisor-shared page-frame
+      allocator; Faascale applies the same 'runtime VM memory elasticity' goal to Firecracker microVMs
+      via a coordinated guest+VMM+host-kernel path -- same taxonomy branch (T2), different VM weight class.
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS26-05
+    basis: Squeezy makes reclamation of hotplugged VM memory fast for serverless FaaS VMs by making the
+      guest kernel hotplug-aware; Faascale's guest+host-kernel-coordinated vertical scaling for Firecracker
+      microVMs targets the same serverless-VM-memory-elasticity problem from the microVM side of the design
+      space.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN
+  evidence_kinds:
+  - code
+  - official-web
+  confidence: MEDIUM
+  notes: 'Rescue pass: could not reach the ACM DL page (403) or any author-hosted PDF -- the first author''s
+    institution, Huazhong University of Science and Technology (HUST), has multiple relevant domains (grid.hust.edu.cn,
+    faculty.hust.edu.cn) that were entirely unreachable (DNS/connect timeout) through this environment''s
+    proxy on repeated attempts, and a dblp lookup (dblp.org/pid/23/1092-1.html) confirmed only authors/venue/pages
+    (SoCC 2024: 196-212), no abstract. However, GitHub''s API (unlike its web search UI, which robots.txt
+    blocks) surfaced the corresponding author''s own public artifact repositories (github.com/Kingdo777/faascale,
+    .../firecracker-faascale, .../linux-5.14.2-faascale-host, .../linux-5.10-faascale, .../puffer) whose
+    names, descriptions and directory structure independently confirm the mechanism summarized above;
+    this is legitimate evidence-priority-4 (artifact/code) evidence per the classification brief, so classification
+    (CORE T2) is made independently from this artifact evidence, not from the title. No quantitative results
+    were recoverable this way (READMEs for the code repos were default/generic or 404), so overhead_bottleneck/primary_tradeoff/quantitative_claims
+    are left UNKNOWN rather than guessed; evidence_depth is DESIGN (architecture understood, no evaluation
+    numbers read), not DESIGN_EVAL.'
+- id: VIRT-SOCC24-11
+  title: 'Snapipeline: Accelerating Snapshot Startup for FaaS Containers'
+  title_correction: null
+  authors:
+  - Yuqiao Lan
+  - Xiaohui Peng
+  - Yifan Wang
+  venue: SoCC
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3698038.3698513
+  official_url: https://dl.acm.org/doi/10.1145/3698038.3698513
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Access to full text/abstract could not be obtained after 4 further distinct routes
+    in this rescue pass; per the record schema's hard rule, kept CONTEXT/LOW rather than classified from
+    the title, even though the title strongly suggests a CORE/SUPPORT T4/T5 snapshot-restore mechanism.
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary:
+  - T5
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN in detail; title indicates pipelining stages of the FaaS container snapshot-restore
+    path to reduce cold-start latency, in the lineage of FaaSnap/Fireworks-style snapshot-based FaaS.
+  mechanism: UNKNOWN - access failure, see notes
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: If confirmed as a pipelined snapshot/restore mechanism, would be a direct T4/T5
+    data point alongside PCLive (this same rescue batch) and FaaSnap/Fireworks.
+  priority: P2
+  related:
+  - VIRT-SOCC24-08
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-SOCC24-08
+    basis: Both titles indicate pipelined restoration/snapshot-startup mechanisms for containerized workloads
+      in the same SoCC 2024 'Speed and Scale in Serverless' / 'Elastic Cloud' session cluster; grouped
+      for the same restore-pipelining design question.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'Rescue pass access failure, routes tried: (1) ACM DL doi -> 403; (2) GitHub repository-search
+    API (api.github.com/search/repositories?q=Snapipeline) -> zero results, no public artifact found under
+    this name; (3) author-homepage guesses for all three authors (no institution could be confidently
+    identified from the author list alone, so no targeted homepage fetch was possible); (4) WebSearch
+    was unavailable for this paper specifically because the session''s search budget was exhausted earlier
+    in this same rescue pass (200/200 calls used on higher-priority targets). Semantic Scholar/OpenAlex
+    APIs were also persistently 429-rate-limited throughout the session. Should be revisited with a working
+    search tool or institutional ACM access.'
+- id: VIRT-SOCC24-12
+  title: 'TianMen: a DPU-based storage network offloading structure for disaggregated datacenters'
+  title_correction: null
+  authors:
+  - Weiyue Zhao
+  - Jingya Wu
+  - Wenyan Lu
+  - Xiaowei Li
+  - Guihai Yan
+  venue: SoCC
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3698038.3698528
+  official_url: https://dl.acm.org/doi/10.1145/3698038.3698528
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Access to full text/abstract could not be obtained after 4 further distinct routes
+    in this rescue pass. Per the brief's disaggregation threshold rule, a DPU storage/network offload
+    structure is only CORE if it builds a virtual resource abstraction over the disaggregated pool; without
+    reading the paper this cannot be confirmed, so it is kept CONTEXT/LOW rather than guessed at SUPPORT/CORE
+    from the title.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T9
+  physical_resource: NIC
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN in detail; title indicates offloading storage-network functions onto a DPU (SmartNIC-class
+    device) for disaggregated-datacenter storage.
+  mechanism: UNKNOWN - access failure, see notes
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: If it builds a virtual storage/network abstraction over pooled disaggregated
+    resources it would be CORE T3; otherwise it remains useful CONTEXT on how DPUs are used to offload
+    datacenter storage-network functions.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'Rescue pass access failure, routes tried: (1) ACM DL doi -> 403; (2) corresponding author Guihai
+    Yan''s institutional page at prof.ict.ac.cn -> DNS/robots.txt fetch failure (name not resolvable through
+    this environment''s proxy); (3) GitHub repository-search API (api.github.com/search/repositories?q=TianMen+DPU
+    and q=TianMen+disaggregated+datacenter) -> zero results; (4) WebSearch unavailable (session budget
+    exhausted before this paper was reached) and Semantic Scholar/OpenAlex APIs persistently 429-rate-limited.
+    Should be revisited with institutional ACM access or a working search tool; ICT/CAS (Institute of
+    Computing Technology) general connectivity was confirmed reachable in this session (www.ict.ac.cn
+    fetched successfully), so a more precise personal-page URL for Guihai Yan or co-authors, once known,
+    would likely be reachable.'
+- id: VIRT-SOCC25-03
+  title: Cost-Efficient Cloud Infrastructure with Hugepage-aware Memory Deduplication
+  title_correction: null
+  authors:
+  - Ruizhe Huang
+  - Xinyu Wang
+  - Zhida An
+  - Hanwen Lei
+  - Peng Jiang
+  - Ziqi Zhang
+  - Ding Li
+  - Yao Guo
+  - Xiangqun Chen
+  - Yuntao Liu
+  - Kang Zhou
+  - Yuxin Ren
+  - Ning Jia
+  - Xinwei Hu
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3772052.3772232
+  official_url: https://acmsocc.org/2025/schedule.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Still could not obtain the abstract or body text after 4 further distinct routes
+    in this rescue pass; per the hard rule this stays CONTEXT/LOW rather than being upgraded to CORE from
+    the title/author-trail alone, despite the strong topical prior (hugepage-granularity memory deduplication
+    for cloud infrastructure).
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary:
+  - T9
+  physical_resource: DRAM
+  logical_abstraction: UNKNOWN in detail; title/venue metadata indicate hugepage-granularity same-page
+    memory deduplication (KSM/THP-style) applied for cost efficiency in multi-tenant cloud infrastructure.
+  mechanism: UNKNOWN - access failure, see notes
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: Expected extension of the KSM/hugepage memory-deduplication line (para-ksm/XLH-style
+    THP-aware KSM) to full cloud deployment; not yet verifiable.
+  priority: P2
+  related:
+  - VIRT-ATC25-14
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-ATC25-14
+    basis: Both are same-page/hugepage-granularity VM memory-deduplication mechanisms in taxonomy T2;
+      grouped pending confirmation of this paper's actual design once accessible.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  - official-web
+  confidence: LOW
+  notes: 'Rescue pass access failure, routes tried: (1) ACM DL doi -> 403 (unchanged from prior pass);
+    (2) co-author Peng Jiang''s own homepage (jpdz.github.io/pengjiang) -> located and fully listed, confirming
+    the exact author list, venue (SOCC''25) and that this is a real, upcoming main-track paper, but the
+    entry carries no PDF/abstract link (unlike several of his other listed papers, which do have ''[PDF
+    link present]''), and critically this same homepage''s FULL publication list does NOT include the
+    WORDS''23 workshop paper ''Towards Efficient Hugepage-aware Memory Deduplication'' that the prior
+    stub proposed as a precursor -- so that PRECURSOR relation from the earlier pass should be treated
+    as unconfirmed, not restated as fact; (3) co-author Ding Li homepage guess (liding.info) -> page loads
+    but this specific paper is not among the highlighted publications shown; (4) Yao Guo homepage guess
+    (yaoguo.tech) -> domain unreachable (DNS failure) through this environment''s proxy. Peng Jiang''s
+    research focus (system auditing/provenance, WASM memory isolation, DPU-assisted auditing) suggests
+    this memory-deduplication paper is a departure into a new area for that PKU group, in collaboration
+    with a Huawei OS team (Yuntao Liu, Kang Zhou, Yuxin Ren, Ning Jia, Xinwei Hu), rather than a direct
+    continuation of a specific named precursor. Should be revisited with institutional ACM access.'
+- id: VIRT-SOCC25-08
+  title: 'From Bottleneck to Breakthrough: Optimizing Scheduling for Hyperscale Containerized Clusters'
+  title_correction: null
+  authors:
+  - Bing Li
+  - Yuquan Ren
+  - Xinyi Song
+  - Zhilei Liu
+  - Cong Xu
+  - Jingyuan Zhang
+  - Caixue Lin
+  - Wu Xiang
+  - Rui Shi
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3772052.3772240
+  official_url: https://acmsocc.org/2025/schedule.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Still inaccessible after 3 further distinct routes in this rescue pass; title indicates
+    a cluster-scheduling optimization for large containerized clusters (placement/scheduling policy),
+    which per the brief lands in CONTEXT (generic scheduling) unless the mechanism is shown to modify
+    container isolation/runtime itself.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  - official-web
+  confidence: LOW
+  notes: 'Rescue pass access failure, routes tried: (1) ACM DL doi -> 403; (2) GitHub repository-search
+    API (q=''hyperscale containerized cluster scheduling'') -> zero results; (3) dblp author cross-check
+    attempted but blocked (dblp.org/search/* paths return ROBOTS_DISALLOWED, unlike specific /pid/ author
+    pages which are fetchable). WebSearch was unavailable (session budget exhausted before this lower-priority
+    paper was reached) and ResearchGate is persistently 429-rate-limited this session. Should be revisited
+    with a working search tool or institutional access.'
+- id: VIRT-SC25-04
+  title: 'coMtainer: Compilation-assisted HPC Container Images with Enhanced Adaptability'
+  title_correction: null
+  authors:
+  - Yuhao Gu
+  - Haoquan Chen
+  - Xianjie Chen
+  - Jiangsu Du
+  - Zhiguang Chen
+  - Nong Xiao
+  - Xianwei Zhang
+  - Yutong Lu
+  venue: SC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3712285.3759790
+  official_url: https://sc25.supercomputing.org/program/papers/
+  fullpaper_source: https://xianweiz.github.io/doc/papers/25sc_comtainer.pdf
+  classification: SUPPORT
+  classification_note: coMtainer is a container-image build/compilation mechanism (system-side rebuild
+    with native toolchains/libraries via build-time metadata injected into OCI images); per the brief's
+    explicit threshold rule, container image/build mechanisms are SUPPORT, not CORE -- it does not touch
+    namespace/cgroup isolation or the container runtime's isolation boundary.
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: An OCI container image built once with generic toolchains that can be automatically,
+    losslessly rebuilt on a specific HPC target system using that system's native compilers/optimized
+    libraries/vendor MPI, without modifying source code
+  problem: HPC container workflows separate build (user side, generic toolchains) from execution (system
+    side, specialized compilers/optimized libraries/vendor-specific MPI); the resulting generic images
+    badly underperform natively-built binaries -- the paper measures 50-72% performance degradation for
+    LULESH on x86-64 and AArch64 HPC clusters when running the generic image instead of a native build.
+  mechanism: 'coMtainer embeds build-time metadata into the container image via three models: a Compilation
+    Model capturing individual GCC invocations, a Build Graph Model (a DAG of data transformations across
+    the build), and an Image Model classifying files by origin (base image / package manager / build process
+    / platform-independent). On the user side this metadata is captured from a two-stage Dockerfile build
+    and injected as a cache layer; on the system side, the target HPC system retrieves that metadata and
+    rebuilds the image using its own native toolchain and optimized libraries (optionally adding LTO/PGO),
+    without the user needing to modify source code -- built on Charliecloud for execution and Buildah
+    for OCI-compliant image construction.'
+  isolation_mechanism: N/A (does not change container isolation; Charliecloud's namespace-based isolation
+    is used unmodified for execution)
+  multiplexing_mechanism: N/A (a build-time/image-construction mechanism, not a runtime resource-sharing
+    mechanism)
+  state_mechanism: Build-provenance state (compilation commands, build DAG, file-origin classification)
+    is stored as an extra cache layer inside the OCI image itself and consumed at deployment time on the
+    target system to drive the system-side rebuild; no runtime VM/container state migrates.
+  overhead_bottleneck: The build-time-metadata cache layer's storage cost (7.1-11.3% of the original image
+    size) and the cost of the system-side rebuild itself; the paper reports no added runtime overhead
+    since everything happens at image-build/deployment time.
+  primary_tradeoff: Embedding portable build provenance in the image so the target system can automatically
+    rebuild it natively -> gains near-native performance across heterogeneous HPC systems (including cross-ISA,
+    e.g. x86-64 to AArch64) with minimal manual porting effort, at the cost of a larger image (extra cache
+    layer) and a rebuild step at deployment time instead of a pure pull-and-run.
+  quantitative_claims:
+  - 'baseline degradation: generic ("original") containerized LULESH is 50-72% slower than a native build
+    on x86-64 (16-node Xeon Platinum 8358P cluster) and AArch64 (16-node Phytium FT-2000+/64 cluster)'
+  - 'recovery from adaptation: average 96.3% of the original-to-native performance gap recovered on x86-64,
+    66.5% on AArch64'
+  - 'adapted-vs-native parity example: 22.0s (adapted) vs 21.35s (native) mean runtime on x86-64; 69.7s
+    vs 67.0s on AArch64'
+  - 'production-application gains: 253% (LAMMPS) and 99.7% (OpenMX) improvement over the generic image'
+  - 'LTO/PGO on top of adaptation: additional 5.6-8% average improvement, up to 30.4% for individual workloads'
+  - 'image size overhead of the build-metadata cache layer: 7.1% (x86-64) to 11.3% (AArch64) of the original
+    image size'
+  - 'manual cross-ISA porting effort: ~5 lines of manual changes vs 47 lines for traditional cross-compilation'
+  - evaluated on 9 HPC benchmarks (HPL, HPCG, LULESH, Mantevo suite) plus 2 production applications (LAMMPS,
+    OpenMX)
+  why_useful_for_learning: 'A clear worked example of the brief''s container-image-vs-isolation-architecture
+    threshold: shows exactly how much performance a generic HPC container image loses to environment mismatch,
+    and fixes it entirely at the image layer without touching the isolation boundary.'
+  priority: P2
+  related:
+  - VIRT-SC25-05
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-SC25-05
+    basis: Both are SC 2025 container-deployment/image-mechanism papers (build-side adaptability here,
+      on-demand image-pull/edge-deployment there); adjacent points in the T5 container-runtime/image-mechanism
+      design space.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: HIGH
+  notes: 'Rescue pass: ACM DL 403 (unchanged). Located the corresponding author''s own homepage (Xianwei
+    Zhang, Sun Yat-sen University: xianweiz.github.io), which links the author-hosted full PDF (doc/papers/25sc_comtainer.pdf);
+    read abstract, problem, the three metadata models, the user-/system-side workflow, evaluation setup
+    and full quantitative results. Superseded prior TITLE_ONLY/CONTEXT/LOW stub in batch23b.yaml; classification
+    changed from CONTEXT (forced placeholder) to SUPPORT (read, applied the brief''s container-image-vs-isolation
+    threshold rule explicitly).'
+- id: VIRT-SC25-05
+  title: 'EDDE: Container Deployment Framework Beyond the Cloud'
+  title_correction: null
+  authors:
+  - Hao Fan
+  - Shadi Ibrahim
+  - et al.
+  venue: SC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3712285.3759854
+  official_url: https://sc25.supercomputing.org/program/papers/
+  fullpaper_source: https://github.com/EDDEimage/EDDE (artifact repository; ACM proceedings PDF not read)
+  classification: SUPPORT
+  classification_note: EDDE is a container image-distribution/on-demand-pulling mechanism (compared explicitly
+    against Nydus-style on-demand image pulling, with an eBPF-accelerated data path) for deploying containers
+    to edge/beyond-cloud sites; per the brief this is a container runtime/image mechanism, SUPPORT T5,
+    not a change to the isolation boundary itself.
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary:
+  - T9
+  physical_resource: NIC
+  logical_abstraction: A container image that can start running at a remote/edge site before it has been
+    fully downloaded, by pulling only the files actually needed on demand from the nearest edge server
+    (ES) instead of the origin registry
+  problem: Deploying containers 'beyond the cloud' (to edge sites) over long-RTT links makes conventional
+    whole-image pulls slow (e.g. 24.07s to fully download an Nginx image even at 10ms RTT to the registry)
+    and existing on-demand-pulling systems like Nydus, while reducing the amount of data fetched, still
+    pay large penalties as RTT grows (network redirection plus FUSE-based IO redirection) and this gets
+    worse the farther an edge site is from the origin registry.
+  mechanism: EDDE restructures container deployment around nearest-edge-server (ES) data locality plus
+    eBPF-accelerated on-demand file fetching (its own 'Gear' on-demand-pulling engine, benchmarked head-to-head
+    against Nydus), and evaluates a randomized-graph model of edge-server placement/connectivity to understand
+    how deployment performance scales with topology.
+  isolation_mechanism: N/A (an image-distribution/deployment mechanism; does not change container namespace/cgroup
+    isolation)
+  multiplexing_mechanism: Network/storage bandwidth to a given container image is shared across deploying
+    nodes by serving files from the nearest edge server rather than the origin registry, and by only transferring
+    the subset of files an application actually touches (on-demand pulling) rather than the whole image.
+  state_mechanism: Image-layer/file data is replicated to and served from nearby edge servers; the deployment-time
+    state is which files have been fetched so far to a given node, tracked so that on-demand IO redirection
+    (via FUSE-like mechanisms, as in Nydus) can fetch the rest lazily.
+  overhead_bottleneck: 'Data-download time under high RTT to the source of the image data: conventional
+    full-image pulls dominate at 10ms RTT (e.g. 24.07s for Nginx), while on-demand pulling shifts the
+    bottleneck to per-file network+FUSE IO-redirection latency, which grows sharply as RTT increases (e.g.
+    from ~12.78s at 10ms RTT to ~25.84s at 300ms RTT for Nginx).'
+  primary_tradeoff: Serving on-demand file pulls from the nearest edge server with eBPF acceleration,
+    instead of a full pull from a (possibly distant) origin registry -> gains large deployment-speed improvements
+    at low RTT to the edge server, but this benefit shrinks as edge-to-registry/edge-to-node RTT grows,
+    and on-demand images still pay a running-time penalty from network+IO redirection relative to a fully-local
+    image.
+  quantitative_claims:
+  - 'per-image deployment speedup vs baseline: 1.6x (ubuntu) to 3.8x (redis)'
+  - 'upper-bound speedup (all files on nearest edge server at 10ms RTT + eBPF acceleration) vs registry-pull-without-eBPF
+    at 300ms RTT: 1.8x (wordpress) to 4.4x (redis)'
+  - EDDE's own on-demand engine ('Gear') performs similarly to Nydus for on-demand pulling at 500 MB/s
+    bandwidth
+  - 'Nginx image full download time: 24.07s at 10ms RTT (conventional) vs 12.78s at 10ms RTT (on-demand)
+    vs 25.84s at 300ms RTT (on-demand, network/IO-redirection-dominated)'
+  why_useful_for_learning: A worked comparison of on-demand container-image pulling (vs Nydus) extended
+    to an edge/beyond-cloud deployment setting, useful SUPPORT background for any CORE serverless-cold-start
+    or container-sandbox-isolation paper that assumes fast image availability.
+  priority: P2
+  related:
+  - VIRT-SC25-04
+  relations:
+  - type: CONTRASTS_WITH
+    target: Nydus (on-demand container image pulling)
+    basis: The paper directly benchmarks its own on-demand-pulling engine ('Gear') against Nydus and reports
+      similar on-demand-pulling performance between the two, with EDDE's contribution being the eBPF-accelerated
+      edge-server-local deployment path around that on-demand core.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - artifact
+  - code
+  confidence: MEDIUM
+  notes: 'Rescue pass: ACM DL 403; Shadi Ibrahim''s Inria personal page (people.rennes.inria.fr/Shadi.Ibrahim)
+    was reachable but did not list this 2025 paper or any hyperlinks in the fetched content. GitHub''s
+    API surfaced the paper''s own artifact organization (github.com/EDDEimage/EDDE, pushed May 2025) whose
+    README documents the exact evaluation figures (per-image speedups, Gear-vs-Nydus comparison, RTT-vs-downloading-time
+    breakdown, edge-topology random-graph-model results) summarized above; this is artifact-level evidence
+    (evidence priority 4), not the ACM proceedings text itself, so evidence_kinds is [artifact, code]
+    and evidence_depth is capped at DESIGN_EVAL rather than FULL. A second, older/unofficial-looking fork
+    (EDDEcontainer/EDDE, pushed April 2024, pre-dating the SC 2025 publication) was found but not used
+    as a source.'
+- id: VIRT-HPDC24-05
+  title: 'Faast: An Efficient Serverless Framework Made Snapshot-based Function Response Fast'
+  title_correction: null
+  authors:
+  - Yongshu Bai
+  - Zhihui Yang
+  - Feng Gao
+  venue: HPDC
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3625549.3658681
+  official_url: https://doi.org/10.1145/3625549.3658681
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Still inaccessible after 4 further distinct routes in this rescue pass (in addition
+    to the 3 routes the prior pass already exhausted); per the hard rule this stays CONTEXT/LOW rather
+    than being classified from the title, despite the strong CORE/SUPPORT T4/T5/T8 prior (snapshot-based
+    fast function response is squarely the FaaSnap/Fireworks design space).
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T5
+  physical_resource: CPU core
+  logical_abstraction: 'UNKNOWN in detail (per title: a pre-captured execution-state snapshot used to
+    serve serverless function invocations quickly, in the lineage of FaaSnap/Fireworks-style snapshot-based
+    FaaS)'
+  problem: UNKNOWN in full detail beyond title (serverless cold-start latency)
+  mechanism: UNKNOWN - access failure, see notes
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: If confirmed to be VM/container-snapshot based (as related work like FaaSnap/Fireworks
+    is), would be a direct CORE/SUPPORT data point for the T4/T5 snapshot-restore branch of the taxonomy.
+  priority: P3
+  related:
+  - VIRT-SOCC24-08
+  - VIRT-SOCC24-11
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - official-web
+  confidence: LOW
+  notes: 'Rescue pass access failure, additional routes tried beyond the prior pass''s three (dl.acm.org
+    PDF 403, ResearchGate 403-then-429, no author-hosted copy): (4) GitHub repository-search API (q=''Faast
+    serverless snapshot function'') -> zero results; (5) no institution could be confidently identified
+    for any of the three authors from the author list alone (name is too generic to safely guess a homepage
+    domain), so no targeted institutional-page fetch was attempted; WebSearch was unavailable for this
+    paper (session budget exhausted before reaching it) and Semantic Scholar/OpenAlex APIs remained 429-rate-limited
+    throughout. Should be re-attempted with a working search tool or institutional ACM access, as recommended
+    by the prior pass.'
+- id: VIRT-MIDDLEWARE24-14
+  title: Enhancing Effective Bidirectional Isolation for Function Fusion in Serverless Architectures
+  title_correction: null
+  authors:
+  - Tianyu Li
+  - et al.
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3654778
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Still inaccessible after 3 further distinct routes in this rescue pass; title suggests
+    a serverless-isolation SUPPORT mechanism (preserving isolation guarantees when multiple functions
+    are fused into one execution unit), but per the hard rule this stays CONTEXT/LOW without having read
+    the paper.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T5
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (title indicates preserving isolation guarantees when multiple serverless functions
+    are fused into one execution unit for performance)
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds:
+  - program-only
+  confidence: LOW
+  notes: 'Rescue pass access failure, additional routes tried beyond the prior pass''s three (ResearchGate
+    429, KU Leuven Lirias timeout, ACM DL 403): (4) GitHub repository-search API (q=''function fusion
+    serverless isolation'') -> zero results; (5) no full author list beyond ''Tianyu Li, et al.'' was
+    available to attempt an author-homepage guess. WebSearch was unavailable for this paper (session budget
+    exhausted before reaching it, and this was deliberately deprioritized versus the task''s named highest-value
+    targets) and Semantic Scholar/OpenAlex APIs remained 429-rate-limited throughout. Should be re-attempted
+    with a working search tool once the full author list is known.'
+- id: VIRT-MIDDLEWARE24-15
+  title: 'LightZone: Lightweight Hardware-Assisted In-Process Isolation for ARM64'
+  title_correction: null
+  authors:
+  - Ziqi Yuan
+  - Siyu Hong
+  - Ruorong Guo
+  - Rui Chang
+  - Mingyu Gao
+  - Wenbo Shen
+  - Yajin Zhou
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700786
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://yajin.org/papers/middleware2024_lightzone.pdf
+  classification: CORE
+  classification_note: The contribution is a genuine in-process isolation mechanism built directly on
+    ARM64 hardware privilege/paging features (TTBR-switched stage-1 page tables and PAN-gated privileged
+    mappings), giving processes many cheap isolation domains without new hardware -- this is the taxonomy's
+    canonical CORE in-process-isolation example (comparable to Intel MPK/VMFUNC), not a mere scheduling
+    or application-level mechanism.
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary:
+  - T7
+  physical_resource: CPU core
+  logical_abstraction: A user process on ARM64 that can create many (>16) cheap intra-process memory-isolation
+    domains -- e.g. to protect cryptographic keys in Nginx, isolate threads in MySQL, or isolate data
+    structures in an in-memory store -- without OS-mediated context switches or new hardware
+  problem: ARM64 lacks a native in-process isolation primitive comparable to x86's VMFUNC/MPK or even
+    ARMv7's Memory Domain feature; existing software approaches cannot simultaneously offer enough isolation
+    domains (>16), strong security, and low switching cost without hardware changes.
+  mechanism: 'LightZone gives each process a set of separate stage-1 page tables (one per isolation domain)
+    and offers two complementary switching primitives: (1) a scalable TTBR-based mode that remaps the
+    domain by updating TTBR0 to point at a different stage-1 page table (~490 cycles on a Carmel core,
+    ~82 cycles on a Cortex-A55, dominated by TLB effects, but supports up to 128+ domains), and (2) an
+    efficient PAN-based mode for the common two-domain case that marks protected memory as kernel-only
+    and toggles the ARM Privileged Access Never (PAN) bit to flip a normal user thread''s access to it
+    (~11-22 cycles). A TTBR1-mapped secure call gate constrains entry into the privileged path to prevent
+    control-flow hijacking, and an instruction sanitizer enforces W^X on executable pages to block time-of-check-to-time-of-use
+    attacks; both mechanisms can be mixed for different memory ranges within the same process, and per-page-table
+    address-space identifiers avoid unnecessary TLB invalidation on TTBR switches.'
+  isolation_mechanism: 'Two ARM64-hardware-enforced boundaries: TTBR-switched separate stage-1 page tables
+    (scalable, many domains) and PAN-gated kernel-marked pages (fast, few domains); a hypervisor-configuration-register
+    (HCR_EL2) check plus stage-2 paging additionally separates the isolated process from the rest of the
+    system, and a dedicated secure call gate plus W^X instruction sanitizer close off control-flow-hijack
+    and TOCTOU attack surfaces on the switching path itself.'
+  multiplexing_mechanism: A single physical core's page-table/TLB hardware is time-multiplexed across
+    a process's isolation domains via cheap TTBR/PAN switches instead of full OS context switches; both
+    mechanisms can be combined per memory range within one process to balance domain count against switch
+    cost.
+  state_mechanism: Per-domain isolation state is the set of separate stage-1 page tables (TTBR mode) or
+    the kernel/user marking of specific pages (PAN mode), both held in ordinary process/kernel page-table
+    structures; nothing migrates across hosts -- this is an in-process, single-host isolation mechanism.
+  overhead_bottleneck: TLB misses caused by switching between more stage-1 page tables as the number of
+    TTBR-mode domains grows -- average switch cost rises with page-table/TLB pressure, which is the structural
+    cost of choosing scalability (many domains) over PAN's minimal-overhead two-domain switch.
+  primary_tradeoff: TTBR-based multi-page-table switching gains domain scalability (>16, tested to 128)
+    at higher average per-switch cost (TLB-miss-bound, ~490 cycles on Carmel), while PAN-based switching
+    gains near-negligible per-switch cost (~11-22 cycles) but is structurally limited to two domains --
+    the paper lets applications mix both primitives per memory region to pick the right point on this
+    trade-off.
+  quantitative_claims:
+  - 'domain switch cost (TTBR, 128 domains): ~490 cycles on Carmel (Jetson AGX Xavier, ARMv8.2, 2.2GHz)
+    vs ~82 cycles on Cortex-A55 (Banana Pi BPI-M5, 2GHz)'
+  - 'domain switch cost (PAN): ~11 cycles (Cortex-A55) to ~22 cycles (Carmel)'
+  - 'Nginx throughput loss with PAN-protected crypto keys: 0.91% (Cortex-A55 host), 1.35% (Carmel host),
+    10k HTTPS requests'
+  - 'MySQL throughput loss with TTBR-based scalable thread isolation: 2.84% (Cortex-A55 host), 3.79% (Carmel
+    host), OLTP workload'
+  - 'NVM (in-memory data structure) benchmark overhead at 128 TTBR domains: 16.7% average (Carmel), 3.8%
+    average (Cortex-A55), 5M substring searches'
+  - 'page-table memory overhead: up to 22.2% for the Nginx/TTBR configuration'
+  - compared against Watchpoint (limited to 16 domains), lwC (x86-based simulation), and PANIC (limited
+    to 2 domains) as baselines
+  why_useful_for_learning: The taxonomy's clearest ARM64 case study of in-process isolation built purely
+    from hardware privilege/paging primitives (no new silicon), letting a learner directly compare TTBR-multi-page-table
+    vs PAN-single-toggle designs, and compare across ISAs against Intel MPK/VMFUNC-based mechanisms such
+    as uIO's in-unikernel isolation (this same rescue batch).
+  priority: P1
+  related:
+  - VIRT-SOCC24-05
+  relations:
+  - type: ALTERNATIVE
+    target: VIRT-SOCC24-05
+    basis: uIO uses x86 Memory Protection Keys (plus an eBPF software fallback) to isolate an in-unikernel
+      auxiliary-code context sharing the guest's address space; LightZone uses ARM64 TTBR/PAN switching
+      to isolate domains within an ordinary multi-threaded process -- alternative hardware primitives
+      for the same in-process-isolation-domain problem, on different ISAs and host environments.
+  - type: CONTRASTS_WITH
+    target: Intel MPK / VMFUNC-based in-process isolation (e.g. sMVX)
+    basis: The paper explicitly frames ARM64 as lacking a native equivalent to Intel VMFUNC/MPK and designs
+      TTBR+PAN switching to fill that gap; a direct cross-ISA contrast for the same isolation-domain-count/switch-cost
+      design point.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  - official-web
+  - code
+  confidence: HIGH
+  notes: 'Rescue pass: the exact filename guessed in the prior pass (middleware24_lightzone.pdf) 404s;
+    the correct URL, found by fetching corresponding author Yajin Zhou''s homepage (yajin.org) and searching
+    its full rendered content for ''LightZone''/''Middleware''/''2024'', is middleware2024_lightzone.pdf
+    (underscore-vs-hyphen and year-format differences from the guess). Read the full author-hosted PDF
+    for abstract, problem, TTBR/PAN mechanism design, isolation details and full evaluation. Cross-checked
+    against the open-source artifact (github.com/hsyhhh/lightzone, tagged ''[Middleware''24] LightZone...'').
+    Superseded prior TITLE_ONLY/CONTEXT/LOW stub in census24d.yaml, which had explicitly flagged this
+    as the batch''s strongest access failure.'
+rescue_report:
+  retrieved: 8
+  still_failed:
+  - VIRT-SOCC24-09
+  - VIRT-SOCC24-11
+  - VIRT-SOCC24-12
+  - VIRT-SOCC25-03
+  - VIRT-SOCC25-08
+  - VIRT-HPDC24-05
+  - VIRT-MIDDLEWARE24-14
+  reclassifications:
+  - id: VIRT-SOCC24-05
+    from: CONTEXT
+    to: CORE
+    why: 'Full paper read: uIO is an in-process isolation/extensibility mechanism for unikernels (MPK-
+      and eBPF-isolated runtime-loadable code sharing the unikernel''s address space) -- a genuine T5
+      virtualization/isolation contribution, not a mere application of one.'
+  - id: VIRT-SOCC24-06
+    from: CONTEXT
+    to: CORE
+    why: 'Full paper read: the contribution is KrustVM, a Rust-based hypervisor TCB (Rcore) running at
+      EL2 that deprivileges the host kernel and mediates stage-2/SMMU page tables to protect VM confidentiality/integrity
+      -- a hypervisor-correctness mechanism, T7.'
+  - id: VIRT-SOCC24-07
+    from: CONTEXT
+    to: CORE
+    why: 'Official abstract read: the contribution is a modified Linux balloon driver plus a continuous
+      user-space ballooning program that makes VM memory de/inflation safe during live migration and giant
+      memory spikes -- a direct VM memory-virtualization/live-migration mechanism, T2/T4.'
+  - id: VIRT-SOCC24-08
+    from: CONTEXT
+    to: CORE
+    why: 'Conference slides and open-source artifact read: PCLive modifies CRIU/runC to pipeline container
+      restoration in dependency order, directly attacking checkpoint/restore migration downtime -- T4/T5.'
+  - id: VIRT-SOCC24-10
+    from: CONTEXT
+    to: CORE
+    why: 'Authors'' own public artifact repositories (Firecracker + guest/host kernel patches for ''Faascale-Memory'')
+      read: the contribution is a coordinated guest/VMM/host-kernel mechanism to vertically scale Firecracker
+      microVM memory at runtime -- VM memory elasticity, T2. Confidence MEDIUM because only artifact-level
+      (not paper-text) evidence was obtained.'
+  - id: VIRT-SC25-04
+    from: CONTEXT
+    to: SUPPORT
+    why: 'Full paper read: coMtainer is a container-image build/compilation-assistance mechanism (system-side
+      native rebuild via embedded build metadata); per the brief''s explicit rule this is SUPPORT (image/build
+      mechanism), not CORE, since it does not touch the isolation boundary.'
+  - id: VIRT-SC25-05
+    from: CONTEXT
+    to: SUPPORT
+    why: 'Artifact README with full evaluation figures read: EDDE is an on-demand container-image-pulling/edge-deployment
+      mechanism benchmarked against Nydus; per the brief this is a container image/runtime distribution
+      mechanism, SUPPORT T5/T9, not a change to isolation architecture.'
+  - id: VIRT-MIDDLEWARE24-15
+    from: CONTEXT
+    to: CORE
+    why: 'Full paper read: LightZone builds in-process isolation domains directly from ARM64 TTBR (multi-page-table)
+      and PAN hardware primitives -- the taxonomy''s canonical in-process-isolation CORE example, T5/T7.'
+  notes: 'Retrieval environment notes: ACM Digital Library returned 403 for every dl.acm.org URL tried
+    in this pass (both via WebFetch and via direct curl through the egress proxy), confirming it is a
+    hard block, not a rate limit. The session''s WebSearch tool budget (200/200 calls) was exhausted midway
+    through this task -- spent mostly on the initial discovery round for the highest-value targets named
+    in the brief (Faascale, ballooning, ConMonitor, KrustVM, uIO, LightZone, Snapipeline, PCLive, Faast)
+    -- after which all further retrieval used WebFetch only. Semantic Scholar and OpenAlex APIs were persistently
+    429-rate-limited for the entire session (consistent with the prior agent''s notes), so the ''official
+    abstract via API'' route from the task brief was not available this pass; the one official-abstract
+    success (the ballooning paper) instead came from an institutional repository page (Princeton ''collaborate'').
+    Common web search engines (Google, Bing, DuckDuckGo, Marginalia) are blocked either by robots.txt
+    or by proxy/server errors when fetched directly, so they could not substitute for the exhausted WebSearch
+    tool. The single most productive unanticipated route was the GitHub REST API (api.github.com/search/repositories
+    and raw.githubusercontent.com), which is NOT blocked by robots.txt (unlike github.com''s own search
+    UI) and surfaced genuine author-owned artifact repositories with descriptive READMEs for Faascale
+    and EDDE even when no PDF was reachable. Author personal/lab homepages (found via institutional pages,
+    prior co-authors'' publication lists, or direct domain guesses) were the source for uIO, KrustVM,
+    PCLive and LightZone''s full PDFs, and for coMtainer''s PDF. Several plausible institutional domains
+    for remaining unretrieved papers (grid.hust.edu.cn, faculty.hust.edu.cn, prof.ict.ac.cn) were completely
+    unreachable through this environment''s proxy (DNS/connect timeout) even though other .cn domains
+    (e.g. ict.ac.cn itself) were reachable, suggesting a specific-host rather than blanket China-domain
+    block. ResearchGate consistently returned 429 on every attempt across the whole session regardless
+    of which specific paper/profile page was requested. For the two SoCC25/SC25/Middleware24 papers left
+    at TITLE_ONLY that were not named in the task''s explicit highest-value list (SOCC25-08, MIDDLEWARE24-14)
+    and for TianMen/Snapipeline/Faast/hugepage-dedup, effort was capped at the 4-distinct-routes floor
+    once the named high-value targets had received deeper effort, per the task''s own prioritization;
+    all attempted routes are recorded in each record''s own `notes` field rather than only here. No paper
+    was reclassified to CORE/SUPPORT from title or author-trail alone in any case -- the two artifact-only
+    reclassifications (Faascale, and partially EDDE/coMtainer) are explicitly flagged with reduced evidence_kinds/confidence
+    rather than presented as full-text reads.'

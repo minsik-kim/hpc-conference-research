@@ -1,0 +1,1071 @@
+papers:
+
+# ============================== MIDDLEWARE 2024 ==============================
+
+- id: VIRT-MIDDLEWARE24-01
+  title: 'UTwinVM: Reliable hints on the effects of hypervisor updates on VMs in the Cloud'
+  title_correction: null
+  authors: [Djob Mvondo, Tong Xing, Antonio Barbalace]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700752
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: The paper's whole contribution is predicting, without VM introspection, how a hypervisor-level patch/update will affect the VMs running above it, which is squarely a guest-host interface / hypervisor-management problem.
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: A per-VM prediction of how an upcoming hypervisor security/feature update will change that VM's observed performance, without opening the VM (no introspection)
+  problem: Cloud operators must patch hypervisors frequently (security fixes, CVEs), but a patch can silently change guest-visible performance or behaviour, and providers cannot inspect tenant VM internals to check impact before rolling the update out fleet-wide.
+  mechanism: UTwinVM runs deliberately designed synthetic "twin" test applications that mimic real VM behaviour patterns, measures their sensitivity to the candidate hypervisor patch, and fits a non-negative least-squares model that maps twin-application deltas to a predicted per-tenant-VM impact, keeping the tenant's actual VM opaque.
+  isolation_mechanism: The security boundary between provider and tenant is preserved by design -- the method explicitly avoids introspecting the guest, substituting synthetic proxy workloads instead.
+  multiplexing_mechanism: N/A (the paper is about update-impact prediction, not about dividing a physical resource among tenants)
+  state_mechanism: N/A (no migration/checkpoint of VM state is involved)
+  overhead_bottleneck: Risk of undetected performance regressions after hypervisor patching, which the prediction step is meant to catch before fleet-wide rollout
+  primary_tradeoff: Avoiding introspection preserves the tenant/provider security boundary -> but costs prediction accuracy versus a hypothetical ground-truth measurement inside the real VM
+  quantitative_claims: []
+  why_useful_for_learning: Illustrates an operational concern that only exists because of the hypervisor layer -- that patching the VMM itself is a first-class production risk distinct from patching the guest OS.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: 'ACM DL (403) and the HAL preprint (hal-04894609, bot-blocked by Anubis challenge) could not be retrieved after 3 distinct routes; classification rests on the WIDE lab announcement page and the Middleware full-program listing, both of which describe the mechanism (non-negative least-squares model over twin test applications) consistently.'
+
+- id: VIRT-MIDDLEWARE24-02
+  title: 'vPIM: Processing-in-Memory Virtualization'
+  title_correction: null
+  authors: [Dufy Teguia, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700782
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://www.upmem.com/wp-content/uploads/2024/09/ABUMPIMP-2024-Invited-talk-Processing-in-Memory-Virtualization.pdf
+  classification: CORE
+  classification_note: The paper's explicit, named contribution is a virtualization layer for a new accelerator class (UPMEM Processing-in-Memory), giving multiple guest VMs isolated, multiplexed access to physical PIM ranks through a frontend/backend virtio-style split -- a direct instance of the T6 "accelerator virtualization" definition.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T2, T3]
+  physical_resource: PIM rank (UPMEM DPU memory bank)
+  logical_abstraction: A per-VM virtual PIM device that a guest Linux kernel module can enqueue PIM SDK requests to, backed transparently by a physical PIM rank managed by the VMM
+  problem: Commercial Processing-in-Memory hardware solves the CPU-memory data-movement bottleneck, but has no virtualization support, so it cannot be safely shared across multiple guest VMs in a cloud/virtualized deployment the way CPU, memory and NICs already are.
+  mechanism: A frontend kernel module in the guest OS accepts PIM SDK requests and forwards them via KVM using virtio transport to a backend module in the VMM (Firecracker); requests travel through a queue living in guest memory (registered with KVM, visible to the VMM) with the VMM translating guest pages to physical addresses instead of copying data, and a Rank Manager hands out physical PIM ranks to VMs.
+  isolation_mechanism: Physical PIM ranks are allocated whole to one VM at a time by the Rank Manager, giving hard rank-level isolation between tenants (no DPU-level sub-rank sharing yet).
+  multiplexing_mechanism: Round-robin allocation of discrete physical PIM ranks across requesting VMs by the Rank Manager backend.
+  state_mechanism: Per-VM PIM request/response state lives in a queue inside guest memory that KVM exposes to the VMM backend; no PIM-state migration mechanism is described.
+  overhead_bottleneck: Virtio-mediated request/response round-trips between guest frontend and VMM backend, most visible for applications issuing many small PIM data transfers.
+  primary_tradeoff: Virtualizing PIM through a virtio-style split enables multi-VM sharing of scarce PIM hardware -> but costs 1.01x-2.89x runtime overhead versus native (bare-metal) PIM access, worst for transfer-heavy kernels.
+  quantitative_claims:
+  - 'overhead: 1.01x-2.07x (avg 1.24x) for single-rank PrIM benchmarks vs. native PIM access'
+  - 'overhead: 1.02x-2.89x (avg 1.54x) for multi-rank PrIM benchmarks vs. native PIM access'
+  - 'overhead: 1.2x slowdown for a rewritten Needleman-Wunsch kernel optimized to reduce small transfers'
+  why_useful_for_learning: A concrete, recent example of the "accelerator virtualization" pattern (T6) applied to an accelerator class (PIM) that has no vendor-provided virtualization support yet, showing the same frontend/backend virtio split used for virtual NICs and virtual GPUs.
+  priority: P2
+  related: []
+  relations:
+  - type: SAME_BRANCH
+    target: SR-IOV / virtio device virtualization
+    basis: Uses the same guest-frontend / VMM-backend virtio queue pattern as paravirtualized NIC/block device virtualization.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: 'ACM DL PDF and both HAL mirrors (hal-04737700) were blocked (403 / Anubis bot-challenge); read instead from the UPMEM-hosted invited-talk slide PDF that summarizes the same paper''s architecture, isolation mechanism and PrIM-benchmark results in detail.'
+
+- id: VIRT-MIDDLEWARE24-03
+  title: 'PvCC: A vCPU Scheduling Policy for DPDK-applied Systems at Multi-Tenant Edge Data Centers'
+  title_correction: null
+  authors: [Yuki Tsujimoto, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700779
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://github.com/sslab-keio/PvCC
+  classification: CORE
+  classification_note: The contribution is a new vCPU scheduling policy inside the Xen hypervisor itself, directly changing how physical cores are timesliced among vCPUs -- textbook T1 CPU/machine virtualization.
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary: [T9, T3]
+  physical_resource: CPU core
+  logical_abstraction: A vCPU that receives microsecond-scale, dynamically-sized timeslices instead of a fixed share, so DPDK poll-mode workloads can be consolidated with best-effort tenants on the same physical cores
+  problem: DPDK's poll-mode packet processing wants dedicated physical cores for low, predictable latency, which is wasteful in resource-limited multi-tenant edge data centers; naively co-scheduling DPDK vCPUs with other tenants under a default hypervisor scheduler produces latency spikes.
+  mechanism: PvCC modifies the Xen (v4.12.1) credit-based vCPU scheduler to hand out microsecond-granularity timeslices and exposes a vCPU-scaling API server that dynamically changes how many physical cores are dedicated to latency-sensitive I/O vCPUs versus best-effort vCPUs, letting the overcommitment ratio move with load.
+  isolation_mechanism: Timeslice-based CPU-time isolation between latency-sensitive DPDK vCPUs and best-effort vCPUs, enforced inside the hypervisor scheduler rather than left to the guest OS.
+  multiplexing_mechanism: Physical CPU cores are time-multiplexed across vCPUs at microsecond granularity, with the vCPU-scaling API changing the number of physical CPUs dedicated to I/O at runtime.
+  state_mechanism: N/A (scheduling only; no VM state migration involved)
+  overhead_bottleneck: Timeslice length trades off tail latency against throughput -- shorter slices (100us) cut latency but saturate throughput sooner than longer ones (1000us).
+  primary_tradeoff: Finer-grained, adaptive vCPU timeslicing lets best-effort tenants reclaim idle DPDK-reserved cores -> but risks the sub-millisecond tail-latency guarantees DPDK deployments exist for if timeslices are set too coarse.
+  quantitative_claims:
+  - '99th-percentile latency: sub-millisecond under PvCC vs. several milliseconds under Xen''s default credit scheduler (Seastar memcached workload, Intel Xeon Gold 5318Y, 128GB DRAM, Intel X540-AT2 10G NIC)'
+  - 'timeslice sensitivity: 100us timeslices reduce latency but saturate throughput earlier than 1000us timeslices (same testbed)'
+  why_useful_for_learning: A concrete case of the CPU-virtualization trade-off between hypervisor-level scheduling fairness and the near-bare-metal determinism that kernel-bypass I/O (DPDK) workloads need.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [artifact, code, official-web]
+  confidence: HIGH
+  notes: Read via the paper's public artifact repository (github.com/sslab-keio/PvCC), which reproduces the design, testbed and headline latency numbers.
+
+- id: VIRT-MIDDLEWARE24-04
+  title: 'Guardian: Safe GPU Sharing in Multi-Tenant Environments'
+  title_correction: null
+  authors: [Manos Pavlidakis, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700768
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://arxiv.org/abs/2401.09290
+  classification: SUPPORT
+  classification_note: Guardian adds memory-safety enforcement (PTX-level bounds checking, address-space partitioning, call interception) on top of GPU spatial sharing that already exists -- it is a sharing-safety mechanism, not a new virtual-GPU abstraction (no MIG-like partition or GPU-state virtualization), which the brief places in SUPPORT.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T9]
+  physical_resource: GPU
+  logical_abstraction: A dynamically-sized, memory-safe address-space partition of one physical GPU that unmodified frameworks (PyTorch, Caffe) can be given without knowing they are sharing the device
+  problem: Sharing one GPU's single address space across multiple co-located tenants (to fix well-known GPU underutilization) is unsafe by default -- one tenant's kernel can read/write another's memory region because CUDA provides no cross-kernel memory isolation.
+  mechanism: Guardian (1) partitions the GPU virtual address space per application, (2) intercepts GPU driver/runtime calls at the lowest level to catch violations before they execute, and (3) instruments kernels at the PTX (GPU assembly) level to insert bounds checks on every memory access, enabling dynamic spatial sharing without CUDA/framework modification.
+  isolation_mechanism: PTX-level bounds checking on every memory instruction plus per-application address-space partitioning, enforcing memory isolation between co-resident tenant kernels sharing one physical GPU.
+  multiplexing_mechanism: Dynamic spatial sharing -- multiple tenants' kernels co-reside on the same physical GPU's address space simultaneously, partitioned rather than time-sliced.
+  state_mechanism: N/A (no GPU context checkpoint/migration described)
+  overhead_bottleneck: Per-memory-access PTX-level bounds-check instructions added to every intercepted kernel.
+  primary_tradeoff: Instrumenting every memory access for safety enables previously-unsafe GPU spatial sharing across mutually-untrusted tenants -> but costs 4-12% (avg 9%) throughput versus native, unchecked execution.
+  quantitative_claims:
+  - 'overhead: 4%-12% (average 9%) versus native GPU execution, measured across production ML frameworks (Caffe, PyTorch) generating billions of GPU kernels'
+  why_useful_for_learning: Shows the concrete mechanism (PTX-level bounds checking) that a SUPPORT-layer paper needs to make spatial GPU sharing safe, which any CORE vGPU/MIG-style paper's isolation claims can be measured against.
+  priority: P1
+  related: []
+  relations:
+  - type: TRADEOFF_PAIR
+    target: NVIDIA MIG / MPS (hardware or driver-enforced GPU partitioning)
+    basis: Both address unsafe GPU sharing, but Guardian achieves it in software (PTX instrumentation) with measured 4-12% overhead instead of hardware-partitioned isolation.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: 'Read via the arXiv preprint (2401.09290, posted under the working title "G-Safe"), which matches the ACM abstract text retrieved for the camera-ready "Guardian" title.'
+
+- id: VIRT-MIDDLEWARE24-05
+  title: 'sMVX: Multi-Variant Execution on Selected Code Paths'
+  title_correction: null
+  authors: [SengMing Yeoh, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3654794
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://ssrg.ece.vt.edu/papers/middleware24-smvx.pdf
+  classification: SUPPORT
+  classification_note: sMVX is an in-process isolation/replication mechanism (Intel MPK-based monitor isolation, non-overlapping variant address spaces) whose security guarantee and performance trade-off directly inform how CORE in-process/hardware-isolation papers (e.g. MPK- or MTE-based sandboxes) are designed, without itself proposing a new virtual-machine or hypervisor abstraction.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: A program in which only security-sensitive code paths run as two divergence-checked variants in non-overlapping address spaces, while the rest of the program runs once
+  problem: Traditional multi-variant execution (MVX) replicates an entire program to catch memory-corruption exploits via behavioural divergence, wasting CPU and memory on code paths (initialization, non-sensitive logic) that carry no security benefit from replication.
+  mechanism: Developers annotate sensitive code paths; sMVX replicates only those paths into two variants with non-overlapping heap address spaces (so a corrupting write lands at different addresses in each variant and is caught by divergence), houses its in-process monitor behind Intel MPK page-granularity protection with stack-pivoting defenses and execute-only memory, and synchronizes variants only at libc call boundaries, emulating I/O for the follower variant.
+  isolation_mechanism: Intel MPK (Memory Protection Keys) provides page-granularity, hardware-enforced isolation of the in-process monitor from the (potentially compromised) variant code, and non-overlapping heap layouts give the two variants divergent memory-corruption behaviour.
+  multiplexing_mechanism: N/A (both variants of the sensitive path run concurrently on separate cores/threads; this is redundant execution, not resource sharing)
+  state_mechanism: Variant execution state (registers, memory) is synchronized only at libc call boundaries, with the follower variant's I/O emulated rather than re-executed, to keep both variants consistent without full instruction-level lockstep.
+  overhead_bottleneck: Heap-pointer relocation/scanning at variant-creation time dominates cost (13,162.4 microseconds measured on Lighttpd), and pointer-intensive applications suffer from expensive runtime pointer scanning.
+  primary_tradeoff: Replicating only sensitive paths instead of the whole program cuts resource waste versus full-program MVX -> but requires source-level annotation, cannot protect statically-linked or setuid binaries, and still pays a heavy variant-creation cost for pointer-heavy code.
+  quantitative_claims:
+  - 'CPU/memory savings: 20% fewer CPU cycles and 49% less memory than full-program MVX (server application benchmarks)'
+  - 'Nbench overhead: 7% average versus vanilla execution'
+  - 'Nginx overhead: 266% throughput overhead vs. vanilla (ApacheBench)'
+  - 'Lighttpd overhead: 223% throughput overhead vs. vanilla (ApacheBench)'
+  - 'variant-creation cost: 13,162.4 microseconds dominated by heap-pointer scanning (Lighttpd)'
+  why_useful_for_learning: A worked example of using hardware protection keys (Intel MPK) to build an in-process isolation boundary cheaply -- the same mechanism family (page-granularity intra-process isolation) that CORE sandbox/unikernel papers rely on.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: Read via the author lab's (Virginia Tech SSRG) hosted camera-ready PDF.
+
+- id: VIRT-MIDDLEWARE24-06
+  title: 'Menos: Split Fine-Tuning Large Language Models with Efficient GPU Memory Sharing'
+  title_correction: null
+  authors: [Chenghao Hu, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700758
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://iqua.ece.toronto.edu/papers/chenghao-middleware24.pdf
+  classification: SUPPORT
+  classification_note: Menos's contribution is a GPU-memory spatial- and temporal-sharing scheme for a multi-client split-learning server, matching the brief's SUPPORT example "GPU interference, GPU preemption, spatial/temporal sharing" rather than proposing a new virtual-GPU abstraction.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T2]
+  physical_resource: GPU
+  logical_abstraction: A server-side GPU memory pool that many split-learning clients draw from, seeing only their own adapters and on-demand activation memory rather than a dedicated device
+  problem: Split fine-tuning lets clients fine-tune a shared, privacy-preserving LLM without exposing their data or the provider's full model weights, but server GPU memory is overwhelmed as the number of concurrently-served clients grows, since each client's base-model copy and activations compete for the same physical memory.
+  mechanism: Menos combines spatial sharing (adapter-based fine-tuning freezes the base model, so Menos keeps one shared copy of base parameters in GPU memory referenced by all client model instances instead of N copies) with temporal sharing (intermediate activation memory is released during the network round-trip gap between a split-learning forward and backward pass and recomputed on demand), coordinated by a sub-millisecond event-driven FCFS-with-backfilling scheduler.
+  isolation_mechanism: N/A explicit tenant isolation is not the focus; clients are logically separated by per-client adapter/optimizer/activation state layered over one shared, read-only base-model copy.
+  multiplexing_mechanism: Spatial sharing of the frozen base-model weights across clients plus temporal sharing (allocate-on-demand, free-on-idle) of activation memory during split-learning's communication gaps.
+  state_mechanism: Per-client trainable state (LoRA adapter, optimizer state, activations) is transient and recomputed/reallocated on demand; no cross-node migration of this state is described.
+  overhead_bottleneck: Scheduling decision latency for forward/backward memory allocation, kept to sub-millisecond by the event-driven scheduler; per-iteration latency instead grows with client count due to the FCFS-with-backfilling ordering.
+  primary_tradeoff: Sharing base-model weights and recomputing activations on demand cuts server GPU memory use sharply -> but adds an activation-recomputation cost that grows per-iteration latency as more clients are served concurrently.
+  quantitative_claims:
+  - 'GPU memory reduction: 64.1% for OPT-1.3B with 4 clients versus per-client-copy baseline (server: NVIDIA V100 32GB; clients: RTX A4500 20GB)'
+  - 'GPU memory reduction: 72.2% for Llama-2-7B (same testbed)'
+  - 'per-iteration time: 4.7s (1 client) to 6.0s (4 clients) for Llama-2 under Menos vs. 154.4s for the vanilla (non-shared) baseline'
+  - 'scheduling overhead: sub-millisecond decision time across configurations'
+  why_useful_for_learning: A concrete, recent example of GPU spatial+temporal sharing techniques (the SUPPORT-layer primitives) applied to a specific workload (multi-tenant split LLM fine-tuning), useful background for any CORE vGPU/MIG paper's motivation.
+  priority: P2
+  related:
+  - VIRT-MIDDLEWARE24-04
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-MIDDLEWARE24-04
+    basis: Both are GPU spatial/temporal sharing mechanisms presented at the same Middleware 2024 GPU session, addressing memory-safety (Guardian) and memory-capacity (Menos) sides of GPU multi-tenancy respectively.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: Read via the author's (University of Toronto iQua lab) hosted camera-ready PDF.
+
+- id: VIRT-MIDDLEWARE24-07
+  title: 'HORSE: Ultra-low Latency Workloads on FaaS Platforms'
+  title_correction: null
+  authors: [Djob Mvondo, Francois Taiani, Yerom-David Bromberg]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: UNKNOWN
+  classification: SUPPORT
+  classification_note: The paper's contribution (PPSM, an algorithm that speeds up resuming a dormant microVM/snapshot) is exactly the brief's "mechanism that makes serverless isolation cheap" case, which the brief assigns to SUPPORT rather than CORE because it optimizes an existing snapshot/resume mechanism rather than defining a new virtualization abstraction.
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T8]
+  physical_resource: CPU core
+  logical_abstraction: A dormant (snapshotted) microVM/function sandbox that can be resumed to serving state far faster than a naive snapshot-restore, to meet microsecond-scale FaaS latency budgets
+  problem: FaaS platforms need to run microsecond-duration workloads with tight latency budgets, but resuming a dormant sandboxed function instance from a cold or snapshotted state is normally too slow to meet those budgets.
+  mechanism: HORSE introduces PPSM, an algorithm that accelerates the resumption of dormant virtual-machine-backed function sandboxes, reported to speed up resume time by up to 142.84x versus the baseline resume path.
+  isolation_mechanism: Relies on the underlying VM/microVM sandbox boundary for tenant isolation (mechanism not itself the paper's contribution).
+  multiplexing_mechanism: N/A at the level of resource sharing; the contribution is about a single instance's resume latency.
+  state_mechanism: Dormant VM/sandbox state is stored (snapshotted) and PPSM changes how quickly that stored state is restored to a runnable instance.
+  overhead_bottleneck: Naive snapshot-restore latency, which PPSM specifically targets and reduces.
+  primary_tradeoff: Faster resume of dormant instances lets FaaS platforms serve microsecond-scale workloads within their latency budget -> implies added algorithmic/engineering complexity in the resume path versus a naive restore.
+  quantitative_claims:
+  - 'resume-time speedup: up to 142.84x faster than baseline resume of a dormant VM/sandbox (per WIDE lab paper announcement)'
+  why_useful_for_learning: Illustrates that the economics of serverless isolation are dominated by how cheaply a snapshot can be resumed, which is precisely the SUPPORT-layer mechanism (snapshot/restore) that CORE lightweight-VM papers (e.g. Firecracker-style microVMs) are built around.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: 'ACM DL page blocked (403); classified from the WIDE lab''s own two-line description of the paper''s contribution (PPSM algorithm, 142.84x figure), which is consistent with but shorter than a full abstract.'
+
+- id: VIRT-MIDDLEWARE24-08
+  title: Near-Storage Processing in FaaS Environments with Funclets
+  title_correction: null
+  authors: [Alan Nair, Raven Szewczyk, Donald Jennings, Antonio Barbalace]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700755
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://github.com/auto-ndp/faasm
+  classification: SUPPORT
+  classification_note: Funclets is built on Faasm's WebAssembly-based multi-tenant sandboxing plus a new function-migration mechanism that moves I/O-heavy code to the storage node -- a serverless-runtime-isolation-plus-migration mechanism (brief's SUPPORT example) rather than a new isolation architecture in its own right.
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T8, T4]
+  physical_resource: NVMe
+  logical_abstraction: A serverless function whose I/O-intensive portion (a "funclet") can transparently execute on or near the storage node instead of the compute node, while still sharing one Wasm-sandboxed runtime process with other tenant functions
+  problem: In a disaggregated compute/storage serverless deployment, I/O-intensive parts of a function pay network round-trip cost to reach remote storage; moving computation to storage (near-data processing) helps, but must not break the FaaS platform's existing multi-tenant isolation or require rewriting functions.
+  mechanism: Funclets extends the Faasm WebAssembly-based FaaS runtime with a migration mechanism that moves the I/O-intensive part of a function to the relevant storage node with minimal code changes, continuing to rely on Faasm's approach of running functions as isolated Wasm-sandboxed threads within a shared runtime process (software-fault-isolation via Wasm plus standard Linux process/thread tooling) for security and resource isolation.
+  isolation_mechanism: WebAssembly software-fault isolation combined with Linux process/thread-level resource isolation, letting multiple tenant functions share one runtime process safely.
+  multiplexing_mechanism: Multiple tenant functions run as threads inside a single shared Wasm runtime process, multiplexing one process's resources across tenants at low per-function overhead.
+  state_mechanism: A function's I/O-intensive code path is migrated (moved) to execute on the storage node, rather than migrating a VM/container's full memory state.
+  overhead_bottleneck: Network round-trip cost between compute and disaggregated storage nodes for I/O-intensive function code, which the migration-to-storage mechanism specifically targets.
+  primary_tradeoff: Migrating I/O-heavy code to storage nodes removes network round-trips for near-data processing -> but requires the sandboxing layer to keep multi-tenant safety guarantees across a now-distributed execution locus.
+  quantitative_claims: []
+  why_useful_for_learning: Shows Wasm-based software-fault isolation used as the SUPPORT-layer mechanism underpinning a specific serverless architecture pattern (near-storage/near-data processing), distinct from and lighter-weight than microVM-based FaaS isolation.
+  priority: P2
+  related: []
+  relations:
+  - type: USES_MECHANISM_FROM
+    target: Faasm (Shillaker & Pietzuch, USENIX ATC 2020)
+    basis: Funclets is built directly on the Faasm WebAssembly multi-tenant FaaS runtime and its existing sandboxing/threading model.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [code, official-web]
+  confidence: MEDIUM
+  notes: 'ACM DL PDF returned 403 and the author-hosted PDF link 404''d; read from the linked open-source repository (github.com/auto-ndp/faasm) README, which describes the same migration mechanism and isolation approach as the paper.'
+
+- id: VIRT-MIDDLEWARE24-09
+  title: 'B-Side: Binary-Level Static System Call Identification'
+  title_correction: null
+  authors: [Gaspard Thévenon, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700761
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://arxiv.org/abs/2410.18053
+  classification: SUPPORT
+  classification_note: B-Side generates the syscall allow-lists that seccomp-style sandboxing/isolation boundaries are built from for multi-tenant and application-sandboxing deployments, informing (without itself being) the CORE syscall-interposition isolation boundary the brief calls out.
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T7]
+  physical_resource: CPU core
+  logical_abstraction: A precise, per-binary list of the exact system calls a program actually needs, usable directly as a seccomp-style filtering/sandboxing policy
+  problem: Building tight system-call allow-lists for sandboxing needs precise identification of legitimately-used syscalls, but existing static-analysis tools produce many false positives and typically require source code, which is unavailable for production/third-party binaries.
+  mechanism: B-Side performs static analysis directly on x86-64 binaries (no source needed), combining symbolic execution with heuristics that specifically detect system-call wrapper functions, which are a major source of imprecision in prior binary-analysis approaches.
+  isolation_mechanism: Its output (a precise syscall list) is meant to drive syscall-filtering-based sandboxing/isolation policies for multi-tenant environments and application sandboxes, though B-Side itself does not enforce the boundary.
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: False positives/negatives in syscall identification, the specific problem B-Side reduces relative to prior static-analysis and dynamic-tracing baselines.
+  primary_tradeoff: Precise binary-only syscall identification enables tighter (safer) sandboxing filters without source access -> versus coarser tools that either need source code or over-approximate the syscall set, weakening the sandbox.
+  quantitative_claims:
+  - 'precision (popular applications): F1 = 0.81 for B-Side vs. 0.31 and 0.53 for two competing tools'
+  - 'syscall-set tightness (557 Debian binaries, static and dynamic): B-Side identifies an average of 43 syscalls vs. 271 and 95 for the two competing tools'
+  why_useful_for_learning: A concrete example of the tooling layer that determines how tight a syscall-interposition sandbox boundary (a CORE T5 isolation mechanism) can actually be made in practice.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: Read via the arXiv preprint (2410.18053).
+
+- id: VIRT-MIDDLEWARE24-10
+  title: 'Privagic: automatic code partitioning with explicit secure typing'
+  title_correction: null
+  authors: [Subashiny Tanigassalame, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700759
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://pages.saclay.inria.fr/gael.thomas/research/biblio/2024/tanigassalame-middleware-privagic.pdf
+  classification: SUPPORT
+  classification_note: Privagic automates code partitioning onto an existing hardware TEE (Intel SGX) via developer-supplied secure-type annotations; it does not create a new confidential-computing isolation boundary itself, so per the brief's container/isolation trap it is the SUPPORT-layer partitioning tool around a CORE-layer TEE mechanism.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: A multi-threaded C/C++ application whose sensitive-data-touching code is automatically split into an SGX enclave, with the split verified by a type system rather than discovered by data-flow analysis
+  problem: Manually or automatically (via data-flow analysis) partitioning an application between a secure enclave and untrusted memory is hard for multi-threaded C/C++ programs, since standard data-flow analysis tools cannot handle multi-threading, forcing developers toward all-or-nothing full-enclave embedding.
+  mechanism: Developers annotate memory locations holding sensitive values with explicit secure types; the Privagic compiler checks that a sensitive value is never stored into an unsafe (non-enclave) memory location under these typing rules, and then automatically emits code partitioned between Intel SGX enclave and normal memory.
+  isolation_mechanism: Intel SGX hardware enclave isolation is the underlying boundary; Privagic's contribution is deciding, via its type system, exactly which code/data must live inside that boundary.
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: Full enclave embedding (putting the whole program inside SGX) as the baseline Privagic improves on, since SGX enclave execution/transition cost scales with how much code runs inside the enclave.
+  primary_tradeoff: Explicit secure typing (versus automatic data-flow analysis) handles multi-threaded C/C++ code that data-flow tools cannot -> but requires developers to add secure-type annotations (reported as under 10 modified lines) rather than getting partitioning fully for free.
+  quantitative_claims:
+  - 'annotation effort: under 10 modified lines of code to add secure-type annotations to evaluated multi-threaded applications'
+  - 'outperforms full-enclave embedding in both performance and security, per the authors'' evaluation (exact figures not captured)'
+  why_useful_for_learning: A worked example of the code-partitioning tooling layer that sits above a CORE confidential-computing mechanism (SGX), showing how the TEE boundary is actually populated in a real multi-threaded application.
+  priority: P2
+  related: []
+  relations:
+  - type: USES_MECHANISM_FROM
+    target: Intel SGX enclave isolation
+    basis: Privagic's partitioned output places sensitive code/data inside an SGX enclave; SGX itself is the trusted-execution mechanism it builds on.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: Read via the author-hosted (Inria Saclay) camera-ready PDF.
+
+- id: VIRT-MIDDLEWARE24-11
+  title: 'In Serverless, OS Scheduler Choice Costs Money: A Hybrid Scheduling Approach for Cheaper FaaS'
+  title_correction: null
+  authors: [Yuxuan Zhao, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700757
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://arxiv.org/abs/2411.08448
+  classification: CONTEXT
+  classification_note: The contribution is an OS-level (Linux CFS-vs-FIFO hybrid) scheduling policy for FaaS billing efficiency; it evaluates against Firecracker microVMs but does not change or propose any virtualization mechanism itself, matching the brief's "generic serverless scheduling" CONTEXT bucket.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: A pool of physical cores split into a FIFO-scheduled group (for short functions) and a CFS-scheduled group (for long functions), with cores reallocated between groups as load shifts
+  problem: Linux's default fairness-oriented CFS scheduler causes excess context switches for the very short (sub-second) functions that dominate real FaaS workloads, and because providers bill per millisecond, that scheduling overhead directly inflates cost -- by the authors' measurement, over 10x versus FIFO for short functions.
+  mechanism: Using Google's ghOSt user-space scheduling framework, the system partitions CPU cores into FIFO-scheduled cores (non-preemptive, for short tasks) and CFS-scheduled cores (for tasks exceeding an adaptively-tuned time limit), with dynamic core reallocation to keep utilization high as the short/long function mix shifts.
+  isolation_mechanism: N/A (scheduling policy change; relies on existing process/microVM isolation, not a new boundary)
+  multiplexing_mechanism: CPU cores are partitioned between two scheduling classes (FIFO vs CFS) and dynamically reallocated between them based on recent function-duration history.
+  state_mechanism: N/A
+  overhead_bottleneck: Context-switch overhead from CFS's preemptive fairness policy when applied to sub-second functions.
+  primary_tradeoff: A hybrid FIFO/CFS scheduler cuts billed execution time and cost for short functions dramatically -> at the cost of scheduler complexity (adaptive time-limit tuning, dynamic core reallocation) versus a single stock Linux scheduler.
+  quantitative_claims:
+  - 'cost: $0.11 (hybrid) vs. $4.51 (CFS), roughly 41x cheaper (Azure FaaS trace, 12,442 functions, 50 Intel Xeon cores)'
+  - 'p99 execution time: 6.69s (hybrid) vs. 232.97s (CFS) on the same trace'
+  - 'Firecracker microVM deployment: ~10% cost savings across 2,952 microVMs versus CFS'
+  why_useful_for_learning: A concrete illustration of how a layer entirely below virtualization (the host OS process scheduler) still directly determines the economics of a virtualized (microVM-based) serverless platform.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: Read via the arXiv preprint (2411.08448).
+
+- id: VIRT-MIDDLEWARE24-12
+  title: Optimal Resource Efficiency with Fairness in Heterogeneous GPU Clusters
+  title_correction: null
+  authors: [Zizhao Mo, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3654792
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: https://arxiv.org/abs/2403.18545
+  classification: CONTEXT
+  classification_note: The paper is explicitly a resource-allocation/scheduling framework over an existing heterogeneous GPU cluster, not a new GPU-sharing or virtualization mechanism, which the brief places in CONTEXT ("generic ... GPU-cluster scheduling").
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T6]
+  physical_resource: GPU
+  logical_abstraction: A cluster-wide job-to-GPU allocation that jointly optimizes training throughput and inter-tenant fairness across heterogeneous GPU types
+  problem: Deep-learning schedulers for heterogeneous GPU clusters typically provide only limited fairness guarantees and suboptimal aggregate training throughput, forcing operators to trade one off against the other.
+  mechanism: OEF (Optimal Efficiency-Fairness) unifies efficiency and fairness objectives inside a single optimization model that covers both cooperative and non-cooperative multi-tenant scenarios, rather than optimizing throughput and fairness as separate, competing objectives.
+  isolation_mechanism: N/A (allocation/scheduling policy; relies on whatever GPU-sharing primitive the cluster already uses)
+  multiplexing_mechanism: Jobs are assigned to GPUs across a heterogeneous cluster by the OEF allocator, which functions purely as a scheduler over existing GPUs rather than introducing a new sharing/virtualization technology.
+  state_mechanism: N/A
+  overhead_bottleneck: The efficiency-fairness trade-off itself, which prior heterogeneity-aware schedulers handle sub-optimally according to the authors.
+  primary_tradeoff: Solving efficiency and fairness jointly instead of sequentially raises aggregate throughput while improving fairness simultaneously -> versus schedulers that must sacrifice one objective to improve the other.
+  quantitative_claims:
+  - 'training throughput: up to 32% higher than state-of-the-art heterogeneity-aware baseline schedulers, with improved fairness (large-scale cluster experiments)'
+  why_useful_for_learning: Shows the CONTEXT-layer scheduling problem (fair, efficient allocation across heterogeneous GPUs) that CORE/SUPPORT GPU-virtualization mechanisms (MIG, spatial/temporal sharing) exist to make schedulable in the first place.
+  priority: P3
+  related:
+  - VIRT-MIDDLEWARE24-04
+  - VIRT-MIDDLEWARE24-06
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [preprint, official-web]
+  confidence: MEDIUM
+  notes: Read the arXiv abstract page (2403.18545); did not go past the abstract since the CONTEXT classification was already clear from it.
+
+- id: VIRT-MIDDLEWARE24-13
+  title: Towards SLO-Compliant and Cost-Effective Serverless Computing on Emerging GPU Architectures
+  title_correction: null
+  authors: [Vivek M. Bhasi, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700760
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Could not be retrieved past the title/venue-session after 3 distinct access attempts; per the hard rule this is recorded as CONTEXT with LOW confidence rather than guessed as CORE/SUPPORT from the promising title.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T6, T9]
+  physical_resource: GPU
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (title indicates SLO-aware, cost-effective serverless computing targeting newer GPU hardware)
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: 'Access failed on 3 routes: ACM DL (403), ResearchGate (429 rate-limited twice), and general web search (no abstract text surfaced). Listed in access_failures.'
+
+- id: VIRT-MIDDLEWARE24-14
+  title: Enhancing Effective Bidirectional Isolation for Function Fusion in Serverless Architectures
+  title_correction: null
+  authors: [Tianyu Li, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3654778
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Title strongly suggests a serverless-isolation SUPPORT mechanism, but the paper could not be retrieved past the title after 3 distinct access attempts, so per the hard rule it is recorded as CONTEXT/LOW rather than classified from the title.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (title indicates preserving isolation guarantees when multiple serverless functions are fused into one execution unit for performance)
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: 'Access failed on 3 routes: ResearchGate (429 rate-limited), KU Leuven Lirias repository (connection timeout), and ACM DL (403). Listed in access_failures.'
+
+- id: VIRT-MIDDLEWARE24-15
+  title: 'LightZone: Lightweight Hardware-Assisted In-Process Isolation for ARM64'
+  title_correction: null
+  authors: [Ziqi Yuan, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3652892.3700786
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: The title exactly matches the brief's CORE in-process-isolation example, but no abstract or body text was retrievable after 5 distinct access attempts, so per the hard rule this is recorded as CONTEXT/LOW instead of classified from the title alone.
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T7]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (title indicates a lightweight, ARM64-hardware-assisted mechanism for isolating regions within a single process, likely analogous to Intel MPK-based intra-process sandboxing)
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related:
+  - VIRT-MIDDLEWARE24-05
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: 'This is the strongest access failure of the batch: ACM DL (403), the author''s own paper-hosting URL (yajin.org/papers/..., 404), the author''s publications listing page (yajin.org/publications.html, 404), ResearchGate (429 twice), and a Tsinghua co-author''s publications page (no listing content returned) were all tried. Flagged prominently in access_failures given how strongly the title indicates a probable CORE paper (cf. VIRT-MIDDLEWARE24-05, sMVX, which uses the x86 analogue of this mechanism).'
+
+- id: VIRT-MIDDLEWARE24-16
+  title: 'Serverful Functions: Leveraging Servers in Complex Serverless Workflows (industry track)'
+  title_correction: null
+  authors: [German T. Eizaguirre, Daniel Barcelona-Pons, et al.]
+  venue: Middleware
+  year: 2024
+  publication_type: INDUSTRY_TRACK
+  doi: 10.1145/3700824.3701095
+  official_url: https://middleware-conf.github.io/2024/program/full-program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Title and industry-track abstract indicate an architecture pattern for mixing conventional servers into serverless workflows for parts that do not fit the function model -- an application/workflow pattern that uses serverless infrastructure rather than a virtualization mechanism itself.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN in detail; a serverless workflow that can delegate specific steps to a conventional long-running server rather than a short-lived function
+  problem: UNKNOWN in detail (title indicates complex serverless workflows have steps poorly suited to the stateless, short-lived function model)
+  mechanism: UNKNOWN in detail
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: Illustrates, at least by title, a real deployment pattern where operators deliberately step outside the serverless/FaaS abstraction for specific workflow stages -- useful CONTEXT for why serverless isolation trade-offs matter operationally.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: 'ACM DL (403) and Semantic Scholar (empty response) did not yield abstract text; industry-track exclusion from regular-research statistics applies regardless of classification depth.'
+
+# ================================ CCGRID 2024 =================================
+
+- id: VIRT-CCGRID24-01
+  title: 'SweetspotVM: Oversubscribing CPU without Sacrificing VM Performance'
+  title_correction: null
+  authors: [Pierre Jacquet, Thomas Ledoux, Romain Rouvoy]
+  venue: CCGrid
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid59990.2024.00023
+  official_url: https://2024.ccgrid-conference.org/program/
+  fullpaper_source: https://github.com/jacquetpi/sweetspotvm
+  classification: CORE
+  classification_note: The contribution is a per-vCPU CPU-oversubscription mechanism for VMs, directly changing how a physical resource is virtualized and multiplexed among VMs -- core T1/T9 CPU virtualization territory.
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: A vCPU whose oversubscription ratio (how many vCPUs of possibly-different VMs share one physical core) can be set individually per vCPU rather than uniformly per VM or per host
+  problem: Cloud providers restrict CPU oversubscription to a handful of coarse, whole-VM offerings because current schedulers apply oversubscription in an all-or-nothing way, forcing a blunt trade-off between consolidation (cost) and per-VM performance guarantees.
+  mechanism: Building on production OVHcloud utilization data showing that individual vCPUs of the same VM have highly non-uniform utilization, SweetspotVM applies differentiated oversubscription ratios to individual vCPUs (rather than to whole VMs), implemented as a local per-server scheduler on top of QEMU/KVM and libvirt that dynamically adjusts CPU pinning against configurable ratio templates (e.g. 1.0/1.5/2.6).
+  isolation_mechanism: Per-vCPU pinning/ratio control bounds how much oversubscription any individual vCPU is exposed to, rather than exposing an entire VM uniformly.
+  multiplexing_mechanism: Physical CPU cores are shared across vCPUs at individually-tunable oversubscription ratios instead of one fleet-wide or one per-VM ratio.
+  state_mechanism: N/A (no VM migration/checkpoint involved)
+  overhead_bottleneck: Picking the wrong oversubscription ratio for a given vCPU's real utilization pattern, which non-uniform vCPU-level tuning is designed to avoid.
+  primary_tradeoff: Per-vCPU (instead of per-VM) oversubscription tuning lets providers consolidate far more aggressively while holding performance close to a non-oversubscribed baseline -> at the cost of a more complex, continuously-adapting scheduler than a static, uniform oversubscription ratio.
+  quantitative_claims:
+  - 'cost: hosting cost divided by 3 while maintaining VM performance at the level of non-oversubscribed platforms (production-informed prototype evaluation, EPYC-7662 topology, QEMU/KVM+libvirt, 12-hour monitoring trace)'
+  why_useful_for_learning: A clear, quantified example of the classic virtualization trade-off (oversubscription vs. per-tenant performance) being pushed to finer granularity than the whole-VM level most schedulers use.
+  priority: P1
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [artifact, code, preprint]
+  confidence: HIGH
+  notes: 'IEEE Xplore and HAL (hal-04454043) were blocked (Anubis bot-challenge / 403); read via the public artifact repository (github.com/jacquetpi/sweetspotvm) README and the STACK research group''s own blog summary of the paper.'
+
+- id: VIRT-CCGRID24-02
+  title: Tackling Memory Footprint Expansion During Live Migration of Virtual Machines
+  title_correction: null
+  authors: [Roja Eswaran, Mingjie Yan, Kartik Gopalan]
+  venue: CCGrid
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid59990.2024.00025
+  official_url: https://2024.ccgrid-conference.org/program/
+  fullpaper_source: https://kartikgopalan.github.io/publications/ccgrid24.pdf
+  classification: CORE
+  classification_note: The paper's whole contribution is a mechanism (SLM) that fixes a specific live-migration side effect -- loss of copy-on-write page sharing -- making it a direct T4 live-migration/state-mechanism paper.
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T2]
+  physical_resource: DRAM
+  logical_abstraction: A migrated VM's memory image that preserves the same copy-on-write sharing relationships with co-located VMs at the destination host that it had at the source host
+  problem: When co-located VMs share memory pages via deduplication (KSM-style copy-on-write sharing) and are migrated to a common destination, standard live migration transfers and re-materializes each shared page separately per VM, "expanding" memory footprint at the destination, causing migration failures, extra network traffic and longer migration times.
+  mechanism: SLM (Sharing-aware Live Migration) classifies each source page as Unique, Duplicate (already transferred as part of another VM's migration), or Dirty; only Unique and Dirty pages are sent with full content, Duplicate pages are sent as identifiers only, and the destination uses mmap with MAP_PRIVATE to remap the identified pages onto the same physical page, reconstructing the original copy-on-write sharing relationship -- implemented for both pre-copy and post-copy live migration on KVM/QEMU.
+  isolation_mechanism: N/A (memory-sharing/migration mechanism; isolation between VMs is unaffected)
+  multiplexing_mechanism: Copy-on-write physical-page sharing across co-located VMs is the resource-multiplexing mechanism being preserved through migration rather than accidentally destroyed by it.
+  state_mechanism: VM memory state moves via classified page transfer (Unique/Duplicate-identifier/Dirty) plus destination-side COW remapping via mmap(MAP_PRIVATE), for both pre-copy and post-copy live migration.
+  overhead_bottleneck: Destination-side memory footprint expansion and the network traffic caused by re-transferring/re-materializing already-shared pages as if they were distinct.
+  primary_tradeoff: Preserving page sharing through migration cuts total migration time, downtime and network traffic substantially -> at the cost of extra source/destination-side page classification and remapping bookkeeping versus naive migration.
+  quantitative_claims:
+  - 'total migration time reduction: up to 59% (pre-copy) and up to 57% (post-copy) vs. generic (sharing-unaware) live migration (Intel Xeon E5-2620 v2, 128GB DRAM, 3-machine KVM/QEMU testbed)'
+  - 'network traffic reduction: up to 62% vs. generic live migration (same testbed)'
+  - 'average downtime: ~96ms (SLM) vs. 93ms (generic) for pre-copy; ~300ms (SLM) vs. 290ms (generic) for post-copy'
+  - 'workloads: idle VMs sized 1GB-32GB, iPerf, and a 5-million-key-value-pair Redis cluster'
+  why_useful_for_learning: A concrete case of the brief's "state" dimension -- exactly what virtualization state (here, page-sharing relationships) must be tracked and reconstructed across a live migration, and what breaks if it is not.
+  priority: P1
+  related:
+  - VIRT-CCGRID24-03
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-CCGRID24-03
+    basis: Both papers, by the same Binghamton group, address sharing-awareness in live migration; VIRT-CCGRID24-03 is the Doctoral Symposium presentation of directly-related work on multi-VM live migration memory sharing.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: Read via the author's (Kartik Gopalan, Binghamton) hosted camera-ready PDF, which describes the SLM mechanism and reports the quantitative results above.
+
+- id: VIRT-CCGRID24-03
+  title: Incorporating Memory Sharing-awareness in Multi-VM Live Migration
+  title_correction: null
+  authors: [Roja Eswaran, Mingjie Yan, Kartik Gopalan]
+  venue: CCGrid
+  year: 2024
+  publication_type: SHORT_PAPER
+  doi: 10.1109/CCGrid59990.2024.00075
+  official_url: https://2024.ccgrid-conference.org/doctoral-symposium/
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: Confirmed by the authors' own publication list to be a Doctoral Symposium paper (not the main track) on the same sharing-aware, multi-VM live-migration mechanism as VIRT-CCGRID24-02, so it is classified CORE on the same T4 basis but excluded from main-track statistics.
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T2]
+  physical_resource: DRAM
+  logical_abstraction: Extends copy-on-write-preserving live migration (see VIRT-CCGRID24-02) to the multi-VM migration case, where several co-located, page-sharing VMs migrate together.
+  problem: The single-VM sharing-aware migration problem (VIRT-CCGRID24-02) becomes harder when multiple co-located, mutually page-sharing VMs must be migrated together, since sharing relationships span VM boundaries.
+  mechanism: UNKNOWN in full detail beyond the shared SLM-style page-classification-and-remapping approach described for the companion main-track paper; the DS paper is confirmed only bibliographically (title, authors, venue, doctoral-symposium status).
+  isolation_mechanism: N/A
+  multiplexing_mechanism: Copy-on-write page sharing across multiple, simultaneously-migrating VMs.
+  state_mechanism: Presumed to extend the Unique/Duplicate/Dirty page classification and destination-side COW remapping of VIRT-CCGRID24-02 to the multi-VM case; not independently confirmed.
+  overhead_bottleneck: 'UNKNOWN in detail (presumed: memory footprint expansion across multiple simultaneously-migrating, sharing VMs)'
+  primary_tradeoff: UNKNOWN in detail
+  quantitative_claims: []
+  why_useful_for_learning: Shows how a CORE live-migration mechanism (page-sharing preservation) generalizes from the single-VM to the multi-VM case, a natural "what's the next hard version of this problem" follow-on to VIRT-CCGRID24-02.
+  priority: P2
+  related:
+  - VIRT-CCGRID24-02
+  relations:
+  - type: EXTENSION
+    target: VIRT-CCGRID24-02
+    basis: Explicitly generalizes the single-VM sharing-aware live migration mechanism to the multi-VM migration setting, per title and shared authorship.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: 'Publication type confirmed as Doctoral Symposium (not main track) via the authors'' own Binghamton publications page; IEEE Xplore page returned no extractable content. Excluded from main-track population counts; see excluded_by_pubtype.'
+
+- id: VIRT-CCGRID24-04
+  title: 'vASP: Full VM Life-cycle Protection Based on Active Security Processor Architecture'
+  title_correction: null
+  authors: [Jiayun Chen, Qihang Zhou, Weijuan Zhang, Nan Jiang, Yamin Xie, Xiaoqi Jia]
+  venue: CCGrid
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid59990.2024.00028
+  official_url: https://2024.ccgrid-conference.org/program/
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: The contribution is a hardware-security architecture extending Active Security Processor protection across the entire VM life-cycle (a trusted-boot-to-teardown chain of trust for guests), matching the brief's T7 "confidential VM / hypervisor correctness" CORE category.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T1]
+  physical_resource: CPU core
+  logical_abstraction: A VM whose entire life-cycle (boot, run, teardown) is continuously attested and measured by an out-of-band Active Security Processor, giving the guest a verifiable chain of trust in a cloud/multi-tenant setting
+  problem: The existing Active Security Processor (ASP) architecture, designed for physical machine trusted computing, does not extend to virtual machines in cloud environments, leaving VM integrity unverifiable across the guest's full life-cycle.
+  mechanism: vASP customizes ASP interfaces for VM contexts, dynamically measures the running guest to ensure guest-originated data has not been tampered with, and implements verification mechanisms that maintain integrity checks across the complete VM operational life-cycle, establishing an end-to-end chain of trust.
+  isolation_mechanism: The Active Security Processor is a physically/logically separate trust root from the hypervisor and guest, providing hardware-rooted attestation independent of a potentially-compromised virtualization stack.
+  multiplexing_mechanism: N/A
+  state_mechanism: The chain-of-trust/measurement state is maintained by the ASP across the guest's full life-cycle, not just at boot, distinguishing it from one-shot secure/measured boot schemes.
+  overhead_bottleneck: UNKNOWN (no performance overhead figures captured)
+  primary_tradeoff: Extending hardware-rooted attestation across the whole VM life-cycle (not just boot) closes a gap left by boot-time-only measured-boot schemes -> at the cost of interfacing a physical security processor with the virtualization stack, adding architectural complexity that pure software attestation avoids.
+  quantitative_claims: []
+  why_useful_for_learning: A concrete example of extending a trusted-computing hardware root (Active Security Processor) into the virtualization stack, complementary to enclave-based (SGX/TDX/SEV) confidential-VM approaches covered elsewhere in the corpus.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: 'IEEE Xplore (empty content on 2 attempts) and ResearchGate (429 rate-limited) did not yield the PDF; classified from the abstract text surfaced via the authors'' lab (DAMS, Institute of Information Engineering CAS) publication listing.'
+
+- id: VIRT-CCGRID24-05
+  title: Workload-Aware Live Migratable Cloud Instance Detector
+  title_correction: null
+  authors: [Junho Lim, Kyunghwan Kim, Kyungyong Lee]
+  venue: CCGrid
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid59990.2024.00031
+  official_url: https://2024.ccgrid-conference.org/program/
+  fullpaper_source: https://leeky.me/publications/workload-aware-migrate-detector.pdf
+  classification: CORE
+  classification_note: The contribution directly targets live migration's CPU-feature-compatibility check -- a core enabling condition for VM live migration -- and shows that using actual workload CPU-feature usage (rather than full instance CPU-feature sets) safely widens the set of viable migration targets, a T4/T1 mechanism paper.
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T1, T9]
+  physical_resource: CPU core
+  logical_abstraction: A set of candidate destination cloud instance types that are guaranteed CPU-feature-compatible for live-migrating a specific running workload, wider than the set produced by comparing full instance CPU-feature specs
+  problem: Standard live-migration compatibility checking (as in CRIU) compares the full CPU-feature sets of source and target instance types; since most workloads only ever use a subset of the CPU features their instance type supports, this over-conservative check produces false negatives that needlessly rule out feasible, often cheaper, migration targets (e.g. spot instances).
+  mechanism: The system has three components -- a CPU Feature Collector that gathers per-instance-type CPU features via CPUID across 450 AWS EC2 instance types; a Workload Instruction Analyzer that determines which CPU features a specific workload actually exercises, via two heuristics (full text-segment disassembly, and execution-path tracking that follows actual function calls), mapping instructions to CPU features with Intel XED; and a Compatibility Checker that matches the workload's actually-used features (not the full instance spec) against candidate target instances.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: The migration-feasibility decision is based on the workload's runtime CPU-feature footprint rather than VM memory state per se; the actual migration mechanism (e.g. CRIU-based) is assumed, not redesigned.
+  overhead_bottleneck: Workload-analysis time (up to 15 seconds) needed to determine actually-used CPU features before a migration decision can be made.
+  primary_tradeoff: Basing compatibility on actual workload CPU-feature usage widens the feasible migration-target set and captures cheaper spot pricing -> at the cost of an upfront (up to 15s) workload-analysis pass and reliance on execution-path coverage (which can miss rarely-taken code paths) for precision.
+  quantitative_claims:
+  - 'precision: 100% across all methods tested, zero migration failures (7 benchmarks x 450 AWS EC2 instance types grouped into 27 CPU-feature classes, 702 directional migrations per workload)'
+  - 'recall: execution-path tracking achieves 5x higher recall than the CRIU baseline (same evaluation)'
+  - 'analysis overhead: up to 15 seconds maximum for workload analysis'
+  - 'cost: 16% improvement in median spot-instance pricing achieved by the widened migration-target set'
+  - 'reliability: 15% reduction in spot-interruption ratio for quartile cases'
+  why_useful_for_learning: A clear illustration of how CPU virtualization/migration compatibility is normally checked far too conservatively, and how workload-aware analysis reclaims migration options (and cost savings) without weakening correctness.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: Read via the author's (Kyungyong Lee) hosted camera-ready PDF.
+
+- id: VIRT-CCGRID24-06
+  title: 'HAPPIES: a History-Aware Efficient Cloud Resource Overcommitment System'
+  title_correction: null
+  authors: [Ziwei Huang, Shibo Tang, Zihao Chang, Lin Tan, Qichao Lu, Jian Ouyang, Wenbin Lv, Zhicheng Yao, Yungang Bao, Sa Wang]
+  venue: CCGrid
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid59990.2024.00075
+  official_url: https://2024.ccgrid-conference.org/program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: The title indicates a cloud resource-overcommitment (oversubscription) system, which per the brief's threshold rules is CORE/SUPPORT only if it is itself a virtualization multiplexing mechanism, but no abstract or body text was retrievable after 5 distinct access attempts, so it is recorded as CONTEXT/LOW rather than classified from the title.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T1]
+  physical_resource: UNKNOWN
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN (title indicates using historical usage data to make cloud CPU/memory overcommitment safer or more efficient)
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related:
+  - VIRT-CCGRID24-01
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only]
+  confidence: LOW
+  notes: 'Access failed on 5 routes: IEEE Xplore document page (empty content, 2 attempts), IEEE Xplore direct PDF (418 error), ResearchGate (429 rate-limited), Semantic Scholar API (429/proxy-rejected), and two co-authors'' personal/lab pages (bibliographic listing only, no abstract). Flagged in access_failures given the title''s strong resemblance to VIRT-CCGRID24-01 (SweetspotVM), a confirmed CORE oversubscription paper.'
+
+- id: VIRT-CCGRID24-07
+  title: 'DeepVM: Integrating Spot and On-Demand VMs for Cost-Efficient Deep Learning Clusters in the Cloud'
+  title_correction: null
+  authors: [Yoochan Kim, Kihyun Kim, Yonghyeon Cho, Jinwoo Kim, Awais Khan, Ki-Dong Kang, Baik-Song An, Myung-Hoon Cha, Hong-Yeon Kim, Youngjae Kim]
+  venue: CCGrid
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid59990.2024.00030
+  official_url: https://2024.ccgrid-conference.org/program/
+  fullpaper_source: https://arxiv.org/abs/2403.05861
+  classification: CONTEXT
+  classification_note: DeepVM selects and mixes cloud VM instance types (spot vs. on-demand) for a distributed-training cluster; it is a fleet-level VM-economics/scheduling paper that uses VMs as its unit of allocation rather than proposing a virtualization mechanism, matching the brief's CONTEXT bucket for cloud cost optimization.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T1, T8]
+  physical_resource: GPU
+  logical_abstraction: A cluster composed of a cost-optimized mix of spot and on-demand VM instance types, sized and blended per training job's checkpointing tolerance and budget
+  problem: Distributed deep-learning training needs GPU-based VM clusters, which are expensive; spot VM instances are far cheaper but can be reclaimed at any time, threatening in-progress training unless checkpointing and instance selection are handled carefully.
+  mechanism: DeepVM uses a four-stage approach -- performance assessment via a FLOPS-per-dollar (FLOPP) metric, architecture-level optimization via linear programming, and an on-demand/spot instance-mix selection tuned to the job's requirements and checkpointing strategy -- validated via simulation and real AWS deployment.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A (VM instance-type selection and mixing, not intra-VM resource multiplexing)
+  state_mechanism: Relies on periodic training checkpointing to survive spot-instance reclamation; does not itself redesign the checkpointing mechanism.
+  overhead_bottleneck: Spot-instance reclamation risk, mitigated by DeepVM's cost-effective checkpointing-aware instance mix rather than eliminated.
+  primary_tradeoff: Blending cheap, reclaimable spot VMs with reliable on-demand VMs cuts training cost and makespan versus an on-demand-only cluster -> at the cost of checkpointing overhead and residual reclamation risk that an all-on-demand cluster would not have.
+  quantitative_claims: []
+  why_useful_for_learning: A real example of how cloud operators reason about VM instance-type economics (spot vs. on-demand) for a specific, checkpoint-tolerant workload class, providing operational CONTEXT for why live-migration/checkpoint mechanisms (CORE elsewhere in the corpus) matter commercially.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [preprint, official-web]
+  confidence: MEDIUM
+  notes: Read the arXiv abstract/summary (2403.05861); did not need to go deeper since the CONTEXT classification was already clear.
+
+- id: VIRT-CCGRID24-08
+  title: Access-Based Carving of Data for Efficient Reproducibility of Containers
+  title_correction: null
+  authors: [Rohan Tikmany, Aniket Modi, Raffay Atiq, Moaz Reyad, Ashish Gehani, Tanu Malik]
+  venue: CCGrid
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid59990.2024.00058
+  official_url: https://2024.ccgrid-conference.org/program/
+  fullpaper_source: http://www.csl.sri.com/users/gehani/papers/CCIC-2024.ABCD.pdf
+  classification: CONTEXT
+  classification_note: ABCD's actual contribution is I/O-access-based data subsetting (via LD_PRELOAD and HDF5-library interposition) to shrink the data a container ships with; the container itself is only the deployment/reproducibility vehicle motivating the problem, not the subject of any isolation/runtime mechanism change, so per the "merely runs inside a container" threshold trap this lands in CONTEXT rather than SUPPORT.
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T10]
+  physical_resource: NVMe
+  logical_abstraction: A "carved" version of a scientific application's input/output dataset, containing only the bytes the program actually accessed, shipped inside the reproducibility container instead of the full dataset
+  problem: Containerizing a scientific application for reproducibility typically bundles the full dataset it was run against, even though the program usually touches only a subset of it; this inflates container size (often to or beyond a gigabyte for even simple applications), raising storage, transfer and security costs.
+  mechanism: ABCD (Access-Based Carving of Data) intercepts I/O at two levels -- system-call level via LD_PRELOAD function interposition, recording byte-level read/write offsets in an interval binary search tree, and library level via HDF5 call interposition (H5Fopen/H5Dread/H5Oopen), producing a "skeleton" copy with only accessed datasets populated -- across three phases (audit, carve, re-execute), with a fallback path for data access not seen during the audit.
+  isolation_mechanism: N/A (data-subsetting mechanism; the container's own isolation boundary is unchanged)
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: Audit-phase I/O interception cost (from milliseconds for synthetic benchmarks to seconds for real applications), and system-call-level interposition specifically incurring more overhead than library-level interposition due to higher event volume.
+  primary_tradeoff: Carving out only accessed data shrinks container/data footprint dramatically -> at the cost of audit-time interception overhead and a fallback path needed for data access patterns not observed during the audit run.
+  quantitative_claims:
+  - 'storage reduction: up to 97% reduction in accessed data size via system-call-level interposition (3 real HDF5 precipitation-domain applications + 4 h5bench synthetic I/O-pattern micro-benchmarks, Ubuntu 22.04, 8-core Intel i7-4790 @ 3.60GHz, 15GB RAM)'
+  - 'storage reduction: 15%-35% via library-level (HDF5) interposition, smaller than system-call-level but with different performance trade-offs'
+  why_useful_for_learning: A useful CONTEXT example of a data-management technique that specifically targets container-based scientific reproducibility, illustrating the "runs inside a container but isn't about virtualization" boundary case the brief warns about.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: Read via the author-hosted (SRI, Ashish Gehani) camera-ready PDF.
+
+venue_populations:
+  - venue: Middleware
+    year: 2024
+    official_source: https://middleware-conf.github.io/2024/program/full-program/ ; cross-checked against https://www.slideshare.net/slideshow/acm-middleware-2024-pc-chairs-opening-remarks/273819855
+    main_track_paper_count: 39
+    count_basis: 'Enumerated all 12 numbered technical sessions of the full program page (10 research sessions + 2 industry sessions), itemizing every listed paper title; totalled 39 research-track titles across sessions 1,2,3,5,6,7,9,10,11,12 (session 12 has only 3 papers, not 4, contrary to the page''s own "12 sessions / 48 papers" summary line, which appears to be an arithmetic error in that source). Independently confirmed as exactly 39 by the PC chairs'' own opening-remarks slide deck ("Combined Research Track Total: 39 papers accepted", from 26 R1 + 33 R2 accepted minus overlap reporting quirks reconciled to 39 in the deck''s own total line), plus 7 accepted industry-track papers (18 submitted, 38.8% acceptance) -- also matching the 4+3 industry papers itemized across sessions 4 and 8.'
+  - venue: CCGrid
+    year: 2024
+    official_source: dblp.org/db/conf/ccgrid/ccgrid2024.html (page-range analysis) ; cross-checked against https://2024.ccgrid-conference.org/program/
+    main_track_paper_count: 67
+    count_basis: 'dblp lists 67 sequential, full-length (pp. 1-635) entries for CCGrid 2024 before the page range drops to 2-4 page items (posters, SCALE challenge, Doctoral Symposium, pp. 636-675). Independently itemized 66 of these 67 directly from the official program''s 8 named tracks (Hardware Systems & Networking, Software Systems & Platforms, ML for Systems/Systems for ML, Future Compute Continuum, Applications & Workflows, Performance Monitoring/Modeling/Analysis/Benchmarking, Distributed & Parallel Storage Systems, Computer Science Education, plus a Scheduling-and-Workflows session and an AI-and-Edge session); the 67th (dblp item at pp. 626-635, a second Computer Science Education track paper) is inferred by page-range continuity rather than independently re-confirmed session-by-session. The ICFEC sessions appearing on the same program page are a separate, merely co-located conference (International Conference on Fog and Edge Computing) and are NOT part of this count; CCGrid''s own workshops (IWOSEMCS, Cloud6G, QUICK, ET-EDGE, SioTec) publish in a separate proceedings volume (conf/ccgridw) and are likewise excluded.'
+possible_omissions: []
+possible_expansion:
+  - title: ICFEC 2024 (International Conference on Fog and Edge Computing, co-located with CCGrid 2024, same program page)
+    venue: ICFEC
+    year: 2024
+    why: Multiple ICFEC session titles (e.g. edge migration, cooperative-inference offloading) touch container/VM/edge isolation themes similar to CCGrid's own scope, but ICFEC is a distinct, separately-refereed conference, not a CCGrid track, so it was left out of this census; a future batch could screen it explicitly if edge-virtualization coverage is judged thin.
+excluded_by_pubtype:
+  - title: Incorporating Memory Sharing-awareness in Multi-VM Live Migration
+    venue: CCGrid
+    actual_type: Doctoral Symposium paper (not main track)
+    evidence: 'Confirmed via the authors'' (Binghamton University) own publications page, which explicitly labels it "Doctoral Symposium Paper, In 24th IEEE/ACM ... CCGRID ... Philadelphia, May 6-9, 2024."'
+  - title: 'A Universal Graph Transaction-Log (and 20 other Middleware 2024 demo/poster titles)'
+    venue: Middleware
+    actual_type: Demo/Poster (Dec 4 Demo & Poster Session)
+    evidence: Middleware 2024 full-program page, "Demo & Poster Session | 17:30-19:00" listing 20 titles explicitly marked Demo or Poster, distinct from the numbered Research/Industry sessions.
+  - title: 'Comparative Analysis and Optimization of LoRA Adapter Co-serving (and 2 other Doctoral Symposium proposals)'
+    venue: Middleware
+    actual_type: Doctoral Symposium
+    evidence: Middleware 2024 full-program page, "DOCTORAL SYMPOSIUM (December 3)" section, distinct from the main-conference research/industry sessions.
+  - title: 'Advancing Serverless Computing for Scalable AI Model Inference (and ~10 other WoSC/WoC/MID4CC/MIDD4DT workshop titles)'
+    venue: Middleware
+    actual_type: WORKSHOP_PAPER
+    evidence: Middleware 2024 full-program page, "WORKSHOPS (December 2-3)" section (WoSC, WoC, MID4CC, MIDD4DT), held before the numbered main-conference sessions.
+  - title: 'Discovery of Floating-Point Differences Between NVIDIA and AMD GPUs (and 3 other CCGrid Doctoral Symposium titles, pp. 663-675)'
+    venue: CCGrid
+    actual_type: Doctoral Symposium
+    evidence: dblp page-range placement (pp. 663-675) plus official CCGrid 2024 program page "Doctoral Symposium | Maestro AB" session listing.
+  - title: 'A Distributed, Asynchronous Algorithm for Large-Scale Internet Network Topology Analysis (and 1 other SCALE Challenge title, pp. 644-657)'
+    venue: CCGrid
+    actual_type: SCALE Challenge (competitive track, not peer-reviewed main track)
+    evidence: dblp page-range placement (pp. 644-657) plus official CCGrid 2024 "SCALE Challenge | Aria AB" program listing (this title is also flagged as the SCALE Challenge Winner).
+  - title: 'A Preparing Approach to Manipulating Nested Data Structures (and 1 other CCGrid Poster Session title, pp. 636-641)'
+    venue: CCGrid
+    actual_type: POSTER
+    evidence: dblp page-range placement (pp. 636-641, 2 pages each) plus official CCGrid 2024 "CCGRID Poster Session | Aria AB" program listing.
+  - title: All IWOSEMCS / Cloud6G / QUICK / ET-EDGE / SioTec workshop papers (Monday, May 6)
+    venue: CCGrid
+    actual_type: WORKSHOP_PAPER
+    evidence: Official CCGrid 2024 program page, Monday May 6 workshop sessions; these publish in the separate conf/ccgridw proceedings, not conf/ccgrid.
+access_failures:
+  - title: 'LightZone: Lightweight Hardware-Assisted In-Process Isolation for ARM64'
+    what_was_tried: 'ACM DL doi page (403); author-hosted direct PDF at yajin.org/papers/middleware24_lightzone.pdf (404); author publications listing at yajin.org/publications.html (404); ResearchGate publication page (429 rate-limited, 2 attempts); a Tsinghua co-author''s publications page (returned no listing content); targeted web search for quoted abstract text (no results with abstract wording).'
+    best_evidence_obtained: 'Title, author list (Ziqi Yuan et al.), venue/session (Middleware 2024, Session 12 "Systems"), and DOI (10.1145/3652892.3700786) only.'
+  - title: 'HAPPIES: a History-Aware Efficient Cloud Resource Overcommitment System'
+    what_was_tried: 'IEEE Xplore document page (returned empty content, 2 attempts); IEEE Xplore direct PDF URL (418 error); ResearchGate publication page (429 rate-limited); Semantic Scholar search API (429 / proxy rate-limit rejection); two co-authors'' personal/lab pages (bibliographic citation only, no abstract).'
+    best_evidence_obtained: 'Title, full author list, venue (CCGrid 2024), and DOI (10.1109/CCGrid59990.2024.00075) only.'
+  - title: Towards SLO-Compliant and Cost-Effective Serverless Computing on Emerging GPU Architectures
+    what_was_tried: 'ACM DL doi page (403); ResearchGate publication page (429 rate-limited); general web search for quoted abstract text (no abstract surfaced, only bibliographic listings).'
+    best_evidence_obtained: 'Title, first author (Vivek M. Bhasi), venue/session (Middleware 2024, Session 5 "GPU"), DOI (10.1145/3652892.3700760).'
+  - title: Enhancing Effective Bidirectional Isolation for Function Fusion in Serverless Architectures
+    what_was_tried: 'ResearchGate publication page (429 rate-limited); KU Leuven Lirias institutional repository page (connection timeout); ACM DL doi page (403).'
+    best_evidence_obtained: 'Title, venue/session (Middleware 2024, Session 1 "Serverless"), DOI (10.1145/3652892.3654778).'
+  - title: 'UTwinVM: Reliable hints on the effects of hypervisor updates on VMs in the Cloud'
+    what_was_tried: 'ACM DL doi page (not directly fetched, known to require subscription); HAL preprint mirror hal-04894609 (Anubis bot-challenge "Access Denied" on 2 URL variants).'
+    best_evidence_obtained: 'A short mechanism description (non-negative least-squares model over synthetic "twin" test applications) from the WIDE research group''s own announcement page, sufficient for ABSTRACT_INTRO-level classification.'
+  - title: 'vPIM: Processing-in-Memory Virtualization'
+    what_was_tried: 'ACM DL PDF (403); HAL preprint mirror hal-04737700 (Anubis bot-challenge "Access Denied" on 2 URL variants).'
+    best_evidence_obtained: 'Full design/evaluation detail was ultimately recovered from a UPMEM-hosted invited-talk slide PDF covering the same paper, so this one did not end up depth-limited despite the HAL/ACM failures.'
+seed_corrections: []
+batch_observations: >
+  This is a from-scratch census (no seed list) for two mid-size, non-US-database-blocked venues.
+  Enumeration completeness differs sharply by venue and by track. For Middleware 2024, the
+  research track (39 papers) and industry track (7 papers) were FULLY enumerated by title,
+  directly from the official full-program page, and cross-validated against an independent
+  source (the PC chairs' own opening-remarks slide deck), which is the strongest population
+  evidence obtained in this batch. Demos/posters (21 titles), the Doctoral Symposium (3
+  proposals + 7 poster/demo lightning talks) and the 4 co-located workshops (~18 titles) were
+  also fully title-enumerated from the same program page (used to spot two virtualization-
+  adjacent titles, vPIM and LightZone-style work, appearing as posters as well as full papers --
+  treated as the main-track paper version being the one to classify) but were not individually
+  screened paper-by-paper beyond their titles, since publication-criterion exclusion already
+  removes them from the main corpus; representative titles are logged in excluded_by_pubtype
+  rather than every single one.
+
+  For CCGrid 2024, the 8 named main tracks (67 papers total) were enumerated from BOTH dblp's
+  page-range listing and the official program's per-track session listing, which agreed to
+  within one paper (a Computer Science Education track paper inferred by page-range continuity
+  but not independently re-confirmed against a session slot); this is flagged transparently in
+  count_basis rather than silently reconciled. All 67 main-track titles were screened for
+  virtualization relevance by keyword/topic; roughly 25 titles received at least a WebSearch-
+  level abstract check, and 8 of those were read in enough depth to produce full records. A
+  further ~15-20 CCGrid main-track titles that plausibly touched cloud/edge/GPU resource
+  management (e.g. COTuner, Elasticity via GPU work-stealing, Opportunistic Energy-Aware
+  Container Scheduling, Apodotiko, XFBench, Jingle, HeROcache, CNN Training Latency Prediction,
+  Efficient Budget-Balanced Decentralized Federated Cloud/Edge, "Is the powersave governor
+  really saving power?") were screened by title and a search snippet only, judged CONTEXT-at-
+  best or non-candidate by the brief's own guidance (generic serverless/FL/edge/GPU-cluster
+  scheduling normally lands in CONTEXT or is filtered as generic application), and were NOT
+  given individual records, to keep this batch's depth-per-record honest given a large candidate
+  pool; this is a keyword-search-depth gap, not a claim that these titles are irrelevant. The
+  CCGrid poster session (2 titles), SCALE Challenge (2 titles) and Doctoral Symposium (4 titles,
+  +1 companion to a main-track CORE paper, recorded as VIRT-CCGRID24-03) were fully title-
+  enumerated; the 5 co-located CCGrid workshops (~35 titles, mostly security/ML/edge, publishing
+  in the separate conf/ccgridw proceedings) and the co-located ICFEC conference (~20 titles) were
+  enumerated by session/title only and excluded as out of scope (workshop proceedings / separate
+  conference respectively), not individually screened for virtualization relevance -- logged
+  under possible_expansion for ICFEC given thematic overlap.
+
+  Threshold calls: (1) VIRT-MIDDLEWARE24-06 (Menos) and VIRT-MIDDLEWARE24-04 (Guardian) were
+  both called SUPPORT rather than CORE because both are GPU spatial/temporal-sharing SCHEMES
+  layered on unmodified CUDA/frameworks, not new virtual-GPU abstractions (no MIG-like partition,
+  no GPU-state virtualization) -- a direct application of the brief's GPU-sharing trap.
+  (2) VIRT-MIDDLEWARE24-10 (Privagic) and VIRT-MIDDLEWARE24-09 (B-Side) were both called SUPPORT
+  rather than CORE because each builds tooling around an existing isolation boundary (SGX
+  enclaves; seccomp-style syscall filtering) rather than creating a new one, per the brief's
+  container/isolation-architecture trap. (3) VIRT-CCGRID24-08 (Access-Based Carving) was pulled
+  back from an initial SUPPORT screen to CONTEXT on closer reading, since its actual mechanism
+  (I/O-access-based data subsetting) does not touch the container runtime/isolation/image
+  mechanism itself -- a clean instance of the brief's "merely runs inside a container is not a
+  virtualization paper" trap. (4) Three titles (LightZone, HAPPIES, "Enhancing Effective
+  Bidirectional Isolation...", "Towards SLO-Compliant Serverless GPU...") looked like probable
+  CORE/SUPPORT papers by title alone but resisted 3-5 independent access routes each; per the
+  schema's hard rule these were recorded as CONTEXT/TITLE_ONLY/LOW rather than classified from
+  the title, and flagged prominently in access_failures so a future pass with different network
+  access can revisit them specifically -- LightZone in particular is judged the single most
+  likely mis-classification risk in this batch. (5) Several titles containing surface-level
+  virtualization-adjacent keywords resolved to DROP/non-candidate on inspection and were not
+  given records at all: "Brug" (a general-purpose, host-level memory allocator unrelated to
+  VMs/containers), "A Cross-Architecture Evaluation of WebAssembly..." (explicitly a portability/
+  performance benchmark, not an isolation-mechanism study, confirmed by its own text), "A2L"
+  (native io_uring I/O layer, explicitly not virtualized I/O per its own text), "Towards
+  Affordable Reproducibility Using Scalable Capture..." (HPC scientific-run-comparison "capture",
+  a false positive on the word "checkpoint"), and "PireSPM" (persistent-memory security
+  architecture with no virtualization/hypervisor link found). These are omitted from the
+  papers list entirely rather than padded in as thin DROP records, consistent with keeping
+  every emitted record at the evidence depth the brief requires.

@@ -1,0 +1,1039 @@
+papers:
+- id: VIRT-EUROSYS25-02
+  title: Towards VM Rescheduling Optimization Through Deep Reinforcement Learning
+  title_correction: null
+  authors:
+  - Xianzhong Ding
+  - Yunkai Zhang
+  - Binbin Chen
+  - Donghao Ying
+  - Tieying Zhang
+  - Jianjun Chen
+  - Lei Zhang
+  - Alberto Cerpa
+  - Wan Du
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3717476
+  official_url: https://download.vusec.net/asplos-eurosys-2025/talk/WXLKEZ/
+  fullpaper_source: https://arxiv.org/abs/2505.17359
+  classification: SUPPORT
+  classification_note: The contribution is a two-stage deep-RL solver for choosing which VMs to live-migrate to defragment CPU capacity; live migration is the enabling virtualization mechanism it is constrained by, not the object of study.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T4
+  - T1
+  physical_resource: CPU core
+  logical_abstraction: A VM-to-physical-machine mapping that a cluster operator can re-establish online within a 5 s decision budget
+  problem: VMs initially placed by fast heuristics leave scattered CPU fragments on physical machines, and optimal rescheduling by MIP takes ~50 minutes, far beyond the window in which a solution is still valid.
+  mechanism: VMR2L decomposes each migration decision into (i) pick a VM and (ii) pick a destination PM, collapsing an O((M*N)^MNL) action space into sequential selections; a sparse-attention feature extractor over the VM/PM bipartite state plus risk-seeking evaluation is trained offline in a deterministic simulator, and a migration-number limit (typically 2-3% of VMs) caps migration cost.
+  isolation_mechanism: N/A (placement-level; per-VM resource requests and affinity/anti-affinity constraints are inputs, not enforced mechanisms)
+  multiplexing_mechanism: Physical machine CPU/memory capacity is packed with VM requests; fragment rate (unusable CPU over total available) is the objective being minimised
+  state_mechanism: 'VM state moves by pre-copy live migration: memory is copied while the VM runs, dirty pages tracked, then a brief pause for final sync; storage is not moved because the fleet is compute/storage-disaggregated'
+  overhead_bottleneck: 'Decision latency: solutions computed beyond ~5 s are stale because VMs arrive/depart concurrently, so solver time, not migration bandwidth, is the binding constraint'
+  primary_tradeoff: Learned policy instead of MIP -> gains a ~1 s decision that fits the operational window, but costs ~2.9% optimality in fragment rate and requires a simulator plus 92 GPU-hours of offline training
+  quantitative_claims:
+  - 'fragment rate: 0.2941 (VMR2L) vs 0.2859 (MIP near-optimal), a 2.86% gap (Medium dataset, 2089 VMs / 280 PMs, migration-number limit 50)'
+  - 'inference time: 1.1 s per mapping vs 50.55 min for MIP/Gurobi (Medium dataset)'
+  - 'inference time: 3.8 s on the Large dataset (4546 VMs / 1176 PMs)'
+  - 'generalisation: 1.16% average fragment-rate gap when one agent trained at MNL=50 is applied to MNL in {10,20,30,40,50}'
+  - 'robustness: >95% of potential fragment-rate improvement retained on clusters whose PM count varies by 10-20%'
+  - 'training cost: 92 hours on a single GPU'
+  why_useful_for_learning: It shows what live migration is actually used for in a production fleet (defragmentation) and how migration cost is budgeted, which is the operational reason CORE migration/memory papers matter.
+  priority: P2
+  related:
+  - VIRT-OSDI25-02
+  relations:
+  - type: LAYER_ABOVE
+    target: VIRT-OSDI25-02
+    basis: Kamino allocates VMs at admission time with latency-driven cache-aware scheduling; VMR2L re-optimises an existing allocation by migration. Both attack CPU/host fragmentation from opposite ends of the VM lifecycle.
+  - type: USES_MECHANISM_FROM
+    target: VM pre-copy live migration (Clark et al., NSDI 2005)
+    basis: Paper states only memory need be transferred and describes dirty-page tracking plus a brief final pause.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: HIGH
+  notes: Read the arXiv version (2505.17359); the arXiv PDF header carries the internal name VMR2L. Official EuroSys title confirmed from the ASPLOS/EuroSys 2025 Virtualization session program page, which also gave the author list.
+- id: VIRT-EUROSYS25-03
+  title: 'HyperAlloc: Efficient VM Memory De/Inflation via Hypervisor-Shared Page-Frame Allocators'
+  title_correction: null
+  authors:
+  - Lars Wrenger
+  - Kenny Albes
+  - Marco Wurps
+  - Christian Dietrich
+  - Daniel Lohmann
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3717484
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3717484
+  fullpaper_source: https://www.sra.uni-hannover.de/Publications/2025/hyperalloc-eurosys/wrenger_25_eurosys.pdf
+  classification: CORE
+  classification_note: 'The contribution is a new guest-hypervisor memory-virtualization interface: the hypervisor is given direct, lock-free access to the guest page-frame allocator, replacing ballooning/free-page-reporting as the de/inflation mechanism.'
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary:
+  - T3
+  - T1
+  physical_resource: DRAM
+  logical_abstraction: Guest-physical memory whose backing can be reclaimed and reinstalled at 2 MiB granularity while remaining DMA-safe under device passthrough
+  problem: VM memory demand is volatile, and existing deflation paths are either too slow (virtio-balloon), not DMA-safe with passthrough devices, or lack automatic reclamation (virtio-mem).
+  mechanism: The guest replaces the Linux buddy allocator with LLFree, whose compact pointer-free metadata is memory-mapped into the QEMU monitor, so guest and hypervisor share a per-frame state tuple (M,R,E,A) and cooperate through atomic operations rather than a device protocol. The hypervisor periodically scans allocator state for free huge pages, unmaps them from EPT and IOMMU (hard or soft reclamation), and the guest hypercalls on allocating an evicted frame so the hypervisor can reinstall host-physical backing.
+  isolation_mechanism: The hypervisor keeps its own authoritative reclamation state R and never trusts the guest-written E hint; a malicious guest manipulating the A bit only loses cooperation (it pays extra faults/hypercalls), and invalid guest state is detected by comparing resident set size against reclamation metadata. Per-VM locking serialises concurrent host reclaim/return/install.
+  multiplexing_mechanism: Host DRAM is shared by reclaiming free 2 MiB huge pages out of each guest allocator every 5 s and returning them to the host allocator; hard limits are enforced by marking frames allocated+evicted, soft limits let the guest re-take them on demand
+  state_mechanism: The guest allocator bitfields/area/tree arrays live in guest-physical memory and are mapped into the QEMU monitor address space at boot; hypervisor-private reclamation metadata (R,M) stays in QEMU. Nothing migrates - only EPT/IOMMU mappings are added and removed.
+  overhead_bottleneck: Reinstalling a reclaimed frame costs an extra mode switch into the user-space QEMU monitor, making install ~6% slower than a virtio-mem EPT fault; the authors note one switch would suffice if HyperAlloc lived inside KVM
+  primary_tradeoff: Co-designing the guest allocator with the hypervisor -> gains two orders of magnitude faster, DMA-safe deflation and lower average footprint, but costs guest transparency (the buddy allocator must be replaced), so adoption depends on economic pressure such as per-second memory billing
+  quantitative_claims:
+  - 'reclaim throughput: 344.8 GiB/s (HyperAlloc) vs 34 GiB/s (virtio-mem) vs 0.95 GiB/s (virtio-balloon) on a 20 GiB VM with 19 GiB written pages, 2x Intel Xeon Gold 6252, 10 iterations'
+  - 'shrink speedup: 362x faster than virtio-balloon and 10x faster than virtio-mem (same setup)'
+  - 'DMA-safe reclaim with passthrough NIC via VFIO: 54.6 GiB/s (HyperAlloc+VFIO) vs 17.7 GiB/s (virtio-mem+VFIO), 20 GiB VM'
+  - 'memory footprint: 17% lower average footprint than virtio-balloon free-page reporting (Clang 16.0 compilation, 16 GiB VM, 6 runs, sampled at 1 Hz)'
+  - 'automatic reclamation CPU cost: 0.51 +/- 0.18% (HyperAlloc) vs 0.15 +/- 0.42% (default virtio-balloon) during Clang compilation on a 12-vCPU guest'
+  - 'STREAM 1st percentile during shrink/grow: 70.1 GB/s (HyperAlloc) vs 31.9 GB/s (virtio-mem) vs 30.9 GB/s (virtio-balloon), 12 threads'
+  - 'install path: ~6% slower than a virtio-mem EPT fault because of the extra QEMU user-space context switch'
+  why_useful_for_learning: It is the cleanest modern statement of the VM memory de/inflation design space - balloon vs hotplug vs shared-allocator - and of why device passthrough (IOMMU pinning) is what breaks classic ballooning.
+  priority: P1
+  related:
+  - VIRT-OSDI25-08
+  - VIRT-ATC25-14
+  relations:
+  - type: ALTERNATIVE
+    target: virtio-balloon / virtio-mem
+    basis: Directly implemented and measured as baselines; HyperAlloc replaces the balloon device protocol with shared allocator state.
+  - type: TRADEOFF_PAIR
+    target: VIRT-EUROSYS25-01
+    basis: HyperAlloc keeps deflation working *under* passthrough/IOMMU pinning; FastIOV attacks the startup cost of that same passthrough path. Both are consequences of choosing passthrough over software mediation.
+  - type: SAME_BRANCH
+    target: VIRT-ATC25-14
+    basis: Para-ksm also reduces VM memory footprint, but by same-page merging (deduplication) rather than by returning free frames; complementary points in the T2 reclamation design space.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - paper
+  - official-web
+  confidence: HIGH
+  notes: The author-hosted PDF is the camera-ready-content but anonymised (Submission Id 517); the author list and DOI were taken from the Leibniz Universitaet Hannover SRA publication entry and the EuroSys session program page.
+- id: VIRT-EUROSYS25-04
+  title: Optimizing Task Scheduling in Cloud VMs with Accurate vCPU Abstraction
+  title_correction: null
+  authors:
+  - Edward Guo
+  - Weiwei Jia
+  - Xiaoning Ding
+  - Jianchen Shan
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3696092
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3696092
+  fullpaper_source: https://web.njit.edu/~dingxn/papers/vsched.pdf
+  classification: CORE
+  classification_note: The contribution is repairing the vCPU abstraction itself - capacity, topology and activity of virtual CPUs as seen by the guest - which is the guest-host interface at the heart of CPU virtualization.
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary:
+  - T9
+  physical_resource: CPU core
+  logical_abstraction: vCPUs annotated with measured capacity, real cache/SMT topology and expected preemption latency, exposed to the guest scheduler as scheduling domains
+  problem: The guest task scheduler assumes vCPUs are uniform, always-running CPUs with a static topology, while in reality vCPUs differ in capacity, are preempted for milliseconds, and sit on a topology the hypervisor may have changed.
+  mechanism: 'Three user-space probers infer the truth without hypervisor changes: vcap measures per-vCPU capacity from paired light/heavy sampling plus steal time, vact estimates preemption latency from heartbeat timestamps and steal-time jumps, and vtop reconstructs the cache/SMT hierarchy from inter-vCPU cache-line transfer latency. A kernel module rebuilds scheduling domains from these results, and three policies use them: biased vCPU selection for latency-sensitive tasks, intra-VM harvesting that migrates CPU-bound tasks off soon-to-be-preempted vCPUs, and relaxed work conservation that hides bad vCPUs via cgroups.'
+  isolation_mechanism: N/A for security; the paper acknowledges a co-located adversarial VM could perturb the probes but argues it is impractical. Performance interference from vCPU stacking is handled by declining to use stacked vCPUs (non-work-conserving).
+  multiplexing_mechanism: KVM time-slices vCPUs onto physical cores and may stack several vCPUs on one core or hardware-thread pair; the guest sees the result only indirectly through steal time and missed ticks
+  state_mechanism: All authoritative scheduling state stays in the hypervisor; the guest holds only derived, periodically refreshed estimates in scheduling-domain structures and per-vCPU metadata. No paravirtual channel is added.
+  overhead_bottleneck: Periodic probing, dominated by vtop cache-line latency measurement on large VMs; ~0.7% average degradation when the workload cannot benefit, and responsiveness limited to seconds rather than sub-second
+  primary_tradeoff: Inferring vCPU properties from inside the guest -> gains deployability on unmodified hypervisors and any cloud, but costs sub-second accuracy (paravirtual designs such as XPV/CPS get real-time data) and adds a probing attack surface
+  quantitative_claims:
+  - 'tail latency: 95th percentile grows ~20x (2 ms -> 16 ms) as vCPU inactivity/preemption latency grows (Tailbench, Figure 2)'
+  - 'throughput: up to 43% higher by excluding a low-capacity straggler vCPU from placement (Parsec, 16-vCPU VM)'
+  - 'priority inversion under vCPU stacking: 6.7x improvement with the non-work-conserving policy on synchronisation-intensive workloads'
+  - 'capacity-aware scheduling: 32% higher throughput vs default CFS on an asymmetric-capacity 16-vCPU VM (Sysbench)'
+  - 'SMT topology accuracy: 18% improvement for Matmul on a 32-vCPU VM with SMT pairs'
+  - 'LLC/socket topology accuracy: 26% average throughput increase and 99% fewer inter-processor interrupts (Hackbench/Dedup/Nginx, cross-socket VM)'
+  - 'biased vCPU selection: 42% average reduction in 95th-percentile latency on an overcommitted 16-vCPU VM (Tailbench)'
+  - 'cost when no benefit is available: 0.7% average performance degradation'
+  why_useful_for_learning: It is the best single explanation of why a vCPU is not a CPU - capacity, preemption and topology all leak - and of the paravirtual-versus-inference choice for closing that semantic gap.
+  priority: P1
+  related:
+  - VIRT-EUROSYS25-02
+  relations:
+  - type: ALTERNATIVE
+    target: XPV / CPS (paravirtualized vCPU exposure)
+    basis: Paper contrasts its inference approach with hypervisor-modifying paravirtual designs and states the sub-second accuracy gap.
+  - type: CONTRASTS_WITH
+    target: VIRT-ATC25-02
+    basis: HyperTurtle reduces the cost of the virtualization boundary itself (nested exits); vSched leaves the boundary alone and instead repairs the abstraction the guest reasons about.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - paper
+  - official-web
+  confidence: HIGH
+  notes: Author-hosted PDF is titled vsched.pdf; system name is vSched. Guest-OS modification required, so it is not applicable to VMs running closed-source guests.
+- id: VIRT-EUROSYS25-05
+  title: 'Erebor: A Drop-In Sandbox Solution for Private Data Processing in Untrusted Confidential Virtual Machines'
+  title_correction: null
+  authors:
+  - Chuqi Zhang
+  - Rahul Priolkar
+  - Yuancheng Jiang
+  - Yuan Xiao
+  - Mona Vij
+  - Zhenkai Liang
+  - Adil Ahmad
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3717464
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3717464
+  fullpaper_source: https://faculty.sist.shanghaitech.edu.cn/xiaoyuan/publication/erebor.pdf
+  classification: CORE
+  classification_note: The contribution virtualizes kernel privilege inside a confidential VM - splitting ring-0 into a monitor mode and a deprivileged-kernel mode using PKS/CET - to create an in-guest sandbox, i.e. a new isolation boundary built on CVM hardware.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T5
+  - T2
+  physical_resource: CPU core
+  logical_abstraction: A confined sandbox inside a confidential VM whose memory and exits are controlled by an attested in-guest monitor, so client data survives a malicious service-provider OS
+  problem: Confidential VMs protect a tenant from the host hypervisor but not from the service provider software running inside the CVM, which can leak client data through syscalls, memory access and covert channels.
+  mechanism: 'Erebor boots an attested Erebor-Monitor first and then deprivileges the Linux kernel: the kernel is instrumented so all MMU-configuration instructions, IDT/LSTAR/GHCI writes and page-table updates are delegated to the monitor, while Intel PKS marks monitor and kernel pages non-accessible in normal mode and Intel CET (IBT + shadow stacks) plus SMEP/SMAP constrain control flow. A Gramine-derived LibOS emulates heap, in-memory filesystem, threading and communication for the sandbox, and the monitor holds exclusive rights to tdcall, so it alone can run TDX attestation and terminate the sandbox on any syscall or VM exit after data arrives.'
+  isolation_mechanism: Page-granularity PKS domains plus monitor-mediated page tables prevent double-mapping of confined memory; W^X on kernel code; SMAP blocks kernel access to sandbox user pages; all context-switch interfaces are interposed so an exit after data receipt destroys the sandbox; output is padded to a fixed length before encryption to hide size
+  multiplexing_mechanism: Confined pages are pre-allocated, pinned and exclusive per sandbox, while read-only common memory (e.g. an ML model) is shared across sandbox instances; the monitor keeps a per-core secure stack and shadow stack
+  state_mechanism: Monitor code, data, secure stacks, shadow stacks, IDT and page-table pages live in guest kernel memory protected by PKS keys, with the per-core IA32_PKRS switched at every monitor entry/exit gate; attestation state is bound to TDX measurement registers
+  overhead_bottleneck: Every privileged operation now costs a monitor call (~1224 cycles, 1.78x a syscall); page-table updates are the extreme case at 58.5x native (23 -> 1345 cycles), which is why initialization is the worst-hit phase
+  primary_tradeoff: Using only guest-controlled hardware features -> gains drop-in deployment with zero changes to the cloud provider hypervisor/paravisor, but costs the finer-grained enclave-style protection that VMPL-based partitioning (Veil, NestedSGX) achieves, and adds ~8% steady-state runtime overhead
+  quantitative_claims:
+  - 'empty monitor call (EMC): 1224 CPU cycles, 0.56x a syscall and 4.31x faster than a tdcall in a native CVM (Intel Xeon Platinum 8570, Emerald Rapids)'
+  - 'privileged-instruction cost: CR writes 294 -> 1593 cycles (5.42x), MSR writes 364 -> 1613 cycles (4.43x), IDT 260 -> 1369 cycles (5.27x)'
+  - 'page-table update: 23 -> 1345 cycles (58.5x native)'
+  - 'application runtime overhead: 8.1% geometric mean across five applications, range 4.5-13.2% (llama.cpp worst at 13.15%)'
+  - 'memory saving from read-only common memory: up to 89.1% (llama.cpp 36 GB -> 8 GB with 8 containers)'
+  - 'one-time initialization overhead: 11.5-52.7% (llama.cpp 52.70%)'
+  - 'background-service impact: OpenSSH 8.2% average (max 18% on 1 KB files), Nginx 5.1% average (max 17.6% on small files)'
+  - 'page-fault cost: 3.8x native (LMBench)'
+  why_useful_for_learning: It shows that a confidential VM is only half an isolation story, and demonstrates the software-only alternative to hardware VM-privilege-level partitioning for building a second boundary inside a guest.
+  priority: P1
+  related:
+  - VIRT-EUROSYS25-17
+  - VIRT-ATC25-01
+  relations:
+  - type: ALTERNATIVE
+    target: Veil / NestedSGX (AMD VMPL-style CVM partitioning)
+    basis: Table 1 of the paper compares protection and deployment requirements; those designs need provider-side hypervisor/paravisor changes.
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS25-17
+    basis: CKI uses the same Intel PKS mechanism to deprivilege a guest kernel, but for secure-container performance rather than in-CVM data confidentiality - the two papers bracket what PKS-based intra-kernel privilege separation is for.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - paper
+  - official-web
+  - code
+  confidence: HIGH
+  notes: No empirical comparison against SGX/gVisor baselines; comparison to Veil/NestedSGX is qualitative (Table 1). Prototype disables huge pages and LKM/eBPF loading.
+- id: VIRT-EUROSYS25-07
+  title: Improving GPU Sharing Performance through Adaptive Bubbleless Spatial-Temporal Sharing
+  title_correction: null
+  authors:
+  - Shulai Zhang
+  - Quan Chen
+  - Weihao Cui
+  - Han Zhao
+  - Chunyu Xue
+  - Zhen Zheng
+  - Wei Lin
+  - Minyi Guo
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3696070
+  official_url: https://dl.acm.org/doi/abs/10.1145/3689031.3696070
+  fullpaper_source: https://jamesthez.github.io/files/bless-eurosys25.pdf
+  classification: SUPPORT
+  classification_note: It is a kernel-squad scheduler layered on existing MPS SM-affinity contexts rather than a new virtual-GPU abstraction, but it is the sharpest available account of the spatial-vs-temporal GPU multiplexing trade-off that vGPU/MIG designs live inside.
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T9
+  physical_resource: GPU
+  logical_abstraction: A per-tenant GPU quota (fraction of SMs) that is honoured on average while instantaneous SM partitioning is re-decided per kernel squad
+  problem: Temporal GPU sharing wastes SMs while a slow tail kernel finishes, static spatial sharing wastes SMs a tenant cannot saturate, and unbounded concurrent sharing makes interference unpredictable - so no existing scheme gives both utilization and a quota guarantee.
+  mechanism: Bless intercepts CUDA kernel launches and groups kernels from several applications into kernel squads; an execution-configuration determiner searches SM-partition splits using two profiled predictors (interference-free and workload-equivalence), and a concurrent kernel manager launches each squad into pre-created MPS contexts created with cuCtxCreate_v3 SM affinity, removing SM restrictions for the rear 20-50% of a request (Semi-SP) to absorb leftover capacity.
+  isolation_mechanism: 'SM-count partitioning through MPS contexts bounds compute interference (measured: kernel slowdown <=2x even against a highly memory-intensive co-runner, 7% average in mutual pairs); fairness restored across squads by giving more slots to the application with the shortest relative progress'
+  multiplexing_mechanism: 'Hybrid: spatial SM partitioning within a squad, temporal switching between squads, at kernel-squad granularity (max 6 kernels per squad in the prototype)'
+  state_mechanism: Per-request progress, queues and configuration search live in host-side scheduler processes; per-context SM restrictions live in pre-established MPS contexts and device ring buffers; profiled kernel durations and SM ratios are stored at deployment time
+  overhead_bottleneck: 'Squad switching and host scheduling: 20 us synchronisation + ~3 us launch idle per squad switch, ~50 us GPU context switch, 6.7 us host scheduling per kernel - so kernels shorter than ~7 us cannot be managed profitably; each MPS context also costs ~230 MB of GPU memory'
+  primary_tradeoff: Scheduling at kernel-squad granularity -> gains bubble-free utilization with honoured quotas, but costs offline per-DAG profiling and restricts the approach to stationary workloads (dynamic graphs such as autoregressive LLM inference do not fit)
+  quantitative_claims:
+  - 'inference latency: 26.9% lower than Reef+ under high load, 34.2% lower than GSlice under medium load, 37.3% lower than temporal sharing under low load (13 models / model pairs, single NVIDIA A100)'
+  - 'quota fidelity: 0.6 ms average latency deviation from the isolated baseline vs 2.1 ms (GSlice) and 14.3 ms (temporal), 9 model pairs x 7 quota configurations'
+  - 'Microsoft Azure serverless trace: 49.3% lower latency than temporal, 41.2% than MIG, 32.1% than GSlice'
+  - 'Twitter trace at 50% even quota: 18.4% lower than temporal, 20.5% than MIG, 7.3% than GSlice'
+  - 'multi-tenancy: 41.2% (4 BERT instances) and 80.8% (8 instances) latency reduction vs temporal sharing'
+  - 'SLO: 0.6% QoS violation vs 38.8% (unbounded MPS) and 50.1% (GSlice)'
+  - 'training co-location: 26.5% lower latency than temporal, 7.5% than MIG, 9.9% than Zico'
+  - 'interference bound: measured kernel slowdown <= 2x against a highly memory-intensive co-runner; 7% average slowdown in mutual pairs'
+  - 'per-MPS-context GPU memory cost: ~230 MB'
+  why_useful_for_learning: It quantifies, on one GPU, what each GPU-multiplexing mechanism actually buys - MIG hard partitioning vs MPS spatial vs time-slicing vs unbounded concurrency - which is the trade-off space every GPU virtualization design must place itself in.
+  priority: P1
+  related:
+  - VIRT-ATC25-03
+  - VIRT-ATC25-05
+  - VIRT-EUROSYS25-12
+  relations:
+  - type: ALTERNATIVE
+    target: NVIDIA MIG
+    basis: MIG is evaluated as a baseline; Bless argues hardware partitioning is too static and measures 20.5-41.2% latency gaps on real traces.
+  - type: USES_MECHANISM_FROM
+    target: NVIDIA MPS (cuCtxCreate_v3 SM affinity)
+    basis: Spatial partitioning is implemented entirely with MPS contexts carrying SM-affinity limits.
+  - type: SAME_BRANCH
+    target: VIRT-ATC25-03
+    basis: Both bound GPU interference for co-located tenants; Bless partitions SMs from the host scheduler while the ATC kernel-space-interception work enforces sharing below the CUDA runtime.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - paper
+  confidence: HIGH
+  notes: System name in the paper is Bless. Single-GPU scope; requires per-application offline profiling (~1.9 s average).
+- id: VIRT-EUROSYS25-11
+  title: Serverless Cold Starts and Where to Find Them
+  title_correction: null
+  authors:
+  - Artjom Joosen
+  - Ahmed Hassan
+  - Martin Asenov
+  - Rajkarn Singh
+  - Luke Darlow
+  - Jianfeng Deng
+  - Qiwen Deng
+  - Adam Barker
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3696073
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3696073
+  fullpaper_source: https://arxiv.org/html/2410.06145v1
+  classification: CONTEXT
+  classification_note: 'A 31-day provider-side characterization of cold starts on Huawei YuanRong: it measures how a production platform pays for isolation instances but introduces no isolation or virtualization mechanism of its own.'
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  physical_resource: CPU core
+  logical_abstraction: A function instance (pod) drawn from pre-warmed resource pools, characterised by how long it takes to create and how long it is then useful
+  problem: Cold-start research has lacked production data, so nobody could say which part of a cold start actually dominates or how often it is paid.
+  mechanism: The authors instrument five regions/20 clusters of a production FaaS platform for 31 days (85 billion requests, 11.9 million cold starts) and decompose each cold start into pod allocation, code deployment, dependency deployment and scheduling time, then correlate with runtime, trigger type and resource size.
+  isolation_mechanism: N/A (Kubernetes pods with preinstalled language runtimes; the paper does not analyse the sandbox mechanism)
+  multiplexing_mechanism: Pre-maintained pools of pods per resource shape are searched in stages when a request finds no warm instance
+  state_mechanism: N/A - no snapshot/restore or VM state mechanism is studied; the paper explicitly does not measure microVM or image provisioning internals
+  overhead_bottleneck: 'Which component dominates is region-dependent: one region is dominated by dependency deployment plus scheduling (up to 7 s), another by pod allocation (up to 3 s)'
+  primary_tradeoff: Keeping pools warm -> gains low cold-start probability but costs idle capacity; the paper reframes this with a utility ratio (useful pod lifetime / cold-start time) and shows 20% of pods never repay their own creation cost
+  quantitative_claims:
+  - 'dataset: 31 days, 5 regions, 20 clusters, 85 billion requests, 11.9 million cold starts (Huawei YuanRong)'
+  - median cold start 0.1-2 s across regions; up to 7 s in the region dominated by dependency deployment and scheduling; up to 3 s where pod allocation dominates
+  - cold-start distribution fits LogNormal with mean 3.24 s and standard deviation 7.10 s
+  - custom-runtime and HTTP-trigger pods show 10+ s median cold starts because no pre-warmed pool exists for them
+  - Python3 accounts for ~50% of all cold starts
+  - timers are 60% of functions but only 5% of running pods; most timer functions cold-start on every invocation
+  - resource pools above 400 millicores show 2-5x longer cold starts than small pools
+  - 'utility ratio: median ~4:1, and 20% of pods have a ratio below 1'
+  why_useful_for_learning: It tells you how much of a real cold start the virtualization layer is even responsible for, which bounds how much any snapshot/restore or sandbox-startup mechanism can win in production.
+  priority: P2
+  related:
+  - VIRT-OSDI25-05
+  - VIRT-ATC25-06
+  - VIRT-EUROSYS25-14
+  relations:
+  - type: LAYER_ABOVE
+    target: VIRT-OSDI25-05
+    basis: Fork in the Road optimises production cold-start latency with sandbox-level mechanisms; this paper supplies the measured component breakdown that motivates such work.
+  - type: CONTRASTS_WITH
+    target: VIRT-ATC25-06
+    basis: Poby attacks image provisioning specifically; this trace shows code/dependency deployment is only one of four components and dominates in some regions but not others.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: 'Threshold call: kept CONTEXT rather than SUPPORT because the study stops at the orchestration layer (pods/pools) and explicitly does not measure microVM/image provisioning internals.'
+- id: VIRT-EUROSYS25-13
+  title: 'SeBS-Flow: Benchmarking Serverless Cloud Function Workflows'
+  title_correction: null
+  authors:
+  - Larissa Schmid
+  - Marcin Copik
+  - Alexandru Calotoiu
+  - et al.
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3717465
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3717465
+  fullpaper_source: https://arxiv.org/abs/2410.03480
+  classification: CONTEXT
+  classification_note: A platform-agnostic benchmark suite for serverless workflows measuring performance, cost, scalability and runtime deviation; it consumes FaaS platforms and contributes no isolation or virtualization mechanism.
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: A portable workflow model that maps onto AWS Step Functions, Google Cloud Workflows and Azure Durable Functions so the same DAG can be measured across providers
+  problem: Serverless workflow platforms differ so much in programming model and infrastructure that fair cross-platform performance comparison has not been possible.
+  mechanism: Defines a platform-agnostic workflow specification plus six real-world application benchmarks and four microbenchmarks covering different computational patterns, with a harness that deploys and measures them consistently on three major clouds.
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A - workflow intermediate state is handled by each provider service; the paper measures resulting behaviour rather than mechanising it
+  overhead_bottleneck: 'UNKNOWN (not established at the depth read: abstract-level evidence only)'
+  primary_tradeoff: A portable workflow abstraction -> gains comparability across providers but costs access to provider-specific features, and the measured runtime deviations show the platforms are not interchangeable
+  quantitative_claims: []
+  why_useful_for_learning: It marks the measurement layer for serverless workflows and is the place to look for cross-provider cost/performance baselines when judging a CORE serverless isolation mechanism.
+  priority: P3
+  related:
+  - VIRT-EUROSYS25-14
+  - VIRT-EUROSYS25-11
+  relations:
+  - type: LAYER_ABOVE
+    target: VIRT-EUROSYS25-14
+    basis: AlloyStack proposes a new serverless workflow execution substrate; SeBS-Flow is the benchmark layer that such substrates would be judged against.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - preprint
+  confidence: MEDIUM
+  notes: Only the abstract was retrievable at the depth attempted (arXiv abs page); no quantitative claims recorded because none were read in the paper body. Author list beyond the first three is not verified - recorded as "et al.".
+- id: VIRT-EUROSYS25-14
+  title: 'AlloyStack: A Library Operating System for Serverless Workflow Applications'
+  title_correction: null
+  authors:
+  - Jianing You
+  - Kang Chen
+  - Laiping Zhao
+  - Yiming Li
+  - Yichi Chen
+  - Yuxuan Du
+  - Yanjie Wang
+  - Luhang Wen
+  - Keyang Hu
+  - Keqiu Li
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3717490
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3717490
+  fullpaper_source: https://madsys.cs.tsinghua.edu.cn/publication/alloystack-a-library-operating-system-for-serverless-workflow-applications/eurosys25-you.pdf
+  classification: CORE
+  classification_note: 'The contribution is an isolation architecture: a modular LibOS with on-demand module loading plus Intel MPK partitions that makes the workflow, not the function, the isolation domain.'
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary:
+  - T8
+  physical_resource: CPU core
+  logical_abstraction: 'A workflow domain (WFD): one address space holding several functions as threads, with a LibOS providing filesystem/network/threading and reference-passed intermediate data'
+  problem: Serverless workflows pay a cold start per function and then copy intermediate data through inter-process or inter-VM channels, so both instance creation and data hand-off dominate end-to-end latency.
+  mechanism: AlloyStack is a three-layer LibOS - as-visor (global runtime), as-libos (kernel modules loaded on demand) and as-std (syscall-routing standard library). Functions of one workflow run as threads in one WFD address space and exchange data by reference through an AsBuffer slot namespace; Intel MPK splits the address space into a system partition (as-visor/as-libos) and a user partition, with trampoline pages switching PKRU and a blacklist on wrpkru/syscall/sysenter/int enforced by pre-execution image scanning.
+  isolation_mechanism: MPK protection keys separate LibOS from user functions within a WFD, and different workflows get different processes/LibOS instances so their files and memory are unreachable across WFDs; optionally each function instance can get its own MPK partition for stricter intra-workflow isolation
+  multiplexing_mechanism: Functions are threads scheduled by Linux CFS via clone(); each function gets exclusive heap/code/data segments and an independent stack, and unused LibOS modules are never loaded
+  state_mechanism: Intermediate data lives in shared heap memory inside the WFD and is addressed by slot identifiers held by as-libos, so hand-off is a reference rather than a copy; per-function heaps are reclaimed on crash, and a fatfs file path is the fallback when reference passing is unavailable
+  overhead_bottleneck: 'Once cold start is removed, the user-space filesystem becomes the limit: rust-fatfs is 4.4x slower than ext4 on reads, and with a 50 MB input cold start is 45% and data transfer 48% of end-to-end latency in the baseline'
+  primary_tradeoff: Sharing one address space per workflow -> gains 1.3 ms starts and copy-free data passing, but costs intra-workflow isolation strength (MPK plus instruction blacklisting rather than separate address spaces) and forces functions to be compiled against as-std or to WASM
+  quantitative_claims:
+  - 'cold start: reduced by 98.5% to 1.3 ms; disabling on-demand module loading raises it to 89.4 ms'
+  - 'intermediate data transfer of 16 MB: 2.6x faster in Rust, 13.2x in C, 1.8x in Python vs Faastlane-refer'
+  - 'end-to-end Rust workflows: 7.3x-38.7x speedup (FunctionChain 4.08-10.15x over OpenFaaS, 6.69-20.68x over OpenFaaS-gVisor)'
+  - 'end-to-end Python/C workflows: 4.8x-78.3x speedup'
+  - 'WordCount with 100 MB input and 3 instances: 6.5-29.3x faster than OpenFaaS variants'
+  - 'P99 latency: up to 7.4x lower than Faastlane-refer-kata at high QPS'
+  - 'resource use: 2.4x less CPU and 3.2x less memory than Faastlane-refer-kata'
+  - 'user-space filesystem penalty: rust-fatfs 4.4x slower than ext4 on reads; Wasmtime path 30.0% slower than Faasm/WAVM on CPU-bound C/Python'
+  why_useful_for_learning: 'It is a clean demonstration that the unit of isolation is a design choice: widening it from the function to the workflow converts both sandbox creation and inter-function data movement from costs into non-events.'
+  priority: P1
+  related:
+  - VIRT-EUROSYS25-16
+  - VIRT-EUROSYS25-11
+  - VIRT-ATC25-07
+  relations:
+  - type: ALTERNATIVE
+    target: Faastlane / Faasm / Firecracker-per-function
+    basis: All are implemented or cited as baselines; the paper measures thread-in-process, WASM and microVM isolation of workflow functions against each other.
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS25-16
+    basis: Both replace a heavyweight sandbox with a language/runtime-level boundary - AlloyStack via LibOS+MPK, WALI via the Wasm memory sandbox with a thin kernel interface.
+  - type: USES_MECHANISM_FROM
+    target: Intel MPK / ERIM-style binary rewriting
+    basis: Paper builds its system/user partition on PKRU switching and cites ERIM for handling unsafe instructions.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - paper
+  - code
+  confidence: HIGH
+  notes: null
+- id: VIRT-EUROSYS25-16
+  title: Empowering WebAssembly with Thin Kernel Interfaces
+  title_correction: null
+  authors:
+  - Arjun Ramesh
+  - Ben L. Titzer
+  - Tianshu Huang
+  - Anthony Rowe
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3717470
+  official_url: https://dl.acm.org/doi/abs/10.1145/3689031.3717470
+  fullpaper_source: https://arxiv.org/html/2312.03858v3
+  classification: CORE
+  classification_note: 'It redefines where the Wasm sandbox boundary sits: instead of the WASI capability API, the boundary becomes linear memory plus a ~2000-LoC thin syscall passthrough (WALI), which is an isolation-architecture contribution.'
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary:
+  - T10
+  physical_resource: CPU core
+  logical_abstraction: A Wasm module that imports ~137 Linux syscalls almost one-to-one, so unmodified POSIX software runs sandboxed and architecture-neutral
+  problem: WASI must be reimplemented per platform, keeps churning, and still lacks mmap, signals and other features legacy software needs, so most existing programs cannot run on Wasm at all.
+  mechanism: WALI exposes the host syscall ABI through the Wasm import section with address-space translation between linear memory and kernel addresses, in ~2000 LoC of C with under 100 lines platform-specific; signals are delivered at engine safepoints (loop headers/function entry) via a virtual signal table, threads are instance replications over shared memory with a 1:1 mapping to native processes, and higher-level APIs including WASI itself can then be implemented as Wasm modules on top. WAZI repeats the recipe on Zephyr.
+  isolation_mechanism: Every syscall operates only on bounds-checked linear memory (rw- only, read-only tables), mmap/mremap are confined to linear memory and fail past declared limits, memory is non-executable, control-flow integrity comes from Wasm structured control flow, and dangerous endpoints such as /proc/self/mem are explicitly blocked
+  multiplexing_mechanism: One Wasm process per native Linux process (its own PID), with threads as replicated instances sharing memory; the kernel does the actual CPU multiplexing
+  state_mechanism: Virtual signal table, pending-signal queue and allocation bookkeeping live inside the engine (<1 KB), which makes binaries portable across x86-64/aarch64/riscv64 but means checkpoint or migration would require serialising engine-internal state
+  overhead_bottleneck: Wasm execution itself (median ~2.32x native) dominates; WALI syscall mediation is a few hundred nanoseconds (read 167 ns, write 151 ns, mmap 512 ns) and usually under 1% of runtime, with clone at ~554 us being a WAMR instance-creation cost
+  primary_tradeoff: Faithfully passing through a real kernel ABI -> gains legacy-software compatibility, a stable interface and a 2000-LoC TCB, but costs the narrow capability surface WASI aimed at, pushing security policy up to a layer above the engine
+  quantitative_claims:
+  - 'syscall coverage: ~137 Linux syscalls implemented as Wasm imports'
+  - 'implementation size: ~2000 LoC for WALI vs over 6000 lines of engine code for a WASI preview1 implementation (libuvwasi); ~4200 LoC for the Zephyr variant WAZI'
+  - 'per-syscall overhead: read 167 ns, write 151 ns, mmap 512 ns; clone ~554 us (WAMR instance duplication; ~5 us in Wasmtime)'
+  - 'signal delivery: under 10% slowdown when polling at loop headers; at least 10x slower if polled at every instruction'
+  - 'startup: milliseconds vs nearly half a second for Docker; Docker also carries ~30 MB base memory'
+  - unmodified WASI implementation (libuvwasi) runs on top of WALI as a Wasm module
+  why_useful_for_learning: It is the clearest case study of how much of an isolation boundary is policy versus mechanism, and of the sandbox-surface-versus-expressiveness trade that every lightweight-isolation design makes.
+  priority: P1
+  related:
+  - VIRT-EUROSYS25-14
+  - VIRT-ATC25-01
+  relations:
+  - type: ALTERNATIVE
+    target: WASI (WebAssembly System Interface)
+    basis: Paper argues WASI misaligns goals and shows WASI can instead be implemented above WALI in Wasm.
+  - type: CONTRASTS_WITH
+    target: Docker containers / QEMU
+    basis: Both are measured as baselines for startup, memory and execution overhead.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - preprint
+  - artifact
+  confidence: HIGH
+  notes: 'Read arXiv v3 (2312.03858), which is the extended version of the EuroSys 2025 paper. System names: WALI (Linux) and WAZI (Zephyr).'
+- id: VIRT-EUROSYS25-17
+  title: A Hardware-Software Co-Design for Efficient Secure Containers
+  title_correction: null
+  authors:
+  - Jiacheng Shi
+  - Yang Yu
+  - Jinyu Gu
+  - Yubin Xia
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3717473
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3717473
+  fullpaper_source: https://ipads.se.sjtu.edu.cn/_media/pub/members/paper.pdf
+  classification: CORE
+  classification_note: It builds a secure-container isolation architecture that replaces hardware VM virtualization with PKS-based intra-kernel privilege separation, eliminating two-dimensional paging and nested VM exits entirely.
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary:
+  - T1
+  - T2
+  - T7
+  physical_resource: CPU core
+  logical_abstraction: 'A secure container: its own guest kernel and address space with a per-container Kernel Security Monitor, but no EPT/nested page tables and no VMX mode switches'
+  problem: Secure containers inherit virtualization hardware tuned for general-purpose VMs, so they lag OS-level containers - and the gap explodes in nested clouds, where memory-intensive apps degrade 28-226% and I/O-intensive apps 1.8-4.3x.
+  mechanism: 'CKI proposes small x86 extensions to Protection Keys Supervisor: destructive privileged instructions (MSR/CR writes, CLI/STI) fault when PKRS is non-zero, a new wrpkrs instruction replaces unsafe wrmsr, and the IDT zeroes PKRS on interrupt entry. On top of that it creates three privilege levels in one address space - host kernel, per-container Kernel Security Monitor, and a deprivileged guest kernel - so the guest kernel runs in kernel mode with its own page tables over a contiguous host-physical range, with the KSM validating every page-table update.'
+  isolation_mechanism: Two PKS domains per container (guest kernel vs KSM) enforced by the per-core PKRS, plus a separate address space per container; page-table pages are read-only to the guest and all updates are validated by the KSM; IDT and interrupt gates live in KSM-only memory with per-vCPU areas mapped at a constant guest virtual address to avoid trusting kernel_gs
+  multiplexing_mechanism: The host kernel hands each container a contiguous host-physical segment that its guest kernel manages directly (no second-level translation), and schedules container vCPUs itself, keeping per-vCPU copies of the guest top-level page-table pages
+  state_mechanism: Isolation state is the PKRS register (per core), the KSM-private per-vCPU area (secure stack, vCPU context, interrupt info) at a constant gVA, KSM-only IDT/gates, and KSM page descriptors tracking reference counts and PTP levels
+  overhead_bottleneck: KSM calls on page-fault handling and the iret path (1067 ns total in nested clouds) replace the far more expensive shadow-paging emulation (~1828 ns in PVM) and nested EPT faults (~30881 ns in nested HVM)
+  primary_tradeoff: Dropping hardware virtualization in favour of PKS plus address-space separation -> gains near-native syscalls and one-dimensional paging (the big win under nesting), but costs contiguous per-container physical memory (fragmentation) and is limited by PKS offering only 16 domains per address space
+  quantitative_claims:
+  - 'motivation: secure containers in nested clouds degrade memory-intensive apps by 28-226% and I/O-intensive apps by 1.8-4.3x'
+  - 'page fault (nested): 1067 ns (CKI) vs 32565 ns (HVM-NST) vs 4407 ns (PVM), AMD EPYC-9654'
+  - 'syscall: ~90 ns (CKI, matching RunC/HVM) vs 336 ns (PVM)'
+  - 'empty hypercall (nested cloud): 390 ns (CKI) vs 6746 ns (HVM-NST)'
+  - 'memory-intensive latency (PARSEC/vmitosis, nested): up to 72% lower than HVM and 47% lower than PVM'
+  - 'memcached with 64 clients (nested): 6.8x throughput vs HVM-NST and 1.2x vs PVM-NST'
+  - 'redis with 64 clients (nested): 2.0x throughput vs HVM-NST and 1.3x vs PVM-NST'
+  - 'GUPS (TLB-miss intensive, bare metal): 19% lower latency than HVM by eliminating the two-dimensional page-table walk'
+  - 'SQLite write-heavy: CKI matches RunC/HVM while PVM is 19-24% lower throughput'
+  why_useful_for_learning: It isolates exactly which costs of a secure container come from hardware virtualization (two-dimensional paging, VM exits, nesting) and shows what remains if you keep the guest kernel but delete the hypervisor boundary.
+  priority: P1
+  related:
+  - VIRT-EUROSYS25-05
+  - VIRT-ATC25-01
+  - VIRT-ATC25-02
+  - VIRT-OSDI25-03
+  relations:
+  - type: ALTERNATIVE
+    target: Kata Containers with hardware-assisted virtualization (HVM); PVM (SOSP 2023 software para-virtualization)
+    basis: Both are implemented as baselines across bare-metal and nested-cloud scenarios.
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS25-05
+    basis: Erebor uses the same Intel PKS primitive for intra-kernel privilege separation, but to defend client data inside a CVM rather than to speed up secure containers.
+  - type: TRADEOFF_PAIR
+    target: VIRT-ATC25-02
+    basis: HyperTurtle makes nested virtualization cheaper; CKI avoids the nested VMX path altogether. The two are the opposing answers to the same nested-cloud cost.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - paper
+  confidence: HIGH
+  notes: 'Found by program scan, NOT in the seed list - recorded in possible_omissions as well. System name is CKI. The proposed PKS extensions do not exist in shipping CPUs: wrpkrs is emulated with wrpkru and the interrupt-time PKRS switch is simulated, so absolute numbers are best-case.'
+- id: VIRT-EUROSYS25-01
+  title: 'FastIOV: Fast Startup of Passthrough Network I/O Virtualization for Secure Containers'
+  title_correction: null
+  authors:
+  - Yunzhuo Liu
+  - Junchen Guo
+  - Bo Jiang
+  - Yang Song
+  - Pengyu Zhang
+  - Rong Wen
+  - Biao Lyu
+  - Shunmin Zhu
+  - Xinbing Wang
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3696066
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3696066
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: The contribution is the startup path of SR-IOV passthrough I/O for VM-based secure containers - VF device management, DMA memory mapping and driver initialization - i.e. the device-virtualization control plane itself.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T5
+  - T8
+  physical_resource: NIC
+  logical_abstraction: An SR-IOV virtual function passed through into a secure container (microVM) fast enough for serverless-style start
+  problem: SR-IOV gives traditional containers fast startup and high data-plane performance, but for secure containers it must be used as passthrough I/O, whose startup cost makes it unusable for time-sensitive workloads such as serverless functions.
+  mechanism: 'FastIOV is a CNI plugin plus stack changes attacking three measured bottlenecks: it decomposes locks in virtual-function device management, removes unnecessary DMA mapping operations, decouples memory zeroing from the critical path, and initializes the guest driver asynchronously. The artifact modifies the VFIO driver, QEMU, the Kata runtime/shim, the Kata guest kernel and agent, and adds a fastiov-cni plugin.'
+  isolation_mechanism: 'Unchanged from SR-IOV passthrough: the IOMMU confines VF DMA to the container VM, and the VM boundary remains the tenant boundary (the paper optimises this path rather than altering it)'
+  multiplexing_mechanism: The physical NIC is divided by SR-IOV into virtual functions, one assigned per secure container
+  state_mechanism: Device-assignment state lives in VFIO/IOMMU page tables and QEMU device models set up at container start; passthrough assignment is what makes this state expensive to create (and, as HyperAlloc notes, expensive to change later)
+  overhead_bottleneck: End-to-end startup latency of enabling SR-IOV passthrough, split across VF device management locking, DMA memory mapping/zeroing, and in-guest driver initialization
+  primary_tradeoff: Passthrough instead of software-mediated virtio -> gains near-native data-plane performance for secure containers but costs a heavy device-attach path at every start; FastIOV pays down that cost rather than giving up passthrough
+  quantitative_claims:
+  - overhead of enabling SR-IOV reduced by 96.1% (as stated in the official abstract)
+  - end-to-end startup time reduced by 65.7% on average and 75.4% at the 99th percentile (official abstract)
+  why_useful_for_learning: It is the concrete inventory of what actually happens when a device is passed through to a guest, and therefore of why passthrough trades data-plane speed for control-plane rigidity.
+  priority: P1
+  related:
+  - VIRT-EUROSYS25-03
+  - VIRT-EUROSYS25-06
+  - VIRT-ATC25-06
+  relations:
+  - type: TRADEOFF_PAIR
+    target: VIRT-EUROSYS25-06
+    basis: Byte vSwitch keeps I/O software-mediated and optimises the vSwitch data path; FastIOV takes the passthrough branch and optimises attach time. Together they span the two answers to cloud network I/O virtualization.
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS25-03
+    basis: 'Both papers are about consequences of IOMMU-pinned passthrough memory: HyperAlloc for reclamation, FastIOV for setup cost.'
+  - type: PRECURSOR
+    target: Understanding Network Startup for Secure Containers in Multi-Tenant Clouds (IMC 2024)
+    basis: Same group; the IMC measurement paper establishes the startup bottlenecks FastIOV then removes.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  - artifact
+  - code
+  confidence: MEDIUM
+  notes: 'ACCESS FAILURE: the full text was not retrievable. Tried (1) dl.acm.org/doi/pdf -> HTTP 403, (2) repeated searches for an author/preprint copy -> none exists, (3) the artifact repository AlibabaResearch/fastiov-eurosys25 (README gives components but no numbers), (4) OpenAlex, which supplied the official abstract and confirmed closed access. Mechanism and numbers above come from the official abstract plus the artifact README; design-level details were NOT read.'
+- id: VIRT-EUROSYS25-06
+  title: 'Byte vSwitch: A High-Performance Virtual Switch for Cloud Networking'
+  title_correction: null
+  authors:
+  - Xin Wang
+  - Deguo Li
+  - Zhihong Wang
+  - Lidong Jiang
+  - Shubo Wen
+  - Daxiang Kang
+  - et al.
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3717479
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3717479
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: The subject is the virtual switch itself - the software device that provides network connectivity to VMs and containers - rebuilt and operated at ByteDance scale for four years.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T9
+  physical_resource: NIC
+  logical_abstraction: A virtual L2/L3 switch port per VM or container, with cloud-network policy applied in software on the host
+  problem: Open vSwitch is generic and complex, and at ByteDance scale its architecture blocked further performance, scalability and operability improvements.
+  mechanism: Byte vSwitch (BVS) is a purpose-built virtual switch with a simplified forwarding design and optimised hash-table structures for the flow lookup path, plus engineering for scalability, manageability and reliability; the paper reports four-plus years of production operation.
+  isolation_mechanism: Per-tenant network policy enforced in the host virtual switch (details not read at this depth)
+  multiplexing_mechanism: One physical NIC and host CPU budget are shared by many guest ports through software packet forwarding
+  state_mechanism: Flow/forwarding tables live in host memory in the vSwitch datapath; UNKNOWN at this evidence depth how state is handled across upgrades or migrations
+  overhead_bottleneck: Per-packet forwarding cost in the host software datapath (flow lookup), which bounds packets-per-second per core
+  primary_tradeoff: A specialised vSwitch instead of generic OVS -> gains up to 3.3x packets-per-second and 25% lower latency, but costs the generality/programmability and community ecosystem that made OVS attractive
+  quantitative_claims:
+  - up to 3.3x higher PPS and 25% lower latency compared to OVS (official abstract; ByteDance production setting)
+  why_useful_for_learning: It is the production reference point for the software-mediated branch of network I/O virtualization, and the baseline any passthrough or offload argument is measured against.
+  priority: P2
+  related:
+  - VIRT-EUROSYS25-01
+  relations:
+  - type: ALTERNATIVE
+    target: Open vSwitch
+    basis: Stated baseline; BVS replaces OVS in ByteDance production.
+  - type: TRADEOFF_PAIR
+    target: VIRT-EUROSYS25-01
+    basis: Software vSwitch mediation versus SR-IOV passthrough are the two ends of the network I/O virtualization trade-off.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: 'ACCESS FAILURE for full text: dl.acm.org PDF blocked (403), no preprint or author copy found; abstract and author list obtained from OpenAlex. Author list truncated to first six plus et al. (14 ByteDance authors in total). Deployed-system experience paper, but it appears in the regular EuroSys main-track program (session 10.2 Cloud and Networking), so it is recorded as ARCHIVAL_MAIN_PAPER.'
+- id: VIRT-EUROSYS25-08
+  title: 'Phantom: Virtualizing Switch Register Resources for Accurate Sketch-based Network Measurement'
+  title_correction: null
+  authors:
+  - Xiang Chen
+  - Hongyan Liu
+  - Zhengyan Zhou
+  - Xi Sun
+  - Wenbin Zhang
+  - Hongyang Du
+  - et al.
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3696077
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3696077
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: Boundary case kept CORE because the stated contribution is explicit resource virtualization - presenting sketches with more register capacity than the switch physically has - which is the same abstraction pattern as memory or device virtualization applied to a switch ASIC.
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary:
+  - T3
+  physical_resource: switch ASIC
+  logical_abstraction: Virtual register capacity for sketch data structures, larger than the physical register file of the data-plane switch
+  problem: Sketches keep their counters in switch registers, and the switch has too few registers, so measurement accuracy is capped by hardware capacity.
+  mechanism: Phantom virtualizes switch register resources so that sketch-based measurement can use more register capacity than physically present; the concrete indirection/eviction design was not readable at this evidence depth.
+  isolation_mechanism: UNKNOWN at this evidence depth
+  multiplexing_mechanism: Physical switch registers are shared among (or backed for) a larger set of logical sketch counters
+  state_mechanism: UNKNOWN at this evidence depth
+  overhead_bottleneck: Limited physical register resources in the programmable data plane (stated); the cost of the virtualization indirection itself was not read
+  primary_tradeoff: Virtualizing a scarce hardware resource -> gains measurement accuracy beyond the hardware limit, but presumably costs added data-plane stages/latency or control-plane traffic - NOT verified at this depth
+  quantitative_claims: []
+  why_useful_for_learning: It shows the virtualization pattern (logical resource larger than physical, with mediated backing) applied outside the CPU/memory/device world, which is useful for recognising the pattern itself.
+  priority: P3
+  related: []
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS25-06
+    basis: Both are network-device virtualization in the EuroSys 2025 program, one in the host software switch and one in the switch ASIC resource plane.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: 'ACCESS FAILURE for full text: tried dl.acm.org (403), targeted searches for author copies (none), OpenAlex (abstract only, closed access). Classification rests on title plus the official abstract stating the contribution is register-resource virtualization; no design/evaluation section was read, so no numbers are recorded. Author list truncated (13 authors total).'
+- id: VIRT-EUROSYS25-09
+  title: 'Hey Hey, My My, Skewness Is Here to Stay: Challenges and Opportunities in Cloud Block Store Traffic'
+  title_correction: null
+  authors:
+  - Haonan Wu
+  - Erci Xu
+  - Ligang Wang
+  - Yuandong Hong
+  - Changsheng Niu
+  - Bo Shi
+  - et al.
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3696068
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3696068
+  fullpaper_source: https://oasis-sjtu.github.io/static/papers/HeyHeyMyMy.pdf
+  classification: SUPPORT
+  classification_note: A production characterization of Alibaba Cloud EBS that lays out the virtual-disk I/O path (VM -> queue pairs -> hypervisor polling worker threads -> BlockServer segments -> ChunkServer) and shows where virtualized block I/O actually becomes imbalanced or throttled.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary:
+  - T9
+  - T2
+  physical_resource: NVMe
+  logical_abstraction: A virtual disk mounted by a VM, exposed through 1-8 IO queue pairs and backed by 32 GiB logical segments spread over BlockServers
+  problem: Cloud block storage deploys many load balancers, yet nobody had measured whether traffic is actually balanced across the layers of the virtual-disk path at fleet scale.
+  mechanism: Using the DiTing distributed tracing framework, the authors collect 310 million sampled IO traces (1/3200) plus second-granularity full-scale metrics over a 12-hour window across ~60,000 VMs and ~140,000 virtual disks in three datacenters, then quantify spatial and temporal skewness at VM, queue-pair, worker-thread, segment, storage-node and LBA granularity and test candidate fixes in trace-driven simulation.
+  isolation_mechanism: Per-virtual-disk IO queue pairs give parallelism and isolation between disks; a throttle enforces the per-VD purchased IOPS/throughput limit - the paper shows the throttle fires while 61.6% (throughput) / 74.7% (IOPS) of the resource is available
+  multiplexing_mechanism: Hypervisor polling worker threads bound to host cores serve queue pairs round-robin; each virtual disk is striped over 32 GiB segments across BlockServers, and ChunkServers persist to SSDs over RDMA
+  state_mechanism: Virtual-disk metadata is the segment-to-BlockServer map; rebalancing moves segments between BlockServers, and the paper shows up to 59.2% of those migrations in the worst cluster are unnecessary
+  overhead_bottleneck: 'Skew, not aggregate capacity: the hottest hypervisor worker thread carries 2.6x the coldest on average, and 1% of VMs contribute 75.4% of read traffic in one datacenter'
+  primary_tradeoff: 'Round-robin queue-to-thread binding and per-VD throttling -> gain simplicity and predictable billing, but cost utilization: rebinding helps only 29.9% of nodes, while lending unused quota between a tenants virtual disks would cut throttle duration by a median 43.7% at the risk of 5.2% negative cases'
+  quantitative_claims:
+  - 'scale: ~60,000 VMs and ~140,000 virtual disks, 12-hour window, 310 million IO traces at 1/3200 sampling, three datacenters (Alibaba Cloud EBS)'
+  - 'spatial skew: 1% of VMs contribute 75.4% of read and 42.6% of write traffic (DC-3); 1% of segments contribute 55.9% of read and 38.6% of write'
+  - 'storage nodes are comparatively balanced: top 1% contribute 2.8% of read and 1.9% of write traffic (DC-3)'
+  - 'temporal skew: VM read traffic median peak-to-average 15813.1, 24.1x the write figure'
+  - 'worker threads: median coefficient of variation 0.7 (read) and 0.5 (write) at 1-minute scale; hottest thread handles 2.6x the coldest on average'
+  - 'read-vs-write asymmetry: 96.8% of storage clusters have read CoV >= write CoV'
+  - 'queue concentration: 42.6% of compute nodes have a single hottest queue carrying >80% of read traffic'
+  - 'LBA hotspots: the hottest 64 MiB block is 3.0% of the address space but takes 18.2% of accesses, and 93.9% of hottest blocks are write-dominant'
+  - 'throttling: when throttled, median available-resource rate is 61.6% (throughput) and 74.7% (IOPS); limited lending at p=0.8 gives positive gain in 85.9% of multi-VD cases, median 43.7% shorter throttle duration'
+  - 'rebalancing: up to 59.2% of migrations unnecessary in the worst cluster; an ideal importer choice extends migration intervals 2.0x (median 0.48 vs 0.24)'
+  - 'caching: BS-side cache shows 21.0x lower standard deviation in cache utilization than compute-node cache'
+  why_useful_for_learning: It is the concrete anatomy of a virtual disk in production - queues, hypervisor polling threads, segments, throttles - and shows that the hard problems of storage virtualization at scale are skew and quota semantics, not raw path efficiency.
+  priority: P2
+  related:
+  - VIRT-EUROSYS25-01
+  relations:
+  - type: LAYER_ABOVE
+    target: VIRT-EUROSYS25-01
+    basis: Both concern virtualized device I/O at Alibaba scale; this paper characterises the steady-state block path while FastIOV addresses network device attach latency.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds:
+  - paper
+  confidence: HIGH
+  notes: Proposed fixes are validated in trace-driven simulation, not in production; the authors call this preliminary.
+- id: VIRT-EUROSYS25-10
+  title: 'A House United Within Itself: SLO-Awareness for On-Premises Containerized ML Inference Clusters via Faro'
+  title_correction: null
+  authors:
+  - Beomyeol Jeon
+  - Chen Wang
+  - Diana Arroyo
+  - Alaa Youssef
+  - Indranil Gupta
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3696071
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3696071
+  fullpaper_source: https://arxiv.org/html/2409.19488v1
+  classification: CONTEXT
+  classification_note: A cross-job autoscaler that allocates replica counts under Kubernetes/Ray Serve on a fixed on-premises cluster; it consumes container multi-tenancy and contributes no isolation or virtualization mechanism.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T8
+  physical_resource: CPU core
+  logical_abstraction: A per-job pool of container replicas sized from a latency SLO turned into a utility function
+  problem: On-premises inference clusters are fixed-size and shared by many models, so per-job autoscalers that assume unlimited cloud capacity cannot satisfy cluster-wide SLO objectives.
+  mechanism: Faro turns latency SLOs into utility functions, predicts each jobs workload probabilistically, derives replica requirements with an M/D/c queueing model, then solves a cluster-wide utility maximisation (Faro-Sum / Faro-Fair) using deliberately relaxed ("sloppified") objectives with a COBYLA solver, followed by a shrinking pass to remove over-provisioning.
+  isolation_mechanism: Relies on Kubernetes resource quotas/cgroup limits and one Ray Serve subcluster per job; no new mechanism
+  multiplexing_mechanism: Fixed cluster CPU capacity is divided into container replicas whose counts are re-decided over time
+  state_mechanism: N/A - replicas are stateless inference servers, scaled by creation/deletion rather than state movement
+  overhead_bottleneck: Solver latency versus reaction time, which is why the utility and latency models are deliberately approximated
+  primary_tradeoff: Optimising a cluster-wide utility across jobs -> gains far fewer SLO violations under oversubscription, but costs per-job independence and requires workload prediction plus an approximate model
+  quantitative_claims:
+  - 'right-sized cluster (36 replicas): 2.3x-12.3x lower SLO violation rate than baselines (lost utility 0.79 vs 2.02 for Mark)'
+  - 'oversubscribed cluster (32 replicas): 2.8x-8.4x lower cluster SLO violation rate than four baselines'
+  - 'mixed ResNet18/ResNet34 workloads: 4x-23x lower SLO violation rates'
+  - 'large scale (20 jobs over 70 replicas): 0.02 SLO violation rate vs 0.08 for Mark'
+  - 'simulator fidelity: cluster utility predicted within 9.6% average difference'
+  - 'testbed: IBM Cloud VPC, two 32-vCPU machines, 10 jobs driven by Azure Functions and Twitter traces (1-1600 req/min)'
+  why_useful_for_learning: 'It is a clean example of the application-level consequence of multi-tenancy: once capacity is fixed, SLO satisfaction becomes an allocation problem across tenants rather than a per-tenant scaling problem.'
+  priority: P3
+  related:
+  - VIRT-EUROSYS25-12
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS25-12
+    basis: Both are SLO-driven allocation over shared inference infrastructure; Faro on CPU container replicas, the other on multiplexed GPUs.
+  existing_corpus_overlap: ai_hpc_systems
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  confidence: HIGH
+  notes: Homogeneous CPU clusters only; GPU/CPU heterogeneity is explicitly future work. existing_corpus_overlap marked ai_hpc_systems as a likely (not verified) overlap given it is an ML-inference cluster paper.
+- id: VIRT-EUROSYS25-12
+  title: Multiplexing Dynamic Deep Learning Workloads with SLO-awareness in GPU Clusters
+  title_correction: null
+  authors:
+  - Wenyan Chen
+  - Chengzhi Lu
+  - Huanle Xu
+  - Kejiang Ye
+  - Chengzhong Xu
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3696074
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3696074
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: At the depth actually reached (official abstract only) the paper is a cluster-level SLO-aware co-location scheme for dynamic inference workloads; it manages interference but no virtual-GPU abstraction could be verified, so the ambiguity resolves to CONTEXT.
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T6
+  physical_resource: GPU
+  logical_abstraction: A shared GPU carrying several dynamic inference tasks whose latency SLOs must still hold
+  problem: Cloud providers over-provision GPUs for latency-critical inference, so utilization is low, but co-locating dynamic inference workloads causes interference that breaks SLOs.
+  mechanism: 'Not established at the depth read: the abstract states the system multiplexes highly dynamic inference workloads on shared GPUs with SLO guarantees under resource interference; the concrete sharing primitive (MPS, streams, time-slicing) was not readable.'
+  isolation_mechanism: UNKNOWN at this evidence depth
+  multiplexing_mechanism: Co-location of multiple inference tasks per GPU device (mechanism unverified)
+  state_mechanism: UNKNOWN at this evidence depth
+  overhead_bottleneck: Resource interference between concurrent inference processes on one GPU (stated in the abstract)
+  primary_tradeoff: Co-locating dynamic inference workloads -> gains GPU utilization but costs SLO predictability because interference is workload-dependent
+  quantitative_claims: []
+  why_useful_for_learning: It marks the cluster-level version of the GPU sharing problem that Bless and the ATC kernel-interception work solve at device level.
+  priority: P3
+  related:
+  - VIRT-EUROSYS25-07
+  - VIRT-ATC25-03
+  relations:
+  - type: LAYER_ABOVE
+    target: VIRT-EUROSYS25-07
+    basis: Bless decides SM partitioning inside one GPU; this work decides co-location across a GPU cluster under SLOs.
+  existing_corpus_overlap: ai_hpc_systems
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: LOW
+  notes: 'ACCESS FAILURE: tried dl.acm.org/doi/pdf (403 twice), targeted web searches for an author or arXiv copy (none found), OpenAlex (title/authors plus a truncated abstract; OpenAlex reports CC-BY but the ACM PDF is still gated from here). Could plausibly be SUPPORT if the sharing primitive turns out to be an interference-modelled spatial-sharing mechanism; flagged for re-reading if a copy becomes available.'
+- id: VIRT-EUROSYS25-15
+  title: 'Eva: Cost-Efficient Cloud-Based Cluster Scheduling'
+  title_correction: null
+  authors:
+  - Tzu-Tao Chang
+  - Shivaram Venkataraman
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3717483
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3717483
+  fullpaper_source: https://arxiv.org/html/2503.07437v1
+  classification: CONTEXT
+  classification_note: 'A cost-driven provisioning and task-packing scheduler over EC2 instances: it consumes cloud VMs as priced units of capacity and contributes no virtualization mechanism, though it does quantify what instance acquisition and task checkpoint/restart actually cost.'
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T4
+  physical_resource: CPU core
+  logical_abstraction: A cloud instance as a priced capacity container that several batch tasks can be packed into
+  problem: Hosting long-running batch jobs in the cloud is expensive because per-task instance provisioning underutilises instances, co-location interference is ignored, and there is no principled way to decide when reconfiguration is worth its overhead.
+  mechanism: Eva orders instance types by hourly cost and packs tasks by throughput-normalised reservation price (a tasks standalone hourly cost scaled by its measured co-location throughput). Each scheduling period it computes both a full reconfiguration and a partial one and picks between them by comparing expected long-run provisioning savings against migration cost under a Poisson arrival model; tasks run as Docker containers with checkpoints in S3.
+  isolation_mechanism: None contributed; co-location interference is measured online by a ThroughputMonitor and fed back into packing decisions
+  multiplexing_mechanism: Several tasks are packed onto one cloud instance subject to its capacity, with interference-adjusted value accounting
+  state_mechanism: 'Reconfiguration is stop-checkpoint-restart, not live migration: checkpointing costs 2-30 s and task relaunch 1-160 s, with instance acquisition 6-83 s and setup 140-251 s'
+  overhead_bottleneck: Reconfiguration overhead (checkpoint + relaunch + instance acquisition) versus the provisioning savings it unlocks
+  primary_tradeoff: Packing and reconfiguring for cost -> gains 42% lower cost but costs ~15% longer job completion time from co-location slowdown, and when migration delays double the scheduler must fall back from full to partial reconfiguration
+  quantitative_claims:
+  - 42% cost reduction with a 15% increase in job completion time versus per-task instance provisioning (abstract)
+  - 'large-scale simulation on an Alibaba production trace (6274 jobs): 58% normalised cost vs 67-100% for baselines, 2.59 tasks per instance vs 1.0 for No-Packing, JCT 19.42 h vs 16.81 h'
+  - 'physical experiment (120-job trace): 84.4% normalised cost vs 100% for No-Packing; GPU/CPU/RAM allocation improves to 76%/85%/41% from 67%/77%/28%'
+  - 'instance lifecycle measured: acquisition 6-83 s, setup 140-251 s, checkpoint 2-30 s, task launch 1-160 s (AWS EC2, 21 instance types across P3/C7i/R7i)'
+  - when migration delays double, full-reconfiguration adoption falls from ~50% to ~12%
+  - 'scalability: full reconfiguration of 8000 tasks in 22 s on 8 cores'
+  why_useful_for_learning: It puts prices and delays on the VM lifecycle - how long an instance takes to acquire and boot, what a checkpoint-restart really costs - which is the economic backdrop for VM allocation and migration work.
+  priority: P3
+  related:
+  - VIRT-EUROSYS25-02
+  - VIRT-OSDI25-02
+  relations:
+  - type: CONTRASTS_WITH
+    target: VIRT-EUROSYS25-02
+    basis: Both reconfigure placements online, but Eva stops and restarts tasks (checkpoint/restart) while VMR2L live-migrates VMs; the cost models differ accordingly.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds:
+  - preprint
+  - code
+  confidence: HIGH
+  notes: Does not use spot/preemptible instances (explicit future work).
+- id: VIRT-EUROSYS25-18
+  title: 'RAKIS: Secure Fast I/O Primitives Across Trust Boundaries on Intel SGX'
+  title_correction: null
+  authors:
+  - Mansour Alharthi
+  - Fan Sang
+  - Dmitrii Kuvaiskii
+  - Mona Vij
+  - Taesoo Kim
+  venue: EuroSys
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3689031.3696090
+  official_url: https://dl.acm.org/doi/10.1145/3689031.3696090
+  fullpaper_source: https://gts3.org/assets/papers/2025/alharthi:rakis.pdf
+  classification: CORE
+  classification_note: 'The contribution is trusted I/O across an isolation boundary: kernel-bypass ring structures in untrusted shared memory are made safe for an SGX enclave by certifying producer/consumer indices and frame ownership inside the TCB.'
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary:
+  - T3
+  - T5
+  physical_resource: NIC
+  logical_abstraction: POSIX send/recv/read/write inside an enclave, served by XDP sockets and io_uring rings that live in untrusted memory but are validated at every use
+  problem: I/O-heavy enclave programs are crippled by enclave exits on every syscall, and the obvious fix - adopting kernel-bypass userspace libraries - would balloon the trusted computing base and assumes a trusted OS.
+  mechanism: RAKIS puts a ~2 KLoC FastPath Module inside the enclave that drives XDP/XSK rings (UDP) and io_uring (TCP and files) directly over shared untrusted memory, with a refined ~5 KLoC LWIP UDP/IP stack also inside; an untrusted Monitor Module thread outside the enclave issues the few remaining syscalls (recvfrom, sendto, io_uring_enter) so the data path needs no enclave exit.
+  isolation_mechanism: '"RAKIS-certified rings": trusted copies of producer/consumer indices are kept in enclave memory and every untrusted index is bounds-checked (0 <= producer_untrusted - consumer_trusted <= ring_size), and a frame-ownership map rejects any UMem frame the enclave did not issue; verified with KLEE symbolic execution and AFL++ fuzzing (84% line / 76% branch coverage of the UDP/IP stack)'
+  multiplexing_mechanism: One FastPath Module and one enclave thread per XSK (each bound to a NIC queue by an eBPF program), and per-thread io_uring instances for multithreaded applications
+  state_mechanism: Trusted ring control variables, socket state and the frame-ownership map live in enclave memory; packet/data buffers and the io_uring submission/completion rings live in untrusted shared memory (16 MB UMem per XSK by default)
+  overhead_bottleneck: Enclave exits on the I/O path, which RAKIS removes for the data plane; the residual cost is the cross-thread handoff for synchronous file I/O (~30% over native) and copies into encrypted enclave memory
+  primary_tradeoff: Driving kernel-bypass rings from inside the enclave with hand-written modules -> gains multi-x I/O throughput while keeping the TCB small (2 KLoC instead of liburing ~35 KLoC or libxdp+libbpf ~130 KLoC), but costs data confidentiality/integrity guarantees (left to TLS or tunnels) and syscall coverage (no epoll; TCP stack stays in the host kernel)
+  quantitative_claims:
+  - 'UDP throughput: 4.6x higher than Gramine-SGX (iperf3; Intel Xeon Gold 6312U, 25 Gbps NIC in loopback)'
+  - 'iperf3 at 1460-byte packets: ~10.5 Gbps (RAKIS-SGX) vs ~2.3 Gbps (Gramine-SGX)'
+  - 'memcached: 4.6x average throughput improvement over Gramine-SGX across thread counts'
+  - 'redis: 2.6x higher throughput than Gramine-SGX (modified to use select instead of epoll)'
+  - 'file write (fstime, 16 KB blocks): 2.8x advantage over Gramine-SGX'
+  - 'curl/QUIC download: matches native, while Gramine-SGX takes 2.5x longer than native'
+  - 'enclave exits for iperf3: ~200K (Gramine-SGX) vs ~10K (RAKIS-SGX)'
+  - 'TCB cost: FastPath Module ~2 KLoC plus Service Module ~6 KLoC, versus ~35 KLoC (liburing) or ~130 KLoC (libxdp with libbpf) if the stock libraries were imported'
+  - 'synchronous file I/O via io_uring: ~30% overhead versus native'
+  why_useful_for_learning: 'It is the sharpest small example of the trusted-I/O problem: whenever a device queue is shared across an isolation boundary, the boundary owner must re-validate the queue metadata, and that validation is the real cost of confidential I/O.'
+  priority: P2
+  related:
+  - VIRT-EUROSYS25-05
+  - VIRT-EUROSYS25-17
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-EUROSYS25-05
+    basis: Both harden a confidential-computing boundary from the inside; Erebor for an untrusted in-CVM OS, RAKIS for an untrusted host OS driving I/O rings.
+  - type: ALTERNATIVE
+    target: Rkt-IO (DPDK-in-enclave)
+    basis: Cited as the DPDK-based alternative; not evaluated because the hardware was unavailable.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds:
+  - paper
+  - code
+  confidence: HIGH
+  notes: Found by program scan, NOT in the seed list - also recorded in possible_omissions. Official proceedings title capitalises the system name as "Rakis" in the ACM listing; the paper PDF uses RAKIS.

@@ -1,0 +1,1484 @@
+papers:
+
+# ============================== SoCC 2025 ==============================
+
+- id: VIRT-SOCC25-01
+  title: "Hydra: Virtualized Multi-Language Runtime for High-Density Serverless Platforms"
+  title_correction: "preprint (arXiv 2212.10131) circulated under the name 'Graalvisor: Virtualized Polyglot Runtime for Serverless Applications'; official SoCC 2025 title is Hydra"
+  authors: [Rodrigo Bruno, et al.]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772267"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://arxiv.org/pdf/2212.10131"
+  classification: CORE
+  classification_note: "Builds a new lightweight isolation/runtime-sharing mechanism (GraalVM Native Image isolates + Truffle JIT sharing + custom seccomp-based sandbox snapshotting) purpose-built to replace container+language-runtime virtualization stacks for serverless functions."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T8, T4]
+  physical_resource: DRAM
+  logical_abstraction: "A shared multi-language runtime instance exposing per-invocation memory isolates (lightweight sandboxes) that multiplex one process's compiled code cache, initial heap and JIT infrastructure across many concurrent, mutually-isolated function invocations of possibly different languages."
+  problem: "Serverless platforms pay for a full virtualization stack (container/VM plus a per-function language runtime) on every invocation even though most functions are short-lived and infrequently invoked, forcing a choice between high idle memory cost and long cold starts."
+  mechanism: "Hydra compiles functions ahead-of-time via GraalVM Native Image into shared native libraries loaded by a common Truffle-based host runtime; each invocation gets a memory isolate (not a full process) that shares the compiled-code cache and JIT-optimized state with other isolates of the same function, and a custom syscall/memory-tracing snapshot mechanism (seccomp-bpf, disjoint 1TB virtual-address reservations per function) checkpoints/restores isolates far more cheaply than CRIU-style whole-process checkpointing."
+  isolation_mechanism: "Per-invocation memory isolates provide the security/fault boundary within one host process; native/unmanaged code that cannot be isolate-sandboxed falls back to process-level forking."
+  multiplexing_mechanism: "Many function invocations (same or different tenants/languages) share one Hydra runtime instance's code cache, heap template and Truffle JIT compiler; a tenant-aware scheduler co-locates invocations from the same tenant to maximize this sharing."
+  state_mechanism: "Sandbox-level snapshot state (dirty writable pages + a replay log of syscalls) is captured post-first-invocation and memory-mapped back on restore, instead of migrating a whole VM/container image."
+  overhead_bottleneck: "Cold JIT warm-up and duplicated per-runtime memory (interpreter + heap + compiled code) across containers/VMs, which the shared isolate model amortizes across invocations."
+  primary_tradeoff: "Sharing one runtime's compiled code/JIT state across isolates -> gains 4.47x function density and 2.1x memory reduction, but costs isolation granularity (native/unmanaged code needs process fallback) and immature multi-language (Python) performance."
+  quantitative_claims:
+    - "function density: 4.47x higher ops/GB-sec average vs. NodeJS/JVM/CPython on OpenWhisk (SEBS/Photons benchmarks, single-node Intel Xeon Gold 5320)"
+    - "memory footprint: 2.1x reduction vs. OpenWhisk (Azure Functions trace replay, 200-node simulation)"
+    - "cold starts: 4x-48x reduction depending on function popularity (same trace replay)"
+    - "first-request latency: 36.62x reduction and 3.15x memory reduction from snapshotting (microbenchmark)"
+    - "tenant-aware scheduling: 2.8x fewer cold starts vs. round-robin placement"
+  why_useful_for_learning: "Shows a concrete, evaluated alternative to container+VM-per-function isolation for serverless: sharing JIT/runtime state across sandboxes while keeping a lighter checkpoint/restore boundary than full-VM live migration."
+  priority: P1
+  related: ["VIRT-SOCC25-02", "Faascale: Scaling MicroVM Vertically for Serverless Computing with Memory Elasticity"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-SOCC25-02", basis: "both reduce serverless memory overhead via a lighter-weight substitute for classic OS/VM isolation (isolate sandboxes vs. unikernel library deduplication)"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: "ACM DL page and abstract blocked (403); full evidence taken from the arXiv preprint (2212.10131), which the SoCC 2025 abstract/DOI records reference as the same work under its final title 'Hydra'. Author full list not independently re-verified beyond 'Rodrigo Bruno et al.' (INESC-ID group, per github.com/arg-inescid/hydra)."
+
+- id: VIRT-SOCC25-02
+  title: "Memory Matters: Load-Time Deduplication for Unikernels"
+  title_correction: null
+  authors: [Gaulthier Gain, Benoît Knott, Cyril Soldani, Laurent Mathy]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772247"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://orbi.uliege.be/bitstream/2268/341121/1/socc25-gaingaulthier.pdf"
+  classification: CORE
+  classification_note: "Contribution is a new unikernel memory-sharing mechanism (load-time library deduplication, Spacer-SLT) that replaces runtime KSM scanning as the multi-tenant density mechanism for a lightweight VM-class isolation boundary (Firecracker/Unikraft unikernels)."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T2]
+  physical_resource: DRAM
+  logical_abstraction: "A shared, read-only library page pool (in /dev/shm) that many statically-linked unikernel instances map into their own address space at load time instead of each holding a private copy of common library code."
+  problem: "Unikernels are statically compiled per-instance, so identical library code is duplicated across many co-located instances; the standard fix (Linux KSM runtime scanning) has convergence delay, unpredictable CPU cost, timing side-channels, and unfair sharing under high concurrency."
+  mechanism: "A build-time toolchain extracts library code into aligned, page-identical .desc-described chunks stored in a shared library pool; a custom Firecracker-based loader maps identical pages directly from the pool into each new unikernel's address space at boot, bypassing ELF parsing and skipping the scan-and-merge step entirely; only read-only pages are deduplicated (writable pages are left private to avoid COW security issues), and ASLR is preserved via trampoline tables."
+  isolation_mechanism: "Each unikernel instance is a separate Firecracker microVM; deduplication only touches read-only shared library pages, so no cross-tenant writable state is shared."
+  multiplexing_mechanism: "Multiple unikernel instances' identical library pages are physically backed by one shared page frame via a common mmap'd pool rather than per-instance private copies."
+  state_mechanism: "Dedup state is static (library-pool metadata built once at compile/link time) rather than dynamic scanner state; no runtime merging or re-scanning is needed once pages are mapped."
+  overhead_bottleneck: "KSM's runtime scanning cost and convergence delay under high instance-launch concurrency, which load-time mapping eliminates by construction."
+  primary_tradeoff: "Deduplicating at load time instead of at runtime -> gains deterministic, zero-variance memory savings and fewer page faults/TLB flushes, but costs the ability to deduplicate writable pages (KSM can still win at very low concurrency) and requires a custom toolchain/loader per unikernel target."
+  quantitative_claims:
+    - "memory savings at 128 FaaS instances (10s lifetime), KSM-quiet baseline: 24% less than DCE, 27% less than Default, 30% less than vanilla Spacer"
+    - "page faults: 3x-5x fewer than DCE/Default/Spacer(KSM) in the 20-application heterogeneous benchmark"
+    - "load time: up to 1.4x faster than Spacer+KSM"
+    - "TLB flushes: up to 10x-13x fewer than KSM-based configurations"
+    - "disk footprint (vanilla mode, 20 apps): 3.3x-5.8x smaller than DCE/Default/Spacer"
+    - "hardware: 32GB RAM, Intel Xeon E5-2650 v2 (32 cores@2.6GHz), Linux 6.1, Unikraft 0.8.0 + Firecracker"
+  why_useful_for_learning: "Direct case study in the classic virtualization memory-density trade-off (scan-based vs. construction-time deduplication) applied to unikernels, the lightest-weight VM-class isolation boundary in the corpus."
+  priority: P1
+  related: ["VIRT-SOCC25-01", "uIO: Lightweight and Extensible Unikernels"]
+  relations:
+    - {type: ALTERNATIVE, target: "VIRT-SOCC25-01", basis: "both attack serverless/unikernel density via a substitute for classic OS-level page/process sharing, one at load time (this paper) and one via JIT/runtime isolate sharing (Hydra)"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "SoCC schedule marks this paper an Honorable Mention. Full text read from the authors' ORBi institutional repository copy."
+
+- id: VIRT-SOCC25-03
+  title: "Cost-Efficient Cloud Infrastructure with Hugepage-aware Memory Deduplication"
+  title_correction: null
+  authors: [Ruizhe Huang, Xinyu Wang, Zhida An, Hanwen Lei, Peng Jiang, Ziqi Zhang, Ding Li, Yao Guo, Xiangqun Chen, Yuntao Liu, Kang Zhou, Yuxin Ren, Ning Jia, Xinwei Hu]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772232"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Forced placeholder under schema rule 2: every full-text and abstract route failed. Authors overlap with a 2023 WORDS-workshop precursor ('Towards Efficient Hugepage-aware Memory Deduplication', Peking Univ. + Huawei) on hugepage-granularity memory deduplication, which strongly suggests VM/container memory-virtualization CORE content, but this must not be assumed from the title/author trail alone."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T9]
+  physical_resource: DRAM
+  logical_abstraction: UNKNOWN
+  problem: "UNKNOWN in detail; the title and precursor workshop paper indicate memory deduplication performed at transparent-hugepage granularity for cost efficiency in multi-tenant cloud infrastructure."
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "Expected extension of the KSM/hugepage memory-deduplication line (XLH, THP-aware KSM) to full cloud deployment; not yet verifiable."
+  priority: P2
+  related: ["VIRT-SOCC25-02", "Towards Efficient Hugepage-aware Memory Deduplication"]
+  relations:
+    - {type: PRECURSOR, target: "Towards Efficient Hugepage-aware Memory Deduplication", basis: "shared authors (Ruizhe Huang, Ding Li, Yao Guo, Xiangqun Chen from Peking Univ.; Yuntao Liu, Yuxin Ren, Ning Jia, Xinwei Hu from Huawei) and near-identical title at WORDS'23, the SoCC'25 paper is almost certainly its extended full version"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only, official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE. Tried (1) ACM DL abs+PDF -> 403 both; (2) arXiv/preprint search -> none found; (3) dblp author list cross-check -> found the WORDS'23 precursor with authors Ruizhe Huang, Ding Li, Yao Guo, Xiangqun Chen (Peking Univ.) + Yuntao Liu, Yuxin Ren, Ning Jia, Xinwei Hu (Huawei), but its own abstract was also inaccessible (dl.acm.org 403, no cache); (4) author homepages (jpdz.github.io/pengjiang, liding320.github.io, KIT os.itec.kit.edu group -- all wrong/incomplete) -> no abstract. Revisit with institutional ACM access; likely CORE/T2 given topic and author trail."
+
+- id: VIRT-SOCC25-04
+  title: "Scheduling Cloud VMs on Variable Capacity Datacenters"
+  title_correction: null
+  authors: [Rajini Wijayawardana, Andrew A. Chien]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772250"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "http://people.cs.uchicago.edu/~aachien/lssg/research/zccloud/IAS_SoCC25.pdf"
+  classification: CONTEXT
+  classification_note: "The contribution is a VM placement/termination scheduling policy (Interval-Aware Scheduler) for datacenters whose physical capacity varies for grid/carbon reasons; it treats VMs as opaque schedulable units and does not touch the hypervisor/VM virtualization mechanism itself."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: "VMs scheduled onto machines whose usable capacity varies over time (\"machine intervals\"); the abstraction exposed to the scheduler is availability-interval statistics, not a virtualized resource per se."
+  problem: "Decarbonization-driven datacenter power flexing creates variable machine capacity that a capacity-oblivious scheduler handles by terminating running VMs/jobs, causing 12-24% goodput loss and SLO violations for long-running cloud services."
+  mechanism: "The Interval-Aware Scheduler (IAS) models each machine's available-capacity period as a stochastic \"interval\" and combines three heuristics -- place big/long jobs on statistically stable machines, align small-job starts with predicted capacity-change times, and use a conservativeness parameter over the interval-duration distribution -- to choose placements that minimize terminations without advance knowledge of exact capacity changes."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "Physical machine capacity is time-multiplexed among VM placements according to predicted interval statistics rather than by a virtualization mechanism; no new resource-partitioning primitive is introduced."
+  state_mechanism: N/A
+  overhead_bottleneck: "VM/job terminations forced by unpredicted capacity reductions, which IAS reduces via interval-aware placement rather than by making termination itself cheaper (e.g. via migration/checkpoint)."
+  primary_tradeoff: "Placing jobs by predicted interval stability -> gains large termination reductions (32-98%) without needing exact future capacity knowledge, but costs accuracy under LIFO-only machine-management assumptions and offers no benefit when job-duration and interval-duration distributions are poorly aligned."
+  quantitative_claims:
+    - "goodput loss under baseline FCFS/First-Fit scheduling: 12-24% (Azure and Google Borg traces plus synthetic Zipf workloads)"
+    - "termination reduction: 92% for the Azure workload; 32-98% across synthetic workloads"
+    - "with conservativeness Z=0.9: 99.4% availability, comparable to industry SLOs, leaving only ~2% of terminations"
+  why_useful_for_learning: "CONTEXT case showing how virtualization's classic 'opaque VM to be placed/terminated' abstraction interacts with a new resource-management problem (grid-responsive variable capacity), without changing the virtualization mechanism itself."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Full text read from the authors' University of Chicago project page copy (co-authored with Argonne National Laboratory)."
+
+- id: VIRT-SOCC25-05
+  title: "Funky: Cloud-Native FPGA Virtualization and Orchestration"
+  title_correction: null
+  authors: [Atsushi Koshiba, Charalampos Mainas, Pramod Bhatotia]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772226"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://dse.in.tum.de/wp-content/uploads/2025/10/Funky-SoCC-2025.pdf"
+  classification: CORE
+  classification_note: "Directly builds a new FPGA virtualization abstraction (vFPGA slots exposed through a unikernel guest + thin hypervisor) with hypervisor-mediated isolation, state capture and preemption -- squarely CORE T6 accelerator virtualization, not merely scheduling over existing FPGA sharing."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T4, T1]
+  physical_resource: FPGA
+  logical_abstraction: "vFPGA: a reconfigurable-slot virtual FPGA exposed to guest applications through unikernel guest APIs, backed by a static Shell (PCIe DMA/MMU) and dynamic per-tenant partial-reconfiguration regions."
+  problem: "Cloud orchestrators lack FPGA support because vendor containers are not lightweight sandboxes, FPGA workloads are not preemptible/checkpointable for multi-tenant sharing, and device plugins cannot enforce CRI/OCI-compliant multi-tenant isolation."
+  mechanism: "Guest applications run inside lightweight Funky unikernels (IncludeOS on Solo5) that cannot touch the FPGA directly; a thin Funky hypervisor/monitor mediates all access via hypercalls (vfpga_init/vfpga_free) and an exitless shared-queue protocol (MEMORY/TRANSFER/EXECUTE/SYNC requests); the FPGA Shell statically reserves PCIe DMA/MMU infrastructure and dynamically partitions the reconfigurable fabric into per-tenant vFPGA regions via Dynamic Partial Reconfiguration, with a per-vFPGA MMU providing memory isolation; three modified Kubernetes-compatible components (scheduler, runtime, CRI annotations) add preemptive eviction, checkpoint/resume and OCI images 28.7x smaller than vendor containers."
+  isolation_mechanism: "Per-vFPGA MMU-enforced virtual memory space plus unikernel sandboxing of the guest application; the hypervisor is the only component with direct device access."
+  multiplexing_mechanism: "One physical FPGA's reconfigurable fabric is spatially partitioned into multiple concurrently-active vFPGA regions via Dynamic Partial Reconfiguration, with the static Shell region shared by all tenants."
+  state_mechanism: "FPGA state is tracked in three layers -- transient on-chip logic (flushed at kernel completion), FPGA memory (tracked init/sync/dirty, only dirty buffers saved), and VM state (vCPU registers + dirty guest pages) -- captured on hypervisor-triggered eviction/checkpoint and restored on resume/replication."
+  overhead_bottleneck: "Synchronization latency while waiting for in-flight FPGA operations to drain before a checkpoint/eviction can complete, mitigated by chunking large data transfers."
+  primary_tradeoff: "Unikernel + hypercall-mediated FPGA virtualization -> gains preemption, checkpoint/restore and 28.7x smaller OCI images at only 7.4% overhead vs. native, but costs vendor lock-in (single Alveo U50/Vitis Shell) and no access to fine-grained on-chip state (flip-flops/BRAM) for checkpointing."
+  quantitative_claims:
+    - "end-to-end overhead: 7.4% vs. native execution across 23 Vitis Accel Examples + Rosetta applications; only 0.6% above a non-virtualizing Docker container baseline"
+    - "OCI image size: 28.7x smaller than AMD's Docker container for FPGA access"
+    - "code portability: 3.4% average source modification across 23 applications"
+    - "eviction of a 1GB FPGA buffer: 177.2ms; VM checkpoint of 1GB: ~2s (disk-based)"
+    - "task preemption benefit: 16.7% execution-time reduction for short high-priority tasks in a 3-FPGA cluster"
+    - "production trace (Google ClusterData 2019, scaled): 1.1x throughput at 25% FPGA acceleration rate with minimal virtualization overhead retained"
+    - "hardware: 4 x86 servers (3 workers: Xeon Gold 6238R; 1 leader: Gold 5317), each worker with 1x AMD Alveo U50 FPGA over PCIe Gen3 x16"
+  why_useful_for_learning: "One of the clearest 2025 statements of accelerator virtualization done the same way CPU virtualization is done -- hypervisor-mediated hypercalls, MMU-based spatial partitioning, and explicit multi-layer state capture for checkpoint/migration -- applied to FPGAs instead of CPUs."
+  priority: P0
+  related: ["Proteus: Heterogeneous FPGA Virtualization", "F3: An FPGA-accelerated FaaS Framework"]
+  relations:
+    - {type: SAME_BRANCH, target: "F3: An FPGA-accelerated FaaS Framework", basis: "both from the TUM/MPI-SWS group, both use a unikernel guest + per-node FPGA manager mediating hypercalls to a partitioned reconfigurable region; Funky targets cloud-native orchestration generally, F3 targets FaaS specifically"}
+    - {type: ALTERNATIVE, target: "Proteus: Heterogeneous FPGA Virtualization", basis: "both virtualize FPGA slots for multi-tenant cloud use via different isolation/orchestration designs"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, preprint, official-web]
+  confidence: HIGH
+  notes: "Full text read from the authors' TUM lab copy (matches the arXiv 2510.15755 preprint)."
+
+- id: VIRT-SOCC25-06
+  title: "Spatio-Temporal Resource Control for Cloud-Native GPU Provisioning"
+  title_correction: null
+  authors: [Hyeon-Jun Jang, Sang-Jae Kim, Weikuan Yu, Hyun-Wook Jin]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772271"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Forced placeholder under schema rule 2: every full-text/abstract route failed. Author Hyun-Wook Jin (Konkuk Univ.) has a research history in GPU/CAN spatio-temporal virtualization and scheduling, consistent with a CORE/T6 GPU-provisioning mechanism, but content cannot be verified."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T9]
+  physical_resource: GPU
+  logical_abstraction: UNKNOWN
+  problem: "UNKNOWN in detail; title indicates spatial+temporal GPU resource control for cloud-native (Kubernetes-style) GPU provisioning."
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "Likely a spatio-temporal GPU sharing/partitioning mechanism analogous to MIG+MPS combinations for Kubernetes GPU pools; not yet verifiable."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only, official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE. Tried (1) ACM DL abs+PDF -> 403; (2) arXiv/preprint search under several keyword combinations -> repeatedly surfaced an unrelated paper ('HAS-GPU', arXiv 2505.01968) with a similar theme but different authors/title, confirmed as NOT this paper; (3) Hyun-Wook Jin's Konkuk Univ. and ResearchGate profiles -> no PDF or abstract surfaced (ResearchGate rate-limited/429 throughout). Revisit with institutional ACM access."
+
+- id: VIRT-SOCC25-07
+  title: "CPU-Limits kill Performance: Time to rethink Resource Control"
+  title_correction: null
+  authors: [Chirag Shetty, Sarthak Chakraborty, Hubertus Franke, Larisa Shwartz, Chandra Narayanaswami, Indranil Gupta, Saurabh Jha]
+  venue: SoCC
+  year: 2025
+  publication_type: SHORT_PAPER
+  doi: "10.1145/3772052.3772219"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://arxiv.org/abs/2510.10747"
+  classification: DROP
+  classification_note: "Excluded on publication-type grounds: the authors' own arXiv listing states this is a 'Vision paper accepted to SoCC 2025' (a 9-page, non-full-paper submission track per the SoCC CFP's Vision Paper category), so it is not part of the main archival research corpus regardless of content."
+  drop_reason: publication_criterion
+  taxonomy_primary: T9
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: "cgroup/CFS CPU quota (\"CPU limit\") as the resource-control primitive under critique; the paper argues for removing this virtualization-adjacent throttling boundary for latency-sensitive containers."
+  problem: "The paper argues that CPU limits (cgroup CFS bandwidth throttling), the standard mechanism underlying container autoscalers, actively harm application performance and cost more than they help for latency-sensitive workloads, contradicting standard practice."
+  mechanism: "Position/vision argument (with supporting measurements) that autoscalers should stop relying on adjusting CPU limits and instead move to a class of 'limitless autoscalers' that allocate CPU without hard quota throttling while still meeting latency SLOs in multi-tenant settings."
+  isolation_mechanism: "cgroup CFS bandwidth control (the mechanism being critiqued) is the isolation boundary discussed, not a new one proposed."
+  multiplexing_mechanism: "Standard Linux CFS time-slicing of CPU cores among containers under quota constraints."
+  state_mechanism: N/A
+  overhead_bottleneck: "Latency/SLO breaches induced by CPU-limit throttling itself, which the paper identifies as the dominant harm rather than a mitigable side effect."
+  primary_tradeoff: "Removing CPU limits -> gains latency/SLO compliance for sensitive workloads but costs the safety margin CPU limits provide against runaway background tasks, which the paper says should instead be handled by a different (limitless) mechanism."
+  quantitative_claims: []
+  why_useful_for_learning: "Directly informs the practical trade-offs of the cgroup CPU-quota mechanism that underlies almost all container resource-isolation designs discussed elsewhere in this corpus, even though it is excluded from the main archival count."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: "Confirmed via the arXiv 2510.10747 listing's own venue annotation ('Vision paper accepted to SoCC 2025'); IBM Research's publication page corroborates the same abstract/authors without listing a track. This is one of the two SoCC candidates flagged for pub-type verification; verification confirms exclusion."
+
+- id: VIRT-SOCC25-08
+  title: "From Bottleneck to Breakthrough: Optimizing Scheduling for Hyperscale Containerized Clusters"
+  title_correction: null
+  authors: [Bing Li, Yuquan Ren, Xinyi Song, Zhilei Liu, Cong Xu, Jingyuan Zhang, Caixue Lin, Wu Xiang, Rui Shi]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772240"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Forced placeholder under schema rule 2: ACM DL and every alternate route failed to yield abstract text; title indicates cluster-scheduler optimization for large containerized clusters, i.e. likely CONTEXT (scheduling) rather than a container isolation/runtime mechanism."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only, official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE. Tried (1) ACM DL abs+PDF -> 403; (2) ResearchGate record 399739999 -> 429 rate-limited on every attempt; (3) dblp author cross-check (Bing Li, Caixue Lin, et al.) -> no personal homepage with the paper found. Revisit with institutional ACM/ResearchGate access."
+
+- id: VIRT-SOCC25-09
+  title: "Metis: A Non-Clairvoyant, Workflow-Aware OS Scheduler for Serverless Applications"
+  title_correction: null
+  authors: [Wenda Tang, Yanan Yang, Jie Wu]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772221"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Forced placeholder under schema rule 2: title indicates an OS-level scheduler for serverless workflows (scheduling policy), which is CONTEXT-tier unless the mechanism turns out to modify the isolation/virtualization boundary itself; content unverified."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T8]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only, official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE. Tried (1) ACM DL abs+PDF -> 403; (2) arXiv/preprint search -> no match (surfaced only an unrelated 2020 SC 'Metis' scheduler paper); (3) author name search (Wenda Tang, Yanan Yang, Jie Wu) -> no personal homepage/preprint found. Revisit with institutional ACM access."
+
+- id: VIRT-SOCC25-10
+  title: "Towards a Lightweight Sidecar-based Service Mesh for Serverless"
+  title_correction: null
+  authors: [Lazar Cvetkovic, Ana Klimovic]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772210"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://anakli.inf.ethz.ch/papers/sidecar_servicemesh_socc25.pdf"
+  classification: CONTEXT
+  classification_note: "The paper's own contribution is a measurement study plus a research agenda for redesigning service-mesh sidecars; it explicitly proposes leveraging existing lightweight-virtualization primitives (Hyperlight, Dandelion) as future building blocks but does not itself build or evaluate a new virtualization mechanism."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "Service-mesh policy application (mTLS, routing, rate limiting) as a per-invocation compute function, proposed to run atop a lightweight sandboxing substrate rather than the current sidecar-container model."
+  problem: "Production service meshes (Istio, Linkerd) impose severe overhead on short-lived serverless functions: applying mesh policies caused 90% of invocations to suffer, with 38.3x higher p95 latency and 3.9x higher CPU utilization than no-policy baselines."
+  mechanism: "The paper profiles Istio/Linkerd sidecar overhead on Knative under an Azure Functions trace replay and argues sidecars should be redesigned as sub-millisecond-startup compute functions built on recent lightweight-virtualization innovations (Hyperlight, Dandelion) that treat policy checks as pure, quickly-instantiable compute rather than long-lived sidecar processes; the lightweight design itself is proposed as future work, not implemented/evaluated here."
+  isolation_mechanism: "Discusses using microVM/isolate-class primitives (Hyperlight, Dandelion) as the isolation boundary for future sidecar policy execution, but does not implement or evaluate one."
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: "Sidecar container startup/warm-up and per-request xDS control-plane traffic (3,000+ transactions for 80 cold starts), identified as the dominant cost current service meshes add to serverless invocations."
+  primary_tradeoff: "Current sidecar-per-pod service mesh -> strong policy isolation and reuse but 1.2s->~4s cold-start inflation and multi-core CPU tax per node; proposed lightweight-sandbox redesign trades some of that isolation maturity for near-zero-overhead policy execution (not yet built)."
+  quantitative_claims:
+    - "cold start latency: 1.2s without policies vs. ~4s with sidecars applied (11-node CloudLab cluster, Knative on Kubernetes)"
+    - "warm-start latency: 7x/38.3x p50/p95 slowdown with policies applied"
+    - "worker CPU consumption: 2.5-6.5 additional cores under sidecar policies"
+    - "control-plane load: 3,000+ xDS transactions observed for just 80 cold starts"
+    - "trace: Azure Functions production trace, 200 functions, 32.5K invocations over 30 minutes"
+  why_useful_for_learning: "Good CONTEXT bridge showing why serverless researchers are reaching for lightweight-virtualization primitives (referencing Hyperlight/Dandelion) to fix a concrete production pain point (service-mesh sidecar tax), motivating why those CORE mechanisms matter."
+  priority: P2
+  related: ["VIRT-SOCC25-14"]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Full text read from the authors' ETH Zurich (anakli) lab copy. The paper is explicitly presented as measurement + research agenda; no new system is fully implemented."
+
+- id: VIRT-SOCC25-11
+  title: "Serverless Elasticsearch: the Architecture Transformation from Stateful to Stateless"
+  title_correction: null
+  authors: [Iraklis Psaroudakis, Pooya Salehi, Jason Bryan, Francisco Fernandez Castano, Brendan Cully, Ankita Kumar, Henning Andersen, Thomas Repantis]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772245"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://www.cs.ubc.ca/~brendan/papers/serverless-elasticsearch.pdf"
+  classification: DROP
+  classification_note: "The contribution is a search-engine storage/indexing architecture (decoupling compute from object-store-backed data, two-tier indexing/search) with no virtualization, isolation, or virtual-resource-abstraction content; 'serverless' here means an operational deployment model, not a runtime-isolation mechanism."
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T8
+  taxonomy_secondary: []
+  physical_resource: NVMe
+  logical_abstraction: "N/A -- this is a data-tiering/indexing architecture (object-store-backed segments with a two-tier indexing/search split), not a virtualized compute or device resource."
+  problem: "Traditional stateful Elasticsearch couples compute and local disk storage per node, causing resource-coupling inefficiency, complex tiering and high operational overhead in a managed cloud offering."
+  mechanism: "Serverless ES offloads durable data to cloud object stores, splits responsibilities into indexing and search tiers with read-after-write consistency, and reduces upload costs via batched compound commits and translog batching."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: "Index/segment state lives in an object store rather than node-local disk, decoupled from the compute tier."
+  overhead_bottleneck: "Object-store upload cost and latency for indexing operations, addressed via batching rather than a virtualization mechanism."
+  primary_tradeoff: "Decoupling compute from storage -> gains independent scaling and simplified operations but requires new batching techniques to hide object-store latency/cost."
+  quantitative_claims:
+    - "upload cost reduction: up to 100x via batched compound commits, up to 30x via translog batching"
+    - "indexing throughput: 2x that of stateful ES on comparable compute hardware"
+  why_useful_for_learning: N/A
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "This is the second SoCC candidate flagged for pub-type verification. No positive evidence found that it is an Industry Paper rather than a Full Research Paper (page count 443-455 = 13pp, consistent with a 12-page full paper + 1 reference page; all authors are Elastic Inc. employees, which the SoCC CFP explicitly permits for the regular research track, not only Industry Papers). Publication type therefore left as ARCHIVAL_MAIN_PAPER; classification is DROP purely on content grounds (no virtualization relation), independent of the pub-type question."
+
+- id: VIRT-SOCC25-12
+  title: "ALAP: Intent-Based Serverless Computing via Delayed Decision-Making"
+  title_correction: null
+  authors: [Prasoon Sinha, Kostis Kaffes, Neeraja J. Yadwadkar]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772262"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://ut-sysml.ece.utexas.edu/publications/prints/socc2025_sinha.pdf"
+  classification: CONTEXT
+  classification_note: "Contribution is a resource-allocation/scheduling policy (delayed, learned per-invocation CPU/memory sizing) placed on top of existing container-based serverless isolation; it does not modify the isolation or virtualization mechanism."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "Right-sized (CPU, memory) container allocation chosen per invocation rather than fixed at function-registration time."
+  problem: "Serverless platforms fix a function's resource allocation at registration time, which is a poor fit when the right allocation actually depends on per-invocation input properties only known at call time."
+  mechanism: "ALAP delays the CPU/memory allocation decision until function input arrives, using a per-function online learning agent (cost-sensitive multi-class classification over input metadata like resolution/bitrate) to predict independent CPU and memory sizes; a companion scheduler pre-launches or routes to right-sized warm containers to hide the resulting cold-start variability."
+  isolation_mechanism: "Standard container isolation (unmodified); the paper's novelty is entirely in the allocation-decision policy layer above it."
+  multiplexing_mechanism: "Warm containers of varying pre-provisioned sizes are pooled and matched to predicted per-invocation resource needs."
+  state_mechanism: N/A
+  overhead_bottleneck: "Cold-start penalties incurred when no warm container of the right predicted size is available, mitigated by background pre-launching."
+  primary_tradeoff: "Delaying the allocation decision to invocation time -> gains input-aware right-sizing (better cost/latency/SLO trade-offs) but costs extra scheduling complexity and depends on per-function online-learning convergence."
+  quantitative_claims: []
+  why_useful_for_learning: "CONTEXT example of how serverless platforms are pushed to finer-grained resource decisions built entirely on top of existing container isolation, without needing a new virtualization primitive."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN
+  evidence_kinds: [paper, official-web]
+  confidence: MEDIUM
+  notes: "Design summarized from the authors' UT Austin SysML lab PDF; full evaluation numbers were not extracted (summary tool truncated before the results table)."
+
+- id: VIRT-SOCC25-13
+  title: "GridGreen: Integrating Serverless Computing in HPC Systems for Performance and Sustainability"
+  title_correction: null
+  authors: [Amit Samanta, Ryan Stutsman, Rohan Basu Roy]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772241"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://publications.sci.utah.edu/publications/Sam2025b/3772052.3772241.pdf"
+  classification: CONTEXT
+  classification_note: "GridGreen is a hybrid workflow-placement/scheduling system across on-prem HPC nodes and AWS Lambda for carbon/performance optimization; it consumes both HPC and serverless infrastructure as opaque resources and does not modify either's virtualization mechanism."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: [T8]
+  physical_resource: CPU core
+  logical_abstraction: "Scientific workflow components placed onto either local HPC nodes or serverless (Lambda) functions across regions, chosen to balance service time, cost and carbon intensity."
+  problem: "Scientific workflows run purely on HPC queue with fixed carbon footprint and wait-time exposure; naively adding cloud serverless bursting ignores geographic/temporal carbon-intensity variation and cost budgets."
+  mechanism: "GridGreen profiles workflow components, forecasts HPC queue wait time and per-region grid carbon intensity, and performs simulation-based search to place each component on the option (local HPC vs. a specific cloud region's Lambda) minimizing a weighted service-time/carbon objective under a cost budget, using speculative pre-warming and dynamic reassignment to handle prediction error."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: "Serverless cold-start latency and cross-environment data-transfer time, mitigated by speculative pre-warming and I/O management rather than a virtualization change."
+  primary_tradeoff: "Cross-environment (HPC+serverless) placement -> gains sustainability and elasticity but costs prediction risk (queue-wait and carbon forecasts can be wrong) requiring dynamic fallback."
+  quantitative_claims: []
+  why_useful_for_learning: "Illustrates CONTEXT-level use of serverless as an elastic, carbon-aware overflow for HPC workflows -- a real infrastructure motivation for why lightweight serverless isolation mechanisms (elsewhere CORE in this corpus) matter operationally."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Full text read from the University of Utah SCI publications archive copy."
+
+- id: VIRT-SOCC25-14
+  title: "Understanding GPU Resource Interference One Level Deeper"
+  title_correction: null
+  authors: [Paul Elvinger, Foteini Strati, Natalie Enright Jerger, Ana Klimovic]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://arxiv.org/html/2501.16909v3"
+  classification: SUPPORT
+  classification_note: "Measurement/characterization paper of GPU spatial-colocation interference at the microarchitectural level (block scheduler, L2/bandwidth, shared memory/IPC); it explains why existing GPU-sharing schedulers (Orion, USHER) mispredict interference, directly informing the trade-offs of any CORE GPU-sharing/virtualization mechanism but does not itself build a virtual GPU abstraction."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T9]
+  physical_resource: GPU
+  logical_abstraction: "N/A -- the paper characterizes interference on physically shared GPU hardware (SMs, L2, memory bandwidth, shared memory banks) rather than proposing a new logical abstraction."
+  problem: "GPU schedulers that spatially colocate kernels for better utilization (e.g. Orion, USHER) oversimplify GPU interference modeling, producing colocation decisions that unpredictably degrade latency-sensitive workloads like LLM decode."
+  mechanism: "Using CUDA Green Contexts, custom microbenchmarks and NVIDIA Nsight Compute/Systems, the authors isolate four interference sources -- block-scheduler contention (SM resource serialization), inter-SM interference (L2 cache pollution, memory-bandwidth contention), intra-SM interference (shared-memory bank conflicts, IPC contention) and pipeline saturation -- and quantify each on real LLM inference (Gemma3-1B, Llama3.1-8B on vLLM)."
+  isolation_mechanism: "N/A (measurement study of an existing shared/unpartitioned execution model, not a new isolation mechanism)."
+  multiplexing_mechanism: "Spatial colocation of independent CUDA kernels/streams on one GPU (the mechanism being measured, not proposed)."
+  state_mechanism: N/A
+  overhead_bottleneck: "Contention for shared microarchitectural resources (SM block scheduler slots, L2 cache capacity, memory bandwidth, shared-memory banks, IPC issue width) during spatial GPU colocation."
+  primary_tradeoff: "Finer-grained interference-aware colocation -> gains higher GPU utilization but requires per-deployment, per-kernel-pair profiling because interference is highly resource- and hardware-generation-specific, undermining simple utilization-based scheduling heuristics."
+  quantitative_claims:
+    - "block-scheduler interference: Llama3-8B decode latency 16.56ms colocated vs. 7.53ms isolated"
+    - "L2 cache pollution: 2.15x slowdown for two colocated copy kernels at 16MB working-set size"
+    - "memory bandwidth contention: up to 1.3x LLM-decode slowdown when colocated with a memory-intensive copy kernel"
+    - "shared-memory bank conflicts: 1.79x-3.75x slowdown in cuBLAS GEMM depending on conflict degree"
+    - "IPC interference: Gemma3-1B decode TBT rises from 5.59ms to 10.74ms when colocated with a high-IPC compute kernel"
+    - "hardware: NVIDIA H100 NVL (132 SMs) and RTX3090 (82 SMs)"
+  why_useful_for_learning: "Best-available microarchitectural explanation for why spatial GPU sharing (MPS/MIG/Green-Contexts-based colocation) is hard to guarantee QoS for -- essential background for evaluating any CORE GPU-virtualization/sharing mechanism's isolation claims."
+  priority: P1
+  related: ["VIRT-SOCC25-15", "VIRT-HPDC25-02"]
+  relations:
+    - {type: TRADEOFF_PAIR, target: "VIRT-HPDC25-02", basis: "this paper explains why MPS-style soft spatial sharing has unpredictable interference, motivating FluidFaaS's choice of hardware-isolated MIG instead"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: "Full text read from the arXiv preprint (2501.16909v3), which matches the SoCC 2025 paper per the authors' own ETH Zurich (anakli) lab page listing it as 'gpu_interference_socc25.pdf'."
+
+- id: VIRT-SOCC25-15
+  title: "ZipBatch: Multi-Tenant GPU Batching with Dual-Resource Regulation"
+  title_correction: null
+  authors: [Haoxuan Yu, Sheng Yao, Wei Wang]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772229"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: UNKNOWN
+  classification: SUPPORT
+  classification_note: "ZipBatch is a batching/multiplexing scheduler for multi-tenant GPU inference (elastic batch construction under bursty traffic) layered on existing GPU sharing rather than a new virtual GPU abstraction -- SUPPORT for understanding GPU multiplexing trade-offs, not CORE."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T9]
+  physical_resource: GPU
+  logical_abstraction: "Elastically-sized inference batches drawn from multiple tenants sharing one GPU instance, regulated jointly on compute and a second resource dimension."
+  problem: "Bursty multi-tenant inference traffic forces schedulers to launch underfilled batches that cannot saturate a shared GPU instance, and imbalanced kernel resource usage leaves the GPU underutilized even when nominally busy."
+  mechanism: "ZipBatch regulates two resource dimensions jointly (dual-resource regulation) when constructing multi-tenant batches, elastically resizing batches to keep the shared instance saturated under bursty load rather than using fixed batch sizes."
+  isolation_mechanism: "N/A / not detailed in available evidence; tenants share GPU execution via batching rather than hardware-partitioned isolation."
+  multiplexing_mechanism: "Multiple tenants' inference requests are combined into shared, dynamically-sized batches on one GPU instance."
+  state_mechanism: N/A
+  overhead_bottleneck: "Underfilled batches and imbalanced per-kernel resource usage under bursty, multi-tenant inference load."
+  primary_tradeoff: "Elastic multi-tenant batching -> gains latency and throughput under bursty load but requires joint regulation of two resource dimensions to avoid starving one tenant's batch to fill another's."
+  quantitative_claims:
+    - "average latency reduction: up to 60.84% vs. existing solutions"
+    - "total throughput increase: up to 71.27% vs. existing solutions"
+  why_useful_for_learning: "Concrete example of GPU multiplexing at the batching layer, complementary to hardware-level GPU-sharing mechanisms (MPS/MIG) discussed elsewhere in the corpus."
+  priority: P2
+  related: ["VIRT-SOCC25-14"]
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "ACM DL PDF blocked (403); evidence taken from the HKUST faculty profile page (Wei Wang) and a secondary abstract summary, not the full paper. Mechanism details beyond 'dual-resource regulation' were not verifiable."
+
+- id: VIRT-SOCC25-16
+  title: "FaaSGNN: Enabling Memory Efficient and Low Latency GNN Inference Services with Serverless Computing"
+  title_correction: null
+  authors: [Yuzhuo Yang, Kaihua Fu, Quan Chen, Deze Zeng, Shuo Quan, Jie Wu, Minyi Guo]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Forced placeholder under schema rule 2: title indicates a serverless GNN-inference-serving system (memory efficiency, latency), i.e. a generic serverless application-serving optimization; content unverified but topically CONTEXT-tier at most."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: []
+  physical_resource: DRAM
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only, official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE. Tried (1) ACM DL abs+PDF -> 403; (2) arXiv/preprint search under FaaSGNN and author names -> no match (surfaced only unrelated GraphFaaS/FaaSTube papers); (3) co-author (Quan Chen, SJTU) personal homepage -> paper not listed. Revisit with institutional ACM access."
+
+- id: VIRT-SOCC25-17
+  title: "BLAFS: A Bloat-Aware Container File System"
+  title_correction: null
+  authors: [Huaifeng Zhang, Mohannad Alhanahnah, Philipp Leitner, Ahmed Ali-Eldin Hassan]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772263"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://arxiv.org/abs/2305.04641"
+  classification: SUPPORT
+  classification_note: "Container image/filesystem debloating mechanism -- per the brief's threshold rule, container runtime/image mechanism (layering, filesystem, provisioning) is SUPPORT rather than CORE (it is not an isolation-boundary redesign)."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: []
+  physical_resource: NVMe
+  logical_abstraction: "A filesystem-level, layer-structure-preserving view of a container image with unused ('bloat') files removed or lazily excluded."
+  problem: "Over half of the top-20 most-downloaded DockerHub containers contain more than 60% bloat (unused files), inflating image size, provisioning time and resource use."
+  mechanism: "The system (internally named BAFFS in the preprint) operates at the filesystem level, preserving the layered structure of container images while identifying and stripping unused files, and composes with lazy-loading snapshotters to accelerate provisioning further."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: "Debloated layer state is produced once at build/conversion time and reused across container instantiations."
+  overhead_bottleneck: "Cold-start latency and image-pull time inflated by unnecessary bytes in container images/layers."
+  primary_tradeoff: "Filesystem-level layer debloating -> gains large cold-start and conversion-time reductions but risks stripping files a workload later needs if bloat detection is imprecise (accuracy/completeness trade-off inherent to any static debloating tool)."
+  quantitative_claims:
+    - "over 50% of top-downloaded DockerHub containers have more than 60% bloat"
+    - "cold-start latency reduction: up to 68% for serverless functions"
+    - "image-conversion speedup: up to 93% faster when paired with lazy-loading snapshotters"
+  why_useful_for_learning: "Concrete illustration of the container-image-mechanism / isolation-architecture boundary the brief draws: this paper improves the image/runtime layer (SUPPORT) without touching the namespace/cgroup isolation boundary itself."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [preprint, official-web]
+  confidence: MEDIUM
+  notes: "ACM DL PDF blocked (403); evidence from the arXiv 2305.04641 preprint (system named BAFFS there vs. BLAFS in the SoCC title -- likely the same work renamed for camera-ready, consistent with the Chalmers group's publication listing which cites arXiv 2305.04641 as the SoCC'25 BLAFS paper)."
+
+- id: VIRT-SOCC25-18
+  title: "WDP: Mitigating Interference in CPU Sharing Through Wake-up Delay Driven Preemption for QoS-aware Co-location"
+  title_correction: null
+  authors: [Yaoxuan Li, Pu Pang, Yecheng Yang, Quan Chen, Zhengxuan Yan, Guoyao Xu, Guodong Yang, Liping Zhang, Minyi Guo]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772231"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Forced placeholder under schema rule 2: full text and abstract inaccessible on every route tried; the title indicates a CPU co-location interference-mitigation scheduler (preemption policy), which is topically adjacent to SUPPORT-tier resource-partitioning mechanisms but cannot be classified from title alone."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only, official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE. Tried (1) ACM DL abs+PDF -> 403; (2) arXiv/preprint search -> none found; (3) co-author (Quan Chen, SJTU) personal homepage -> paper not listed there either. Revisit with institutional ACM access."
+
+- id: VIRT-SOCC25-19
+  title: "Confidential Analytics with Scylla"
+  title_correction: null
+  authors: [Shamiek Mangipudi, Pavel Chuprikov, Gerald Prendi, Patrick Eugster]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772209"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://swystems.usi.ch/files/Scylla.pdf"
+  classification: SUPPORT
+  classification_note: "Scylla is a comparative analytics framework built on top of existing confidential-computing primitives (SGX/SEV-SNP/TDX/Nitro enclaves and VM-based TEEs) plus partially-homomorphic encryption; it explicitly distinguishes enclave-like (NativeTEE) vs. VM-like (VirtualTEE) trust boundaries and empirically compares their performance, which directly supports understanding CORE confidential-VM/TEE trade-offs without itself proposing a new confidential-VM mechanism."
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "A security-mechanism-agnostic analytics query interface that can be backed interchangeably by any of several TEEs (enclave- or VM-based) or homomorphic-encryption schemes."
+  problem: "Securing cloud analytics data 'in use' requires choosing among TEEs and cryptographic schemes with very different security guarantees, platform availability, developer burden and performance, with no unified way to combine or compare them."
+  mechanism: "Scylla provides a common analytics interface over a hybrid backend combining hardware TEEs (Intel SGX, AMD SEV-SNP, Intel TDX, AWS Nitro) -- distinguishing NativeTEE (enclave-like) from VirtualTEE (VM-like) trust models -- and software partially-homomorphic-encryption schemes (AES-GCM, ElGamal, Paillier, SMHE, SAHE), with a heuristic to pick the best mechanism combination per query."
+  isolation_mechanism: "Delegated to the underlying TEE: enclave-based isolation (SGX) restricts the trusted boundary to a process-level enclave; VM-based isolation (SEV-SNP/TDX/Nitro) extends the trust boundary to a full confidential VM."
+  multiplexing_mechanism: "N/A (single-tenant-per-query trust boundary; no new sharing mechanism)."
+  state_mechanism: "Encrypted/attested data moves between a driver VM and TEE-protected worker VMs/enclaves during query execution; state is not virtualization state in the migration sense."
+  overhead_bottleneck: "TEE attestation/encryption overhead, which the paper shows varies substantially by mechanism (PHE fastest, then SGX, then SEV/Nitro/TDX closely matched)."
+  primary_tradeoff: "VM-based confidential computing (SEV-SNP/TDX/Nitro) -> broader trusted boundary and easier porting of unmodified code, but higher and more variable overhead than enclave-based SGX or software PHE in this evaluation."
+  quantitative_claims:
+    - "vs. Opaque (SGX-based baseline): ~1.91x faster average query execution (TPC-H scale factor 10)"
+    - "vs. Hydra baseline in PHE mode: ~1.02x faster; in SGX mode: 1.19x slower"
+    - "PHE vs. SGX: PHE ~5.61x faster on average across mechanisms tested"
+    - "mechanism performance ranking: PHE > SGX > SEV ~ Nitro ~ TDX"
+    - "setup: 5 worker VMs + 1 trusted driver VM on AWS and Azure"
+  why_useful_for_learning: "Rare empirical, apples-to-apples comparison of enclave-based vs. VM-based confidential computing overhead, directly useful for evaluating any CORE confidential-VM paper's performance claims."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Not in the seed list; found via a supplementary keyword scan of the full SoCC 2025 schedule (Privacy session) undertaken because 'Confidential' matches the corpus's T7 taxonomy. Full text read from the authors' USI SWYSTEMS lab copy. Logged in possible_omissions."
+
+- id: VIRT-SOCC25-20
+  title: "Offloading Cloud-Native Infrastructure with XpuPod"
+  title_correction: "preprint (arXiv 2503.23952) circulated under the name 'HeteroPod: XPU-Accelerated Infrastructure Offloading for Commodity Cloud-Native Applications'"
+  authors: [Jingkai He, et al.]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772211"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://arxiv.org/abs/2503.23952"
+  classification: SUPPORT
+  classification_note: "The system offloads cloud-native infrastructure services (service meshes, monitoring agents) onto DPUs behind a unified 'split network namespace' abstraction spanning CPU and DPU; this is a device-offload/isolation architecture that helps explain DPU/SmartNIC device-virtualization trade-offs, but its own contribution is placement + a cross-device networking abstraction rather than a new virtual-GPU/DPU resource abstraction, so SUPPORT rather than CORE."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T9]
+  physical_resource: NIC
+  logical_abstraction: "A split network namespace presenting a unified network abstraction to processes whose infrastructure-service components execute across both the host CPU and an attached DPU."
+  problem: "Cloud-native infrastructure services (service meshes, monitoring agents) compete for host CPU/memory with user applications, degrading performance and scalability, while unmodified commodity cloud-native applications cannot easily be split across host and DPU."
+  mechanism: "XpuPod/HeteroPod offloads infrastructure-service components to DPUs to enforce strict isolation from user applications and reduce host contention, using HeteroNet's split network namespace to give CPU- and DPU-resident process parts a single coherent network view, plus an elastic XPU-networking communication mechanism achieving shared-memory-class performance without pinned-resource or polling overhead."
+  isolation_mechanism: "Host-application and DPU-offloaded infrastructure-service execution are isolated by running on physically separate processors (host CPU vs. DPU) rather than sharing host cores/cache."
+  multiplexing_mechanism: "The DPU's compute/network resources are shared among the offloaded infrastructure-service instances of potentially many host applications."
+  state_mechanism: "Network-namespace state is split and kept coherent across the CPU/DPU boundary rather than migrated wholesale."
+  overhead_bottleneck: "Cross-device (CPU<->DPU) communication cost for split-namespace traffic, addressed via the elastic XPU-networking mechanism to approach shared-memory performance."
+  primary_tradeoff: "Offloading infrastructure services to a DPU -> gains host resource contention relief and stronger isolation from user workloads but costs cross-device communication complexity and depends on DPU availability/cost."
+  quantitative_claims: []
+  why_useful_for_learning: "Concrete example of using a physically separate accelerator (DPU) as an isolation boundary for infrastructure services -- complements the corpus's device-virtualization (SR-IOV/vFPGA) mechanisms with a namespace-splitting alternative."
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [preprint, official-web]
+  confidence: MEDIUM
+  notes: "Not in the seed list; found via a supplementary keyword scan of the full SoCC 2025 schedule (Infrastructure session). ACM DL PDF blocked (403); evidence from the arXiv 2503.23952 abstract (title differs, but topic/author overlap with 'Jingkai He' -- an author appearing in the same search results -- and the SJTU IPADS lab's publication listing make the identity match reasonably confident though not certain). Logged in possible_omissions."
+
+- id: VIRT-SOCC25-21
+  title: "Rethinking Tiered Memory Management in Cloud Data Centers"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772213"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://arxiv.org/abs/2506.06067"
+  classification: CORE
+  classification_note: "If the identity match to the arXiv preprint 'GPAC: Guest Physical Address Space Consolidation' is correct, the paper directly builds a hypervisor/guest-cooperative memory-tiering mechanism operating on guest physical address space and two-level (guest->host) address translation -- squarely CORE T2. Confidence is MEDIUM because the title-to-preprint identity mapping is inferred from matching topic/technique, not confirmed authorship."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T1]
+  physical_resource: DRAM
+  logical_abstraction: "A guest-physical-address-space view in which scattered 'skewed hot' base pages are consolidated into densely-packed huge-page regions, so that host-level tiering (which only sees huge-page-granularity hotness) places memory correctly between fast (DRAM/HBM) and slow (NVMM/CXL) tiers."
+  problem: "Host-level memory tiering in virtualized environments cannot distinguish a densely-hot huge page from a 'skewed hot' huge page (only a small hot fraction), wasting expensive near-memory-tier capacity on mostly-cold pages."
+  mechanism: "Two guest-resident components -- a user-space Scattered Page Filter and a kernel-space Page Consolidator -- communicate via a custom syscall (no host modification) to relocate scattered hot base pages within the guest physical address space into densely-packed huge-page regions, exploiting the two-level (guest virtual -> guest physical -> host physical) address translation already present in virtualized memory tiering; the design is host-agnostic and compatible with existing tiering engines (Memtierd, TPP, AutoNUMA)."
+  isolation_mechanism: "N/A / not detailed in available evidence beyond standard guest/host memory-tiering separation."
+  multiplexing_mechanism: "Near-memory (fast-tier) capacity is allocated to guests based on host-observed huge-page hotness, which the guest-side consolidation makes a more accurate signal."
+  state_mechanism: "Page-hotness/consolidation state lives entirely in the guest (filter + consolidator); the host's existing tiering telemetry is left untouched (\"telemetry-agnostic\")."
+  overhead_bottleneck: "Wasted near-memory-tier capacity from skewed hot huge pages, which the host cannot see through without guest cooperation."
+  primary_tradeoff: "Guest-side page consolidation -> gains large near-memory savings with negligible performance loss and no host modification, but requires guest kernel cooperation (does not help unmodified/uncooperative guests)."
+  quantitative_claims:
+    - "single VM: 50-70% reduction in near-memory consumption with negligible performance loss"
+    - "multi-VM: 10-13% performance improvement at scale"
+    - "compatible with Memtierd, TPP, AutoNUMA tiering engines; effective with HBM and CXL memory"
+  why_useful_for_learning: "If correctly identified, extends this corpus's guest-vs-hypervisor tiered-memory theme (paired with VIRT-SOSP25-02 Demeter) with a third design point: consolidate hotness signal quality in the guest rather than moving policy authority itself."
+  priority: P1
+  related: ["VIRT-SOSP25-02"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-SOSP25-02", basis: "both address the guest-hypervisor semantic gap in VM memory tiering, one by guest-side hotness consolidation (this paper, if identity confirmed) and one by guest-side full tiering delegation (Demeter)"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [preprint, official-web]
+  confidence: MEDIUM
+  notes: "Not in the seed list; found via a supplementary keyword scan of the full SoCC 2025 schedule (Memory session). IMPORTANT CAVEAT: author list could not be confirmed (ACM DL blocked, ResearchGate 429-rate-limited on every attempt), and the arXiv paper used as evidence ('GPAC', 2506.06067) has a different title -- the identity mapping to this SoCC title is inferred solely from an exact match of technique (guest physical address consolidation for hot-page tiering in virtualized/cloud data centers) and should be re-verified with institutional ACM access before being treated as certain. Logged in possible_omissions."
+
+- id: VIRT-SOCC25-22
+  title: "VLCs: Managing Parallelism with Virtualized Libraries"
+  title_correction: null
+  authors: [Yineng Yan, William Ruys, Hochan Lee, Ian Henriksen, Arthur Peters, Sean Stephens, Bozhi You, Henrique Fingler, Martin Burtscher, Milos Gligoric, Keshav Pingali, Mattan Erez, George Biros, Christopher J. Rossbach]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3772052.3772265"
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://arxiv.org/abs/2512.04320"
+  classification: SUPPORT
+  classification_note: "VLCs are an intra-process resource-view virtualization (linker-namespace isolation + ptrace-based interposition on resource-query syscalls), explicitly distinguished by the authors from OS/machine virtualization since libraries still share one address space and directly access shared data; genuinely useful boundary case for understanding virtualization-style resource-view interposition below the OS/VM layer, hence SUPPORT/T10 rather than CORE."
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: "A Virtual Library Context (VLC): a process subunit that encapsulates a set of libraries and a private view of allocated CPU-core/GPU resources, so that resource-oblivious libraries (OpenMP, OpenBLAS, LibTorch) believe they own exclusive hardware even when several VLCs coexist in one process."
+  problem: "Composed parallel applications link multiple libraries that each assume exclusive access to hardware resources; when several run concurrently in one process they contend destructively, and fixing this normally requires modifying the libraries or the OS."
+  mechanism: "VLCs use per-library linker namespaces (dlmopen) to give each library its own static/global state, and ptrace-based system-call interposition to intercept resource-query syscalls (e.g. sched_getaffinity) so each VLC reports only its own allocated resource slice; a 'service VLC' pattern handles libraries incompatible with dlmopen (TBB, CUDA, older pthreads), and a transparent mode avoids explicit function-pointer management."
+  isolation_mechanism: "Performance/resource-view isolation only (no data isolation): libraries in different VLCs still share the process address space and can access each other's data directly; only their view of available CPU/GPU resources is separated."
+  multiplexing_mechanism: "A fixed pool of CPU cores and GPUs is statically partitioned across VLCs within one process, with each VLC's resource-query syscalls redirected to see only its own partition."
+  state_mechanism: "Per-library static/global state is duplicated per linker namespace so each VLC instance of a library has independent internal state despite sharing one process."
+  overhead_bottleneck: "None significant reported: end-to-end application overhead is under 0.54%, with syscall interposition costing ~20us per intercepted call."
+  primary_tradeoff: "Intra-process resource-view virtualization -> gains most of the contention-avoidance benefit of full OS/process isolation at near-zero overhead and with only 13-27 lines of application changes, but costs the ability to isolate data (unlike real process/VM isolation) and is capped at 16 (extendable to 32+) VLCs by glibc's linker-namespace limit."
+  quantitative_claims:
+    - "synthetic workloads: up to 2.85x speedup (average 2.05x)"
+    - "LibTorch hyperparameter tuning: 2.61x over default concurrent config, 1.35x over best PyTorch API option"
+    - "Kokkos multi-GPU Heat3D: 1.46x over an MPI baseline"
+    - "VLC initialization: 40.2us (C++), 3.96ms (Python); end-to-end overhead <0.54%"
+    - "hardware: 24-core dual-socket Intel E5-2650 v4, 128GB RAM, 4x NVIDIA Tesla P100 GPUs"
+  why_useful_for_learning: "A genuine boundary case for the corpus's virtualization taxonomy: shows the same conceptual machinery as OS/device virtualization (namespace-based state separation + syscall interposition to control what a consumer 'sees' of a shared resource) applied one level below the OS, inside a single process."
+  priority: P2
+  related: ["VIRT-HPDC25-03"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-HPDC25-03", basis: "both are boundary-case virtualizations that intercept execution (syscall/trap) to present a partial or transformed resource view without full OS/VM isolation"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: "Not in the seed list; found via a supplementary keyword scan of the full SoCC 2025 schedule (Consistency session) triggered by the literal word 'Virtualized' in the title. Full text read from arXiv 2512.04320. Logged in possible_omissions."
+
+- id: VIRT-SOCC25-23
+  title: "REEF: Energy-Efficient, Application-QoS-Aware Thread Processing in Oversubscribed Server Environments"
+  title_correction: null
+  authors: [Ning Li, Hong Jiang, Hao Che, Zhijun Wang]
+  venue: SoCC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: "https://acmsocc.org/2025/schedule.html"
+  fullpaper_source: "https://ranger.uta.edu/~jiang/publication/Conferences/2025/SoCC25(REEF).pdf"
+  classification: CONTEXT
+  classification_note: "REEF is an application-layer (syscall-interception + Linux signals) thread-batching technique for power management under application-chosen thread oversubscription; the authors themselves state it coordinates existing OS schedulers rather than replacing them and explicitly leave containerized/virtualized environments unevaluated, so it does not touch virtualization/hypervisor mechanisms despite using the keyword 'oversubscription'."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: "N/A -- operates on application worker threads directly via syscall interception, not a virtualized resource abstraction."
+  problem: "Storage-intensive server applications (MongoDB, MySQL) deliberately oversubscribe threads beyond core count; arbitrary query arrival patterns fragment CPU idle time, preventing deep C-state entry and wasting energy, while naive DVFS breaks under oversubscription."
+  mechanism: "REEF intercepts syscalls and uses Linux signals to convert application worker threads into 'on-call' variants activated by batched scheduling, deliberately aligning idle gaps to CPU C-state break-even thresholds (~1000us for C6) using a mathematically-derived ideal batching strategy, entirely in user space (10K LOC) atop existing OS schedulers (CFS, ghOSt)."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "Many application worker threads (deliberately oversubscribed beyond core count) share CPU cores under REEF's batched activation scheme rather than a virtualization-level time-slicing mechanism."
+  state_mechanism: N/A
+  overhead_bottleneck: "Fragmented, unpredictable idle periods from arbitrary query arrival under thread oversubscription, which REEF's batching converts into longer, predictable idle windows."
+  primary_tradeoff: "Application-level thread batching -> gains large energy savings and lower tail latency but requires per-application, per-hardware-generation tuning of batch size/delay and is explicitly not evaluated in containerized/virtualized deployments."
+  quantitative_claims:
+    - "energy efficiency: up to 53.45% throughput-per-watt improvement; up to 2.18x/5.33x EE(P99)/EE(P99.9)"
+    - "tail latency: P99 reduced 33-81%, P99.9 reduced 38-83%"
+    - "hardware: dual 12-core Intel Xeon E5-2650 v4, 64GB RAM, PowerEdge R630, tested with MongoDB/YCSB and MySQL/Sysbench"
+  why_useful_for_learning: "CONTEXT-tier illustration that 'oversubscription' as a keyword does not automatically mean virtualization -- this paper oversubscribes application threads, not virtual CPUs, and explicitly compares against a cgroup-CPU baseline without touching the isolation boundary."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Not in the seed list; found via a supplementary keyword scan of the full SoCC 2025 schedule (Infrastructure session) triggered by 'Oversubscribed' in the title. Full text read from the author's UT Arlington homepage copy. Logged in possible_omissions as a checked-but-not-relevant title, kept as CONTEXT per the 'ambiguous -> CONTEXT' rule rather than DROP."
+
+# ============================== SC 2025 ==============================
+
+- id: VIRT-SC25-01
+  title: "BOER: Enhancing Resource Utilization for Deep Learning Inference with Hybrid Spatial GPU Sharing"
+  title_correction: "an NSF-PAR-archived preprint of apparently the same work circulates under the name 'KACE: Kernel-Aware Colocation for Efficient GPU Spatial Sharing' (same authors' problem statement and evaluation setup); title mapping to the official SC25 title is inferred, not confirmed by a shared DOI"
+  authors: [Bing-Shiun Han, Tathagata Paul, Zhenhua Liu, Anshul Gandhi]
+  venue: SC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3712285.3759857"
+  official_url: "https://sc25.supercomputing.org/program/papers/"
+  fullpaper_source: "https://par.nsf.gov/servlets/purl/10559302"
+  classification: SUPPORT
+  classification_note: "The system predicts colocation interference and chooses which DL inference jobs to pair on an already-shared GPU via NVIDIA MPS; per the brief's threshold rule this is a scheduler layered over existing spatial GPU sharing, not a new virtual-GPU abstraction, so SUPPORT rather than CORE."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T9]
+  physical_resource: GPU
+  logical_abstraction: "N/A -- consumes existing NVIDIA MPS spatial-sharing partitions as given; the paper's abstraction is a colocation-pairing decision, not a new resource view."
+  problem: "Choosing which two (or more) DL inference workloads to colocate on a spatially-shared GPU to raise utilization without excessively degrading either workload's latency is hard because interference depends on fine-grained kernel resource usage."
+  mechanism: "The system predicts pairwise colocation interference from exclusive (isolated-run) kernel resource-usage metrics with minimal offline training data, then uses this prediction to select which DL workloads to colocate under NVIDIA MPS spatial sharing."
+  isolation_mechanism: "Relies on NVIDIA MPS's existing (soft) spatial partitioning; no new isolation boundary is introduced."
+  multiplexing_mechanism: "Multiple DL inference workloads execute concurrently on one physical GPU via MPS, with this paper's contribution being which pairs to multiplex, not how multiplexing is implemented."
+  state_mechanism: N/A
+  overhead_bottleneck: "Mispredicted colocation pairings that degrade a co-located workload's latency, which the prediction model reduces by learning from exclusive-run kernel metrics rather than requiring exhaustive pairwise profiling."
+  primary_tradeoff: "Predicting interference from single-workload kernel metrics -> gains near-oracle throughput with far less profiling (20% of the training data needed by prior work) but is still an application-level scheduling layer, inheriting whatever isolation weaknesses MPS itself has."
+  quantitative_claims:
+    - "achieves ~91% of oracle throughput using only 20% of the training data prior methods need"
+    - "11% improvement over prediction-based baselines; 16% improvement over rule-based baselines"
+    - "hardware: NVIDIA V100 32GB, Intel Xeon Gold 6230, 128GB RAM, PyTorch 1.13/CUDA 12.3"
+  why_useful_for_learning: "Companion SUPPORT example (alongside VIRT-SOCC25-14) for why MPS-style spatial GPU sharing needs external interference-prediction help rather than being safe to colocate blindly."
+  priority: P2
+  related: ["VIRT-SOCC25-14", "VIRT-HPDC25-02"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-SOCC25-14", basis: "both are about the practical difficulty of safely colocating workloads on a spatially-shared GPU, one via microarchitectural measurement (SoCC25-14) and one via a predictive scheduler (this paper)"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: MEDIUM
+  notes: "ACM DL PDF blocked (403); evidence taken from an NSF PAR-archived preprint matching the abstract/evaluation topic and one shared author area (Stony Brook Univ., GPU colocation) under the working title 'KACE'; the exact identity match to the published 'BOER' title/DOI is inferred, not confirmed by a direct link between the two documents."
+
+- id: VIRT-SC25-02
+  title: "Workload Intelligence: Workload-Aware IaaS Abstraction for Cloud Efficiency"
+  title_correction: null
+  authors: [Lexiang Huang, Anup Parayil, Jue Zhang, Xiaoting Qin, Chetan Bansal, Jovan Stojkovic, Pantea Zardoshti, Pulkit Misra, Eli Cortez, Raphael Ghelman, Inigo Goiri, Saravan Rajmohan, Jim Kleewein, Rodrigo Fonseca, Timothy Zhu, Ricardo Bianchini]
+  venue: SC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3712285.3759848"
+  official_url: "https://sc25.supercomputing.org/program/papers/"
+  fullpaper_source: "https://www.microsoft.com/en-us/research/publication/workload-intelligence-workload-aware-iaas-abstraction-for-cloud-efficiency/"
+  classification: CONTEXT
+  classification_note: "The contribution (Workload Sage) is a bidirectional information-exchange interface/API between cloud workloads and the platform, not a hypervisor/VM-internals mechanism; despite the name 'IaaS abstraction', it is a communication protocol layered above existing VM virtualization, so CONTEXT rather than CORE/SUPPORT."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: "A dynamic, bidirectional information channel ('Workload Sage') letting a workload declare characteristics/intents and the platform communicate optimization opportunities back, on top of standard opaque VM types."
+  problem: "Cloud platforms today see almost nothing about a workload beyond its chosen VM type and decoration flags, which is compounded by a proliferating number of VM types that are hard for customers to choose among, preventing platform-side optimization."
+  mechanism: "Workload Sage defines a framework for dynamic, bidirectional communication between cloud workloads and the platform so each side can react to the other's state and opportunities, rather than the platform inferring everything from a static VM-type label."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: "UNKNOWN (evaluation detail not accessible)"
+  primary_tradeoff: "UNKNOWN (evaluation detail not accessible)"
+  quantitative_claims: []
+  why_useful_for_learning: "CONTEXT example of cloud providers trying to reduce the opacity that VM-type-based virtualization interfaces impose between workload and platform."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT_INTRO
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "ACM DL blocked (403); evidence from the Microsoft Research publication page, which gave abstract/authors but no evaluation section or quantitative results."
+
+- id: VIRT-SC25-03
+  title: "XaaS Containers: Performance-Portable Representation With Source and IR Containers"
+  title_correction: null
+  authors: [Marcin Copik, Valerie Hayot-Sasson, Kyle Chard, Eiman Alnuaimi, Alberto Madonna, Ian Foster, Alok Kamatar, Todd Gamblin, Torsten Hoefler]
+  venue: SC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3712285.3759868"
+  official_url: "https://sc25.supercomputing.org/program/papers/"
+  fullpaper_source: "https://arxiv.org/pdf/2509.17914"
+  classification: SUPPORT
+  classification_note: "Confirmed via full-text read: the paper is entirely about container image representation/build (source or LLVM-IR containers deferring compilation to deployment time) with standard OCI runtimes and no new isolation boundary -- exactly the SUPPORT, not CORE, container-image/build case the task flagged for verification."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: "A container image that carries source code or compiler intermediate representation (LLVM IR) instead of a pre-compiled, hardware-specific binary, letting hardware-specific specialization happen at deployment time on any HPC system."
+  problem: "HPC containers sacrifice hardware-specific performance for portability because compilation decisions (vectorization flags, MPI/accelerator libraries) are baked in early and ABI constraints prevent swapping in system-optimized libraries (e.g. vectorized BLAS/LAPACK) at deployment."
+  mechanism: "XaaS Containers distribute applications as source or LLVM-IR containers rather than fixed binaries; deployment-time tooling detects specialization points (aided by an LLM-based classifier for undocumented cases) and compiles/links against the target system's optimized libraries, with standard OCI container runtimes left unchanged."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: "Redundant compilation across many build-configuration combinations, mitigated by IR-level deduplication (many configurations compile to few unique IRs)."
+  primary_tradeoff: "Deferring specialization to deployment time -> gains near-native performance portability across heterogeneous HPC systems but costs platform-dependent IR images (separate images per architecture) and requires manual intervention for undocumented specialization opportunities."
+  quantitative_claims:
+    - "IR deduplication: 5 GROMACS build variants (8,710 compilation targets) reduced to 2,695 unique IRs (69% reduction)"
+    - "multi-configuration builds: 7,052 translation units reduced to 2,694 IRs (76% reduction)"
+    - "GPU portability gap: SYCL portable containers 11-20% slower than specialized builds on CSCS Ault23"
+    - "LLM specialization-detection: Gemini Flash 2 median F1 = 0.978; other models 0.55-0.97"
+  why_useful_for_learning: "Directly useful negative case for the corpus's container-isolation-vs-image threshold: explicitly confirms that image/build representation work leaves the OCI isolation boundary untouched, unlike CORE container-isolation-architecture papers."
+  priority: P2
+  related: ["SC25-04"]
+  relations:
+    - {type: SAME_BRANCH, target: "SC25-04", basis: "both are HPC container-image/build mechanism papers (source/IR portability vs. compilation-assisted adaptability) explicitly flagged for the CORE-vs-SUPPORT container threshold"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, code, official-web]
+  confidence: HIGH
+  notes: "Full text read from arXiv 2509.17914 (matches the SC25 DOI per dblp). Public artifact at github.com/spcl/xaas-containers."
+
+- id: VIRT-SC25-04
+  title: "coMtainer: Compilation-assisted HPC Container Images with Enhanced Adaptability"
+  title_correction: null
+  authors: [Yuhao Gu, Haoquan Chen, Xianjie Chen, Jiangsu Du, Zhiguang Chen, Nong Xiao, Xianwei Zhang, Yutong Lu]
+  venue: SC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3712285.3759790"
+  official_url: "https://sc25.supercomputing.org/program/papers/"
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Forced placeholder under schema rule 2: only the author list and venue metadata could be retrieved, not the abstract or body text, despite the task's directional hint (container-image/build mechanism, likely SUPPORT) which cannot be applied without reading the paper."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: "UNKNOWN in detail; title indicates compilation-assisted construction of HPC container images for better cross-system adaptability, i.e. likely a container-image/build mechanism analogous to VIRT-SC25-03."
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P2
+  related: ["VIRT-SC25-03"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-SC25-03", basis: "both titles indicate HPC container-image/build adaptability mechanisms; grouped for the same CORE-vs-SUPPORT threshold question the task raised"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only, official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE. Tried (1) ACM DL abs+PDF ('full' and 'pdf' paths) -> 403 both; (2) author (Xianwei Zhang, Sun Yat-sen Univ.) publication page -> title/authors only, no abstract; (3) an arXiv id surfaced by search (2603.12044) was fetched and found to be a DIFFERENT, unrelated Apptainer/PMIx paper -- explicitly not this work. The task's hint that this is likely a SUPPORT container-image/build paper (like coMtainer's SC25 neighbor XaaS Containers) is plausible but unverified; classification left at the conservative CONTEXT/TITLE_ONLY default per hard rule 2."
+
+- id: VIRT-SC25-05
+  title: "EDDE: Container Deployment Framework Beyond the Cloud"
+  title_correction: null
+  authors: [Hao Fan, Shadi Ibrahim, et al.]
+  venue: SC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3712285.3759854"
+  official_url: "https://sc25.supercomputing.org/program/papers/"
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Forced placeholder under schema rule 2: abstract/body inaccessible on every route tried; title indicates a container deployment framework extending beyond cloud datacenters (likely edge/HPC), i.e. a deployment/scheduling framework rather than a new isolation mechanism, but this cannot be confirmed."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: UNKNOWN
+  problem: UNKNOWN
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: UNKNOWN
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [program-only, official-web]
+  confidence: LOW
+  notes: "ACCESS FAILURE. Tried (1) ACM DL abs+PDF+full -> 403 all; (2) an arXiv id surfaced by search (2603.07621) returned an empty/non-machine-readable PDF; (3) co-author Shadi Ibrahim's ResearchGate profile -> listing only, no abstract (ResearchGate rate-limited/429 repeatedly). Revisit with institutional ACM access."
+
+- id: VIRT-SC25-06
+  title: "GreenMix: Energy-Efficient Serverless Computing via Randomized Sketching on Asymmetric Multi-Cores"
+  title_correction: null
+  authors: [UNKNOWN]
+  venue: SC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3712285.3759861"
+  official_url: "https://sc25.supercomputing.org/program/papers/"
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Power/energy-management scheduling for serverless functions on asymmetric (big.LITTLE-class) multi-core hardware; it optimizes keep-alive and core-type placement policy rather than the container isolation mechanism, so CONTEXT rather than SUPPORT/CORE."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9]
+  physical_resource: CPU core
+  logical_abstraction: "N/A -- serverless functions are placed onto existing asymmetric core types (e.g. ARM big.LITTLE, Intel Alder Lake P/E cores); no new virtual-resource abstraction is introduced."
+  problem: "Serverless platforms on asymmetric multi-core processors must decide function execution/keep-alive placement between fast and efficient cores to balance energy use against latency, and existing schedulers do not exploit processor asymmetry well."
+  mechanism: "GreenMix uses randomized sketching techniques tailored to serverless function execution and keep-alive management to make near-optimal energy/performance placement decisions on asymmetric cores while meeting QoS targets."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: "Serverless function instances (including idle keep-alive instances) are multiplexed across heterogeneous (big/LITTLE-class) cores rather than a homogeneous pool."
+  state_mechanism: N/A
+  overhead_bottleneck: "Energy waste from suboptimal core-type assignment and keep-alive duration under asymmetric hardware, addressed by the sketching-based decision procedure."
+  primary_tradeoff: "Randomized-sketching-based placement -> gains near-optimal (within 10%) energy efficiency and keep-alive cost with low decision overhead but is specific to asymmetric-core hardware (ARM big.LITTLE, Intel Alder Lake-class) rather than general-purpose homogeneous clusters."
+  quantitative_claims:
+    - "achieves within 10% of the optimal solution for energy efficiency and keep-alive cost reduction, while meeting QoS targets"
+  why_useful_for_learning: "CONTEXT example of serverless power-management research that is adjacent to, but distinct from, the corpus's virtualization/isolation mechanisms."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "ACM DL blocked (403); evidence from a Northeastern University College of Engineering news article (Devesh Tiwari's group; SC25 Best Paper Finalist) summarizing the abstract. Author list beyond the group PI not independently confirmed."
+
+- id: VIRT-SC25-07
+  title: "Bridging the Gap Between Binary and Source Based Package Management in Spack"
+  title_correction: null
+  authors: [John Gouwar, Gregory Becker, Tamara Dahlgren, Nathan Hanford, Arjun Guha, Todd Gamblin]
+  venue: SC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3712285.3759791"
+  official_url: "https://sc25.supercomputing.org/program/papers/"
+  fullpaper_source: "https://www.arxiv.org/pdf/2509.07728"
+  classification: DROP
+  classification_note: "Confirmed via full-text read to be purely an HPC software package-manager (Spack) feature -- ABI-compatibility modeling and binary/source 'splicing' -- with no container, VM, or any virtualization/isolation content whatsoever."
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T10
+  taxonomy_secondary: []
+  physical_resource: UNKNOWN
+  logical_abstraction: N/A
+  problem: "Spack's package manager restricts each dependency to one implementation per install DAG to guarantee ABI compatibility, blocking beneficial binary reuse (e.g. software built against standard MPICH cannot use an ABI-compatible vendor MPI without a full rebuild)."
+  mechanism: "'Splicing' adds a can_splice directive to Spack's package DSL to declare ABI-compatible package configurations, augments Spack's Answer-Set-Programming concretizer to synthesize compatible splice solutions, and uses binary relocation/rewiring to patch dependencies accordingly."
+  isolation_mechanism: N/A
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A
+  overhead_bottleneck: "Concretizer solver time growth as the splice-candidate solution space expands (4.7-7.1% overhead from encoding changes alone, 17-153% with splicing enabled)."
+  primary_tradeoff: "Automatic binary/source mixing via splicing -> gains large rebuild-time savings ('hours saved') at the cost of increased (but still practical, ~2 minutes) concretization time and a requirement for manual can_splice compatibility declarations."
+  quantitative_claims:
+    - "concretization overhead: 4.7-7.1% (encoding only) to 17-153% (with splicing enabled), evaluated on the RADIUSS HPC software stack"
+  why_useful_for_learning: N/A
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: "Full text read from arXiv 2509.07728. Clear keyword-adjacent false positive (package 'management', not resource virtualization)."
+
+# ============================== HPDC 2025 ==============================
+
+- id: VIRT-HPDC25-01
+  title: "F3: An FPGA-accelerated FaaS Framework"
+  title_correction: null
+  authors: [Charalampos Mainas, Martin Lambeck, Bruno Scheufler, Laurent Bindschaedler, Atsushi Koshiba, Pramod Bhatotia]
+  venue: HPDC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3731545.3731582"
+  official_url: "https://hpdc.sci.utah.edu/2025/program.html"
+  fullpaper_source: "https://binds.ch/papers/f32025.pdf"
+  classification: CORE
+  classification_note: "Builds a complete FPGA virtualization stack for FaaS -- unikernel guest isolation, a per-node vFPGA manager mediating hypercalls, and Shell-based hardware partitioning with per-vFPGA MMUs -- directly matching the CORE definition of accelerator virtualization with hypervisor-mediated isolation, not merely a scheduler over shared FPGAs."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T5, T8]
+  physical_resource: FPGA
+  logical_abstraction: "vFPGA: a per-tenant dynamically-reconfigurable FPGA region reachable only through hypercalls from an F3 unikernel guest, with the FPGA Shell providing a virtual memory space per vFPGA via dedicated MMUs."
+  problem: "FPGAs offer large speedups for serverless functions but conflict with FaaS requirements: complex low-level vendor APIs, no virtualization/isolation for multi-tenant sharing, high reconfiguration/communication overhead, and no orchestration support."
+  mechanism: "CPU-side function code runs in lightweight F3 unikernels (IncludeOS on Solo5) that cannot access the FPGA directly; a per-node vFPGA manager mediates every FPGA request as hypercalls, preventing direct device access; the FPGA Shell statically reserves PCIe DMA/MMU infrastructure and creates multiple dynamic vFPGA regions via Dynamic Partial Reconfiguration, each with its own MMU-managed virtual memory space; a bitstream cache, watchdog process and state-flushing protocol support safe reassignment between tenants, and a FunkyCL-style OpenCL-compatible layer with zero-copy transfers eases porting."
+  isolation_mechanism: "Unikernel sandboxing of guest CPU code plus per-vFPGA MMU-enforced memory isolation; all device access is mediated through hypercalls to the vFPGA manager, which enforces multi-tenant boundaries."
+  multiplexing_mechanism: "One physical FPGA fabric is spatially divided into multiple concurrently-active vFPGA regions (13.1% static Shell + 29% dynamic region on an Alveo U50 in the evaluated configuration) via Dynamic Partial Reconfiguration."
+  state_mechanism: "FPGA control/status registers, tracked memory buffers (init/sync/dirty) and unikernel VM state (vCPU registers, dirty pages) are captured on eviction and restored on resume, enabling safe multi-tenant reassignment."
+  overhead_bottleneck: "FPGA reconfiguration/bitstream-loading latency for cold starts, mitigated with a bitstream cache and warm-boot reuse."
+  primary_tradeoff: "Unikernel + hypercall-mediated FPGA virtualization -> gains safe multi-tenant sharing, preemption and orchestration integration at low overhead, but costs workload applicability (not all serverless workloads benefit, e.g. AES loses to CPU AES-NI) and fabric fragmentation under dynamic partial reconfiguration."
+  quantitative_claims:
+    - "single-function speedup: 28.6x average over CPU baseline (range 1.6x-150.3x) across 10 diverse applications; 9 of 10 faster than CPU"
+    - "cold-boot overhead vs. Docker: 11.6% latency increase; with reconfiguration: 15.6%"
+    - "hypercall latency: ~5us per call; total API overhead 10.8us (call_fpga_acc) / 4.6us (wait_fpga_acc) vs. 167.9ms average app runtime"
+    - "function chaining (GZIP->AES): 1.4x-1.7x faster than client-/server-side piping baselines"
+    - "concurrent SHA256 (30 clients): linear scaling, 2x speedup with 2 vFPGAs, 4x with 4 vFPGAs"
+    - "Azure trace simulation (200-node cluster): 3x average latency reduction; 2.0x-6.4x at 25%-100% acceleration ratios"
+    - "hardware: 1 leader + 3 worker nodes (Intel Xeon Gold), each worker with 1x AMD Alveo U50 FPGA, 100GbE"
+  why_useful_for_learning: "A near-ideal CORE reference for accelerator virtualization: shows the full stack (guest isolation, hypercall mediation, MMU-based spatial partitioning, multi-layer state capture) applied specifically to make FPGA sharing safe for FaaS multi-tenancy."
+  priority: P0
+  related: ["VIRT-SOCC25-05"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-SOCC25-05", basis: "same TUM/MPI-SWS authors and near-identical vFPGA/unikernel/hypercall architecture; Funky generalizes this design to cloud-native orchestration beyond FaaS"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Full text read from the authors' (Laurent Bindschaedler) lab copy; also announced on the author's blog as accepted to HPDC 2025."
+
+- id: VIRT-HPDC25-02
+  title: "FluidFaaS: A Dynamic Pipelined Solution for Serverless Computing with Strong Isolation-based GPU Sharing"
+  title_correction: null
+  authors: [Xinning Hui, Yuanchao Xu, Xipeng Shen]
+  venue: HPDC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3731545.3731580"
+  official_url: "https://hpdc.sci.utah.edu/2025/program.html"
+  fullpaper_source: "https://cdn.jsdelivr.net/gh/PictureResearch/picture_papers@main/papers/hpdc2025.pdf"
+  classification: SUPPORT
+  classification_note: "The paper explicitly builds on NVIDIA MIG's existing hardware-isolated GPU partitions rather than inventing a new virtual-GPU abstraction; its contribution is a dynamic pipelined/time-shared usage pattern over fixed MIG slices, matching the brief's SUPPORT threshold ('a scheduler over existing GPUs') rather than CORE."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T8, T9]
+  physical_resource: GPU
+  logical_abstraction: "A pipeline of function stages, each mapped to a fragment of an existing (hardware-partitioned) MIG slice, dynamically reassembled and time-shared across serverless invocations to reduce fragmentation."
+  problem: "Existing MIG-based serverless GPU sharing treats each function as a monolithic unit needing one contiguous MIG partition, causing severe fragmentation as idle capacity scatters across many partially-used MIG instances that cannot individually fit new requests (prior work, ESG, over-allocates by 167% on average)."
+  mechanism: "FluidFaaS decomposes serverless functions into pipeline stages mapped onto fragmented MIG slices, and applies hotness-aware eviction to time-share MIG slices between instances based on observed request-load patterns, rather than requiring one function to hold one whole contiguous partition."
+  isolation_mechanism: "Relies entirely on NVIDIA MIG's hardware-enforced isolation (separate compute units, cache, memory, data paths per instance); no new isolation mechanism is introduced."
+  multiplexing_mechanism: "Multiple pipeline stages from different function instances are packed into and time-shared across the fixed set of MIG partitions (e.g. one 4g.40gb, one 2g.20gb, one 1g.10gb per A100 in the evaluated config), rather than one function per whole partition."
+  state_mechanism: "Pipeline stage inter-communication uses CPU shared memory (10-40ms overhead per stage) because MIG's hardware isolation prevents direct cross-partition GPU memory sharing."
+  overhead_bottleneck: "Cross-stage data-transfer overhead via CPU shared memory, imposed by MIG's isolation, offset by much shorter queuing time from reduced fragmentation."
+  primary_tradeoff: "Pipelined time-sharing of fixed MIG partitions -> gains large fragmentation-driven throughput/latency wins without giving up MIG's strong hardware isolation, but costs CPU-mediated inter-stage communication latency and works only within MIG's existing fixed partition-size menu (no dynamic MIG reconfiguration)."
+  quantitative_claims:
+    - "system throughput: +75% (heavy workload), +25% (medium workload) vs. baseline"
+    - "P95 tail latency: up to 81% reduction (heavy workload)"
+    - "SLO hit rate: +90% (medium workload)"
+    - "GPU time savings vs. ESG: 6% across workloads; prior work (ESG) shown to over-allocate by 167% on average"
+    - "hardware: 2 nodes x 8x NVIDIA A100 80GB, 4x AMD EPYC 7763 64-core, 1440GB RAM"
+  why_useful_for_learning: "Clear worked example of the brief's CORE-vs-SUPPORT GPU-sharing threshold: uses MIG (the CORE hardware-partitioning mechanism, analyzed elsewhere) but this paper's own contribution is purely schedule/pipeline-level, hence SUPPORT."
+  priority: P1
+  related: ["VIRT-SOCC25-14", "VIRT-SC25-01"]
+  relations:
+    - {type: USES_MECHANISM_FROM, target: "NVIDIA Multi-Instance GPU (MIG)", basis: "builds its dynamic pipelining and time-sharing entirely on top of MIG's existing hardware-isolated partitions"}
+    - {type: CONTRASTS_WITH, target: "VIRT-SOCC25-14", basis: "SoCC25-14 shows MPS-style soft spatial sharing has unpredictable microarchitectural interference; this paper deliberately chooses hardware-isolated MIG to avoid that class of problem, at the cost of fixed partition granularity"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Full text read via the PICTure Research Group's CDN-hosted copy (NC State University / UC Santa Cruz)."
+
+- id: VIRT-HPDC25-03
+  title: "Virtualization So Light, it Floats! Accelerating Floating Point Virtualization"
+  title_correction: null
+  authors: [Nick Wanninger, Nadharm Dhiantravan, Peter Dinda]
+  venue: HPDC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3731545.3731584"
+  official_url: "https://hpdc.sci.utah.edu/2025/program.html"
+  fullpaper_source: "https://users.cs.northwestern.edu/~pdinda/Papers/hpdc25.pdf"
+  classification: CORE
+  classification_note: "Deliberately classified CORE/T10 (boundary case), not DROP or CONTEXT: the paper's own mechanism is a textbook trap-and-emulate design (hardware exception intercepted by a user-level monitor that selectively emulates only the operations native hardware cannot execute correctly, leaving everything else running at full native speed) -- structurally the same technique classical CPU virtualization uses to virtualize privileged instructions (Popek-Goldberg trap-and-emulate), here applied to floating-point arithmetic semantics instead of CPU privilege. It is not machine/OS virtualization (no VM, no guest/host address space, no hypervisor privilege ring), so it is placed under T10 (boundary/other conceptually useful adjacent virtualization mechanism) with T1 as a secondary tag purely for the trap-and-emulate technique lineage, rather than under T1 itself."
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary: [T1]
+  physical_resource: CPU core
+  logical_abstraction: "An alternative floating-point arithmetic system (e.g. arbitrary-precision MPFR, posits, interval arithmetic) transparently substituted for IEEE 754 hardware semantics on a per-instruction basis, for an unmodified binary, via NaN-boxed references to out-of-band alternative-arithmetic values."
+  problem: "Floating-point virtualization (transparently swapping in an alternative arithmetic system for an unmodified binary) is theoretically attractive but practically unusable because standard POSIX-signal-based trap delivery costs over 5,000 cycles per instruction, producing slowdowns exceeding 1000x."
+  mechanism: "FPVM installs via LD_PRELOAD and lets hardware floating-point instructions execute natively whenever their result would be precise IEEE 754; only instructions that would need special handling (exceptions: rounding, overflow, underflow, NaN consumption) trap to a user-space handler, which decodes the faulting x64 instruction (Capstone), binds its operands from register/memory state, and delegates the arithmetic to the alternative-arithmetic library, boxing the result as a signalling-NaN-encoded pointer; two optimizations amortize the remaining trap cost -- trap short-circuiting (a custom kernel module shortcuts POSIX-signal delivery) and instruction-sequence emulation/caching (subsequent traps at the same PC replay a cached decode/bind/emulate sequence instead of re-decoding)."
+  isolation_mechanism: "Per-process opt-in via a kernel-module registration; a process not registered falls back to standard POSIX signal delivery, so the mechanism is backward-compatible and does not cross any privilege boundary beyond the existing kernel trap-handler entry point."
+  multiplexing_mechanism: "Per-thread execution contexts: each thread gets its own FPVM state (initialized on pthread/clone()), so multiple threads/alternative-arithmetic computations are multiplexed on the same cores without a shared virtualization layer."
+  state_mechanism: "On each trap, FPVM saves/restores general-purpose and floating-point registers, control state (mxcsr) and flags in a ucontext-like structure; NaN-boxed heap-allocated alternative-arithmetic values are tracked with a specialized mark-and-sweep garbage collector, and values are demoted back to plain IEEE754 doubles when they escape to memory or cross function boundaries."
+  overhead_bottleneck: "The cost of delivering a hardware floating-point exception to a user-space handler via the standard POSIX-signal path (>5,000 cycles/instruction), which dominates over the cost of the alternative arithmetic itself."
+  primary_tradeoff: "Trap-and-emulate selective virtualization -> gains full binary compatibility (no recompilation) and near-native speed on the (common) hardware-precise fast path, but costs a 1.65x-7.70x residual overhead above the alternative arithmetic system's own intrinsic cost, plus incomplete instruction/vector-operation coverage and a required custom kernel module for the fast path."
+  quantitative_claims:
+    - "end-to-end slowdown before optimization: 198.6x-5617.7x; after trap short-circuiting + sequence emulation: 37.3x-287.3x (average 7.2x improvement, best case 11.5x)"
+    - "virtualization overhead above the alternative-arithmetic system's own intrinsic cost: reduced from 5.48x-20.62x down to 1.65x-7.70x"
+    - "MPFR-backed overhead: 1.35x-5.09x above MPFR's own intrinsic cost"
+    - "trap short-circuiting alone: 3.2x-3.8x reduction in hardware+kernel+return overhead; without the kernel module, per-trap cost is ~5,980 vs. ~760 cycles"
+    - "sequence-cache size: under 2,000 entries even for the largest workload (Enzo, ~307K LOC); sequence lengths 3-32 instructions"
+    - "hardware: Dell R6515, AMD EPYC 7443P 24-core, 512GB DDR4, Linux 5.15"
+  why_useful_for_learning: "A genuine taxonomy boundary case worth keeping in the corpus specifically because it shows trap-and-emulate -- the foundational CPU-virtualization technique -- generalized to a completely different semantic domain (arithmetic correctness rather than privileged execution), clarifying what is essential to 'virtualization' (selective interception + transparent substitution) versus what is incidental (guest/host address spaces, hypervisor rings)."
+  priority: P2
+  related: ["VIRT-SOCC25-22"]
+  relations:
+    - {type: SAME_BRANCH, target: "VIRT-SOCC25-22", basis: "both are boundary-case virtualizations built from trap/syscall interception rather than full guest/host machine virtualization"}
+    - {type: CONTRASTS_WITH, target: "VIRT-SOSP25-03", basis: "SOSP25-03 specifies/verifies a real hypervisor's trap-and-emulate-style stage-2 isolation; this paper applies the same conceptual pattern (selective trap interception) one layer away from any hypervisor, to arithmetic semantics"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Full text read from the authors' Northwestern University copy. The task explicitly flagged this as a genuine boundary case requiring justified taxonomy placement; classification_note documents the reasoning in full so a reviewer can contest the T10-vs-T1 call if desired."
+
+- id: VIRT-HPDC25-04
+  title: "PathFence: Reducing Cross-Path Dependencies in Microservices"
+  title_correction: null
+  authors: [Xuhang Gu, Qingyang Wang, et al.]
+  venue: HPDC
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: "10.1145/3731545.3731583"
+  official_url: "https://hpdc.sci.utah.edu/2025/program.html"
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "PathFence partitions application-level 'soft resources' (e.g. thread pools, queues, connection pools) along microservice request-execution paths to stop cross-path blocking; this is an application/middleware-level resource-isolation technique, not a machine/OS/device virtualization mechanism, so it lands as CONTEXT (generic application resource-isolation, ambiguous enough to avoid DROP per the brief's default)."
+  drop_reason: null
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: CPU core
+  logical_abstraction: "Per-execution-path partitions of a microservice's internal soft resources (e.g. thread pools), so that congestion on one request path cannot block threads/queues serving a different path."
+  problem: "In microservice architectures, resource contention on one request-execution path (e.g. under bursty load or attack) can block unrelated request paths that happen to share the same internal soft resources (thread pools, queues), causing response-time instability."
+  mechanism: "PathFence is described (via a related dissertation) as 'a path-aware resource isolation framework that partitions soft resources according to execution paths to mitigate cross-path blocking', reducing cross-path dependencies so that congestion on one path does not propagate to others."
+  isolation_mechanism: "Soft-resource partitioning (e.g. per-path thread-pool/queue allocation) at the application/middleware level, not an OS or hypervisor isolation boundary."
+  multiplexing_mechanism: "A microservice's internal thread/queue capacity is divided among distinct request-execution paths rather than pooled globally."
+  state_mechanism: N/A
+  overhead_bottleneck: "Cross-path resource blocking under contention (bursty load or adversarial request patterns), which path-aware partitioning is designed to eliminate."
+  primary_tradeoff: "Partitioning soft resources per execution path -> gains response-time stability under contention/attack but likely costs some aggregate resource-utilization efficiency versus a fully pooled/shared allocation (partitioning trades utilization for isolation, mirroring the general resource-partitioning trade-off seen in virtualization contexts)."
+  quantitative_claims: []
+  why_useful_for_learning: "CONTEXT example of the general resource-partitioning-for-isolation pattern (also central to CORE virtualization mechanisms) applied purely at the application/middleware layer rather than to machine resources."
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "ACM DL and NSF PAR PDF both blocked/unreachable (403 / robots.txt fetch failure); mechanism description sourced from a related LSU dissertation (Xuhang Gu, advised in Qingyang Wang's group) that describes and cites PathFence. Full evaluation numbers not accessible."
+
+# ============================== BATCH REPORT ==============================
+
+venue_populations:
+  - venue: SoCC
+    year: 2025
+    official_source: "https://acmsocc.org/2025/schedule.html ; cross-checked against https://dblp.org/db/conf/cloud/socc2025.html and https://dl.acm.org/doi/proceedings/10.1145/3772052 (ACM DL page itself returns HTTP 403 to automated fetches)"
+    main_track_paper_count: 67
+    count_basis: "Counted 67 numbered entries with page ranges (pages 1-893) from the dblp SoCC 2025 proceedings listing, cross-checked against the acmsocc.org schedule's per-session paper titles. This count spans ALL accepted submission types (full research, short, industry, vision) since SoCC's proceedings TOC does not separate them; publication-type screening was applied per-candidate, not per the whole population."
+  - venue: SC
+    year: 2025
+    official_source: "https://sc25.supercomputing.org/2025/09/you-asked-we-listened-minimizing-overlap-in-papers-scheduling/ (SC25 official blog); program index at https://sc25.supercomputing.org/program/papers/ ; ACM DL proceedings 10.1145/3712285 (blocked to automated fetch, 403)"
+    main_track_paper_count: 137
+    count_basis: "SC25's own blog post states '137 papers were accepted to SC25' from 623 submissions (22% acceptance rate). The full 137-title program listing could not be enumerated (see access_failures) so the SC25 virtualization scan in this batch relied on targeted keyword web searches across the concepts named in the task, not a line-by-line pass over all 137 titles."
+  - venue: HPDC
+    year: 2025
+    official_source: "https://hpdc.sci.utah.edu/2025/program.html"
+    main_track_paper_count: 25
+    count_basis: "Counted directly from the fetched HPDC 2025 technical-program page: 11 papers on Day 2 (Numerical Methods 4, Model Training 4, Storage Systems 3), 7 on Day 3 (Efficiency and Sustainability 4, Clouds and FaaS 3), 7 on Day 4 (Tuning and Performance 4, Best Paper/Best Student Paper Finalists 3) = 25 total technical papers. No papers were marked short/poster in this listing."
+
+possible_omissions:
+  - title: "Confidential Analytics with Scylla"
+    venue: SoCC
+    year: 2025
+    why_relevant: "TEE-based confidential analytics framework explicitly comparing enclave-based (SGX) vs. VM-based (SEV-SNP/TDX/Nitro) confidential computing, directly relevant to T7."
+    evidence: "Full text read (swystems.usi.ch/files/Scylla.pdf); classified SUPPORT and added as VIRT-SOCC25-19."
+  - title: "Offloading Cloud-Native Infrastructure with XpuPod"
+    venue: SoCC
+    year: 2025
+    why_relevant: "DPU-offload architecture for cloud-native infrastructure services with a cross-device (CPU/DPU) split-namespace abstraction, relevant to T3/T9 device-offload isolation."
+    evidence: "arXiv abstract read (likely = 'HeteroPod', 2503.23952); classified SUPPORT and added as VIRT-SOCC25-20 (identity mapping MEDIUM confidence)."
+  - title: "Rethinking Tiered Memory Management in Cloud Data Centers"
+    venue: SoCC
+    year: 2025
+    why_relevant: "Title and (probable) content directly concern guest-physical-address-space memory tiering in virtualized cloud data centers, T2 CORE-candidate, same branch as SOSP25 Demeter."
+    evidence: "arXiv abstract read for a probable-match preprint ('GPAC: Guest Physical Address Space Consolidation', 2506.06067); classified CORE with MEDIUM confidence and an explicit identity-mapping caveat, added as VIRT-SOCC25-21."
+  - title: "VLCs: Managing Parallelism with Virtualized Libraries"
+    venue: SoCC
+    year: 2025
+    why_relevant: "Literal 'virtualized' keyword; intra-process resource-view virtualization via linker namespaces + ptrace interposition, a genuine T10 boundary case."
+    evidence: "Full text read (arxiv.org/abs/2512.04320); classified SUPPORT and added as VIRT-SOCC25-22."
+  - title: "REEF: Energy-Efficient, Application-QoS-Aware Thread Processing in Oversubscribed Server Environments"
+    venue: SoCC
+    year: 2025
+    why_relevant: "'Oversubscribed' keyword match; checked to rule in/out virtualization relevance."
+    evidence: "Full text read (ranger.uta.edu author copy); confirmed application-layer thread scheduling with no virtualization mechanism, classified CONTEXT and added as VIRT-SOCC25-23 (kept for completeness, not a true omission of virtualization-relevant work)."
+
+possible_expansion: []
+
+excluded_by_pubtype:
+  - title: "CPU-Limits kill Performance: Time to rethink Resource Control"
+    venue: SoCC
+    actual_type: "Vision Paper (per the SoCC CFP's non-full-paper submission categories)"
+    evidence: "The authors' own arXiv listing (2510.10747) states 'Vision paper accepted to SoCC 2025'; IBM Research's publication page corroborates the same title/authors/abstract without contradicting this. Page range in the proceedings (125-133, 9pp) is short of the 12-page full/industry-paper norm, consistent with a shorter vision-track submission."
+  - title: "Serverless Elasticsearch: the Architecture Transformation from Stateful to Stateless"
+    venue: SoCC
+    actual_type: "ARCHIVAL_MAIN_PAPER (verified, NOT excluded)"
+    evidence: "Investigated per the task's flag. Page range 443-455 (13pp) matches a 12-page full/industry paper plus 1 reference page. All authors are Elastic Inc. employees, but the SoCC CFP permits industry-affiliated authors in the regular Full Research Paper track (Industry Papers only require 'at least one' industry author as a minimum, not exclusivity). No independent source (arXiv, author CV, ACM DL, ResearchGate) stated an Industry- or Short-Paper track for this specific submission. Left as ARCHIVAL_MAIN_PAPER; the paper is instead DROPped from the corpus on content grounds (no_virtualization_relation), unrelated to its publication type."
+
+access_failures:
+  - title: "Cost-Efficient Cloud Infrastructure with Hugepage-aware Memory Deduplication (SoCC 2025)"
+    what_was_tried: "ACM DL abstract+PDF (403); arXiv/preprint search (none); dblp author list cross-reference to a 2023 WORDS-workshop precursor by an overlapping author set (also blocked on ACM DL, 403); author homepages (jpdz.github.io/pengjiang, liding320.github.io, KIT os.itec.kit.edu group)"
+    best_evidence_obtained: "Full author list (14 authors, Peking University + Huawei) via dblp; a same-topic 2023 WORDS workshop precursor paper by an overlapping author subset was identified but its own abstract was also inaccessible."
+  - title: "Spatio-Temporal Resource Control for Cloud-Native GPU Provisioning (SoCC 2025)"
+    what_was_tried: "ACM DL abstract+PDF (403); multiple arXiv/preprint keyword searches (repeatedly surfaced an unrelated paper, 'HAS-GPU' arXiv 2505.01968, confirmed different authors/title); author (Hyun-Wook Jin, Konkuk Univ.) ResearchGate/sciprofiles pages (rate-limited/no PDF)"
+    best_evidence_obtained: "Full author list via dblp (Hyeon-Jun Jang, Sang-Jae Kim, Weikuan Yu, Hyun-Wook Jin) and confirmation that Jin has a prior research history in spatio-temporal GPU/device virtualization."
+  - title: "WDP: Mitigating Interference in CPU Sharing Through Wake-up Delay Driven Preemption for QoS-aware Co-location (SoCC 2025)"
+    what_was_tried: "ACM DL abstract+PDF (403); arXiv/preprint search (none); co-author Quan Chen's (SJTU) personal homepage publication list (paper not listed)"
+    best_evidence_obtained: "Full author list via dblp only."
+  - title: "Metis: A Non-Clairvoyant, Workflow-Aware OS Scheduler for Serverless Applications (SoCC 2025)"
+    what_was_tried: "ACM DL abstract+PDF (403); arXiv/preprint search (surfaced only an unrelated 2020 SC 'Metis' scheduler paper); author name search (no homepage/preprint found)"
+    best_evidence_obtained: "Full author list via dblp only (Wenda Tang, Yanan Yang, Jie Wu)."
+  - title: "From Bottleneck to Breakthrough: Optimizing Scheduling for Hyperscale Containerized Clusters (SoCC 2025)"
+    what_was_tried: "ACM DL abstract+PDF (403); ResearchGate record 399739999 (429 rate-limited on every attempt); author homepage search (none found)"
+    best_evidence_obtained: "Full author list via dblp only."
+  - title: "FaaSGNN: Enabling Memory Efficient and Low Latency GNN Inference Services with Serverless Computing (SoCC 2025)"
+    what_was_tried: "ACM DL abstract+PDF (403); arXiv/preprint search (surfaced only unrelated GraphFaaS/FaaSTube papers); co-author (Quan Chen, SJTU) homepage (paper not listed)"
+    best_evidence_obtained: "Full author list via dblp only."
+  - title: "coMtainer: Compilation-assisted HPC Container Images with Enhanced Adaptability (SC 2025)"
+    what_was_tried: "ACM DL abstract+PDF+full (403 all three); author (Xianwei Zhang) publication homepage (title/venue only, no abstract); an arXiv id surfaced by search (2603.12044) fetched and confirmed to be a DIFFERENT, unrelated Apptainer/PMIx paper"
+    best_evidence_obtained: "Full author list and CCF-A tier note via the author's publication page."
+  - title: "EDDE: Container Deployment Framework Beyond the Cloud (SC 2025)"
+    what_was_tried: "ACM DL abstract+PDF+full (403 all three); an arXiv id surfaced by search (2603.07621) returned an empty/non-machine-readable PDF; co-author Shadi Ibrahim's ResearchGate profile (429 rate-limited)"
+    best_evidence_obtained: "First author name (Hao Fan) and co-author (Shadi Ibrahim, Inria/HUST) from search result titles only."
+  - title: "PathFence: Reducing Cross-Path Dependencies in Microservices (HPDC 2025)"
+    what_was_tried: "ACM DL abstract+PDF (403); NSF PAR direct PDF fetch (robots.txt fetch failure / unreachable); LSU dissertation repository (Xuhang Gu) fetched successfully and yielded a one-sentence mechanism description"
+    best_evidence_obtained: "One-sentence mechanism description ('path-aware resource isolation framework that partitions soft resources according to execution paths to mitigate cross-path blocking') via a related LSU PhD dissertation that cites/describes PathFence; no evaluation numbers obtained."
+  - title: "Full SC25 technical program (135 of 137 papers not individually reviewed)"
+    what_was_tried: "sc25.supercomputing.org/proceedings/papers/ (index page only, no titles); sc25.conference-program.com (JS-rendered schedule app, unreachable through the egress proxy -- robots.txt fetch timeouts on every path including presentation/session/list pages); ACM DL proceedings TOC 10.1145/3712285 (403); dblp conf/sc/sc2025 (robots.txt disallowed for the fetch tool); OpenAlex API queries (429 rate-limited repeatedly); Semantic Scholar bulk search API (returned zero results for multiple query formulations); institutional 'papers accepted' blog posts and an SC25-recap blog (no comprehensive title list found)"
+    best_evidence_obtained: "Confirmed total accepted-paper count (137, from the official SC25 blog) and confirmed the 7 seed-list titles individually via targeted per-title web searches; could not obtain a full 137-title program listing to run a systematic line-by-line virtualization keyword scan as the task requested. Compensated with ~10 targeted multi-keyword searches directly combining SC25/'SC 2025' with every concept the task listed (VM, hypervisor, SR-IOV, IOMMU, live migration, GPU virtualization/MIG/MPS, confidential computing/TEE, unikernel, serverless/FaaS, multi-tenancy, oversubscription, interference); these surfaced no additional SC25 virtualization-relevant papers beyond the 7 seeds, but this is a lower-recall method than a full program scan and should not be treated as exhaustive."
+
+seed_corrections: []
+
+batch_observations: |
+  Threshold calls made in this batch:
+
+  1. SoCC pub-type screening (task priority #1): both flagged seeds were investigated to conclusion.
+     "CPU-Limits kill Performance" is confirmed a Vision Paper via the authors' own arXiv venue
+     annotation and is excluded (publication_criterion). "Serverless Elasticsearch" could NOT be
+     shown to be an Industry Paper despite an all-industry author list (the SoCC CFP explicitly
+     allows industry-affiliated authors in the regular research track); it is kept as
+     ARCHIVAL_MAIN_PAPER but DROPped on content grounds instead (no virtualization relation).
+
+  2. SC25's XaaS Containers and coMtainer: XaaS Containers was fully read and confirmed SUPPORT
+     (container image/build representation only, standard OCI runtime, no isolation-boundary
+     change) exactly as the task predicted. coMtainer could not be read at all after four
+     distinct access routes failed (ACM DL x3, author homepage, a wrong-paper arXiv id); it is
+     left at the conservative TITLE_ONLY/CONTEXT default per hard rule 2 rather than assumed
+     SUPPORT by title-similarity to XaaS Containers, even though that is the likely outcome.
+
+  3. HPDC25 "Virtualization So Light, it Floats!": classified CORE under T10 (boundary/other)
+     with T1 as a secondary tag, on the reasoning that its trap-and-emulate mechanism (selective
+     hardware-exception interception + transparent substitution of only the operations needing
+     it) is structurally the same technique used by classical CPU virtualization, just applied to
+     floating-point arithmetic semantics rather than privileged CPU instructions -- not placed
+     under T1 primary because there is no guest/host machine, address space, or hypervisor
+     privilege ring involved. This is flagged in the record's classification_note for review.
+
+  4. HPDC25 FluidFaaS and SC25 BOER: both explicitly build on top of an existing hardware/software
+     GPU-sharing primitive (MIG and MPS respectively) rather than inventing a new virtual-GPU
+     abstraction, so both are SUPPORT per the brief's explicit GPU-sharing threshold rule, matching
+     VIRT-SOCC25-14's and VIRT-SOCC25-15's treatment of the same MPS/MIG-sharing-is-usually-SUPPORT
+     principle.
+
+  5. Two SoCC papers explicitly literal-keyword-matched the taxonomy ("VLCs: ...Virtualized
+     Libraries" and REEF's "Oversubscribed") during a supplementary full-schedule scan undertaken
+     on this batch's own initiative (not required by the task for SoCC, only for SC25). VLCs turned
+     out to be a genuine intra-process resource-view virtualization boundary case (SUPPORT/T10);
+     REEF turned out to be pure application-thread scheduling with an explicit authorial statement
+     that virtualized/containerized environments were NOT evaluated, and was kept CONTEXT (not
+     DROP) per the "ambiguous -> CONTEXT" default even though it is arguably a keyword false
+     positive, because "oversubscription" of threads is close enough to the taxonomy's T9 resource-
+     oversubscription language to warrant caution.
+
+  6. The full SC25 technical program (137 papers) could not be enumerated due to a combination of
+     ACM DL blocking all automated access (403 on every path), dblp disallowing the fetch tool via
+     robots.txt, and the official sc25.conference-program.com schedule site being unreachable
+     through the sandboxed egress proxy (robots.txt fetch timeouts on every URL pattern tried,
+     including individual presentation/session pages whose IDs were discovered via Google-indexed
+     snippets). The task's instruction to "scan the SC25 technical program properly" was therefore
+     only partially satisfiable: it was compensated with roughly a dozen targeted multi-keyword
+     web searches spanning every concept the task listed, which is a materially lower-recall
+     substitute for a full line-by-line pass and should not be treated as a clean bill of health
+     for the remaining ~130 unreviewed titles. This is the single largest residual risk in this
+     batch and is called out explicitly here and in access_failures.
+
+  7. ResearchGate returned HTTP 429 on essentially every attempt across the whole session (SoCC,
+     SC, and HPDC candidates alike), removing what would otherwise have been a useful secondary
+     abstract source for several access-failed papers.
+
+  8. Broad-preservation stance: per the brief's explicit instruction that this is not a pruning
+     exercise, all 9 access-failed candidates (6 SoCC, 2 SC, 1 HPDC-adjacent PathFence which DID
+     yield a partial mechanism description) were kept as CONTEXT/TITLE_ONLY records rather than
+     omitted from the corpus, so a future pass with institutional ACM/ResearchGate access can
+     upgrade them without re-discovering that they exist.

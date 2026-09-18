@@ -1,0 +1,776 @@
+papers:
+
+# ============================== SOSP 2025 ==============================
+
+- id: VIRT-SOSP25-01
+  title: Device-Assisted Live Migration of RDMA Devices
+  title_correction: null
+  authors: [Artem Y. Polyakov, Gal Shalom, Asaf Schwartz, Aviad Yehezkel, Omri Ben David, Omri Kahalon, Ariel Shahar, Liran Liss]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764795
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: "Forced placeholder under schema rule 2: every full-text route failed, so no layer was decided from evidence; the title and the RDMA-vendor author list point to CORE (device-state live migration) and this record must be revisited."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T3, T1]
+  physical_resource: NIC
+  logical_abstraction: UNKNOWN
+  problem: "UNKNOWN in detail; the title indicates live migration of VMs that use RDMA devices, which passthrough/SR-IOV normally prevents."
+  mechanism: UNKNOWN
+  isolation_mechanism: UNKNOWN
+  multiplexing_mechanism: UNKNOWN
+  state_mechanism: UNKNOWN
+  overhead_bottleneck: UNKNOWN
+  primary_tradeoff: UNKNOWN
+  quantitative_claims: []
+  why_useful_for_learning: "Expected to be the reference point for the hardest open problem in device passthrough, namely migrating opaque in-device state; not yet verifiable."
+  priority: P1
+  related: [VIRT-SOSP25-06, VIRT-SOSP25-05]
+  relations:
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-06, basis: "both concern capturing and moving accelerator/device state that bypasses the OS, per their titles and venue session grouping"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: TITLE_ONLY
+  evidence_kinds: [official-web, program-only]
+  confidence: LOW
+  notes: "ACCESS FAILURE. Tried (1) ACM DL DOI page 10.1145/3731569.3764795 -> HTTP 403; (2) ResearchGate publication 396442798 -> HTTP 429 / gated 'Request PDF'; (3) targeted searches for arXiv/author/NVIDIA preprint -> none exists. Also noted but NOT used as paper evidence: NVIDIA DOCA 'SR-IOV Live Migration' product documentation (docs.nvidia.com/doca/sdk/sr-iov-live-migration), which describes the shipped mechanism. Re-attempt with institutional ACM access; expected CORE/T4."
+
+- id: VIRT-SOSP25-02
+  title: "Demeter: A Scalable and Elastic Tiered Memory Solution for Virtualized Cloud via Guest Delegation"
+  title_correction: null
+  authors: [Junliang Hu, Zhisheng Hu, Chun-Feng Wu, Ming-Chang Yang]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764801
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://zenodo.org/records/16912877
+  classification: CORE
+  classification_note: "The system's subject is the guest/hypervisor division of labour for tiered VM memory: tiering decisions are delegated into the guest instead of being driven by the hypervisor, which is a memory-virtualization architecture question, not an application question."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T1, T9]
+  physical_resource: DRAM
+  logical_abstraction: "Guest-visible elastic tiered memory: the VM sees a memory pool whose fast/slow tier placement it manages itself under hypervisor-granted capacity."
+  problem: "Hypervisor-driven tiered memory management for VMs cannot see guest access semantics and does not scale or adapt elastically across many co-located VMs."
+  mechanism: "Demeter delegates hot/cold page classification and promotion/demotion to the guest kernel while the hypervisor retains capacity arbitration; the artifact ships patched Linux guest kernels plus a patched Cloud Hypervisor, and is compared against guest-side tiering baselines (TPP, Nomad, Memtis) and a hypervisor-side baseline (TPP-H) over DRAM + Intel Optane PMEM."
+  isolation_mechanism: "Hypervisor retains tier capacity arbitration between VMs; per-VM tiering policy runs inside the guest so one guest's policy cannot drive another's placement (design inferred from the guest-delegation split; not verified against paper text)."
+  multiplexing_mechanism: "Fast-tier (DRAM) capacity is divided among guests by the hypervisor, with each guest deciding which of its own pages occupy its share."
+  state_mechanism: "Tiering/hotness state lives in the guest kernel rather than in hypervisor page-tracking structures; the hypervisor holds only capacity accounting."
+  overhead_bottleneck: "Hypervisor-side hotness tracking of guest physical memory (the semantic gap and its scanning cost) is the cost Demeter removes."
+  primary_tradeoff: "Delegating tiering to the guest -> gains guest-semantic accuracy and per-VM scalability but costs hypervisor authority over placement and requires a modified, cooperating guest."
+  quantitative_claims: []
+  why_useful_for_learning: "It is the cleanest 2025 statement of the classic memory-virtualization dilemma, where the hypervisor has authority but no semantics and the guest has semantics but no authority."
+  priority: P1
+  related: [VIRT-SOSP25-16, "HyperAlloc: Efficient VM Memory De/Inflation via Hypervisor-Shared Page-Frame Allocators", "virtio-mem: paravirtualized memory hot(un)plug"]
+  relations:
+    - {type: ALTERNATIVE, target: VIRT-SOSP25-16, basis: "Mage scales the host-side fault/eviction path for far memory; Demeter instead pushes the tiering decision into the guest -- two opposite answers to where memory-expansion policy belongs"}
+    - {type: SAME_BRANCH, target: "HyperAlloc: Efficient VM Memory De/Inflation via Hypervisor-Shared Page-Frame Allocators", basis: "both are guest-hypervisor cooperative memory mechanisms in the ballooning/virtio-mem lineage"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [artifact, official-web]
+  confidence: MEDIUM
+  notes: "PARTIAL ACCESS FAILURE. Tried (1) ACM DL DOI page -> 403; (2) unpaywall.org/10.1145/3731569.3764801 -> 403; (3) author pages jlhu.io and jlhu.io/publications -> robots-disallowed / no PDF; (4) targeted preprint searches -> none. Evidence used is the authors' own Zenodo artifact record 16912877, which states Demeter is 'a tiered memory management solution designed for virtualized environments' via 'guest delegation', names the guest-delegated vs hypervisor-based (TPP-H) split, the DRAM+Optane PMEM setup and the TPP/Nomad/Memtis baselines. The artifact README also claims up to 2x over hypervisor-based and 28% over guest-based baselines; these are DELIBERATELY OMITTED from quantitative_claims because they were not read in the paper. Design/isolation fields marked as inferred."
+
+- id: VIRT-SOSP25-03
+  title: "Ghost in the Android Shell: Pragmatic Test-oracle Specification of a Production Hypervisor"
+  title_correction: null
+  authors: [Kayvan Memarian, Ben Simner, David Kaloper-Mersinjak, Thibaut Perami, Peter Sewell]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764817
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://www.cl.cam.ac.uk/~pes20/Stuff/exec-spec-paper.pdf
+  classification: CORE
+  classification_note: "The object of study is pKVM's memory-isolation invariant itself -- Arm stage-2 translation, page ownership and donation/sharing between host, hypervisor and guests -- so the contribution is a specification of hypervisor virtualization semantics."
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T1, T2]
+  physical_resource: DRAM
+  logical_abstraction: "An abstract 'ghost state' model of the hypervisor: finite partial maps from addresses to (physical address, permissions, attributes) plus per-page ownership and sharing annotations, standing in for concrete Arm page-table trees."
+  problem: "pKVM enforces host/guest isolation in production Android but is too large and too concurrent for full formal verification, leaving its central memory-isolation invariant unchecked."
+  mechanism: "The authors write executable functional-correctness specifications in plain C that mirror pKVM's own ownership structure, compute abstraction functions that walk the concrete stage-1/stage-2 page tables into ghost state at lock-acquire/release boundaries, and after each hypercall or fault handler compare the recorded post-state against a pure specification function applied to the pre-state; nondeterminism (ENOMEM, concurrently mutable host arguments) is handled by parameterising the spec on recorded return codes and READ_ONCE values."
+  isolation_mechanism: "pKVM's own mechanism is Arm-A two-stage translation at EL2 with logical page ownership encoded in spare page-table-entry bits; the paper's contribution is a runtime oracle that checks that host, hypervisor and guest physical ranges stay disjoint except where explicitly shared."
+  multiplexing_mechanism: "Host physical memory is partitioned among host, hypervisor and guests by ownership transfer (donation/sharing) rather than by time-slicing; vCPUs are loaded onto physical CPUs with ownership moving from a VM-global lock to thread-local state."
+  state_mechanism: "Virtualization state lives in per-component stage-2 page tables plus ownership bits; the ghost state is a shadow copy in a separate physical memory region with its own allocator, recomputed at lock boundaries and discarded after each check."
+  overhead_bottleneck: "Recomputing page-table abstractions at every lock boundary: 3.2x boot slowdown and 11.5x on the hand-written test suite, plus ~18 MB for the ghost page-table representations."
+  primary_tradeoff: "Executable test-oracle specification -> gains developer-maintainable, concurrency-aware checking of a production hypervisor at ~1 person-year but costs soundness (testing, not proof) and 3-11x runtime overhead, so it cannot ship."
+  quantitative_claims:
+    - "bugs found: 5 critical bugs acknowledged by pKVM developers, 4 fixed (only 1 found by running the specification; 4 found while code-reading to write it)"
+    - "specification size: ~2,600 lines for hypercall specs, ~1,300 for abstraction recording, ~4,500 for abstract datatypes, ~14,000 total C"
+    - "runtime overhead: 3.2x for boot (1.49s -> 4.76s) and 11.5x for hand-written tests (1.07s -> 12.3s), on Intel Xeon Gold 6240 4 cores under QEMU"
+    - "ghost state memory: ~18 MB, dominated by page-table representations"
+    - "coverage: 100% line coverage of the __pkvm_host_share_hyp target excluding unreachable code; 92% (459/497) of specification function lines"
+    - "effort: ~1 person-year total versus ~30 person-years of pKVM development"
+    - "random testing rate: ~200,000 hypercalls/hour, runs up to 24 hours"
+  why_useful_for_learning: "It is the best available description of what a production Arm hypervisor's isolation invariant actually is, stated precisely enough to check, including how ownership and locking interact."
+  priority: P1
+  related: [VIRT-SOSP25-04, VIRT-SOSP25-12, "Atmosphere: Practical Verified Kernels with Rust and Verus"]
+  relations:
+    - {type: ALTERNATIVE, target: VIRT-SOSP25-04, basis: "both establish confidence in a privileged isolation monitor, Miralis by exhaustive symbolic execution of a small TCB, pKVM by runtime test oracles over a large existing one"}
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-12, basis: "both verify that a production kernel's logical view of memory protection matches what the hardware actually enforces, here Arm stage-2 tables, there MPU/PMP registers"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: null
+
+- id: VIRT-SOSP25-04
+  title: The Design and Implementation of a Virtual Firmware Monitor
+  title_correction: null
+  authors: [Charly Castes, Francois Costa, Neelu S. Kalani, Timothy Roscoe, Nate Foster, Thomas Bourgeat, Edouard Bugnion]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764826
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://people.inf.ethz.ch/troscoe/pubs/caste_sosp_2025.pdf
+  classification: CORE
+  classification_note: "It applies textbook trap-and-emulate virtualization to a new privilege level -- RISC-V machine mode -- producing a virtual M-mode with virtual CSRs, virtual PMP entries, virtual interrupts and virtual MMIO devices for unmodified firmware."
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T1, T3]
+  physical_resource: CPU core
+  logical_abstraction: "A virtual machine mode (vM-mode): unmodified vendor firmware runs in user mode but sees a complete M-mode -- shadow CSRs, virtual PMP registers, virtual CLINT and virtual interrupts."
+  problem: "TEE and confidential-VM security monitors sit at the same privilege level as tens-to-hundreds of thousands of lines of vendor firmware, so the whole firmware image is inside their TCB."
+  mechanism: "Miralis, a 6.2k-line Rust virtual firmware monitor, deprivileges firmware into user mode and emulates 12 privileged instructions and 84 CSRs with shadow state that is never installed into physical registers while firmware runs; physical PMP entries are multiplexed so that virtual PMP rules are always installed at lower priority than the entries protecting Miralis, and unsafe MMIO regions are revoked by default via PMP; a fast-path offload subsystem implements common standard extensions (time reads, Sstc, IPIs, remote fences) directly in Miralis so firmware is bypassed for hot operations."
+  isolation_mechanism: "RISC-V PMP, with Miralis's own protective entries at strictly higher priority than the firmware's virtual entries, plus trapping of all sensitive instructions; firmware DMA is blocked wholesale by denying access to MMIO regions controlling DMA-capable devices, because current platforms lack IOPMP."
+  multiplexing_mechanism: "A single physical PMP register file is multiplexed between Miralis's own protection entries and the firmware's virtual PMP entries; there is one virtual guest (the firmware), so no inter-guest time-sharing."
+  state_mechanism: "Virtual firmware state is shadow CSRs held in Miralis's memory; world switches install/restore CSRs, flush TLBs and reconfigure PMPs, costing ~7,000 cycles round trip."
+  overhead_bottleneck: "World-switch frequency: without fast-path offloading, cost scales with trap rate, reaching 10.6% on IOzone and 2x latency on memcached at 388k traps/s."
+  primary_tradeoff: "Virtualizing M-mode by trap-and-emulate -> gains firmware removal from the TCB with no firmware modification and no new hardware extension, but costs a per-trap emulation penalty that must be bought back by offloading standard operations into the monitor."
+  quantitative_claims:
+    - "code size: 6.2k lines of Rust total (2.1k instruction emulator, 1.1k hardware interface, 430 MMIO device emulation, 190 fast-path offloading)"
+    - "verification: exhaustive symbolic execution with Kani against a Rust translation of the official RISC-V Sail model (6.9k lines), covering 43% of the codebase (2.7k lines); 21 bugs found during development"
+    - "instruction emulation cost: ~483 cycles on StarFive VisionFive 2 (U74, 1.5 GHz), ~271 cycles on SiFive HiFive Premier P550 (1.8 GHz)"
+    - "world switch: ~7,000 cycles round trip (~5 us)"
+    - "application overhead with fast path: 0-1.2% on Redis, memcached, MySQL and GCC on Premier P550"
+    - "overhead without fast-path offloading: 1.9% on CoreMark-Pro (11k traps/s), 10.6% on IOzone, 2x memcached latency (388k traps/s)"
+    - "boot time: 48.0s with Miralis+offload vs 47.5s native vs 61.3s without offload"
+    - "ported policies: Keystone enclave monitor at ~1% overhead (matching original); ACE confidential-VM monitor verified on QEMU"
+    - "firmware virtualized unmodified: OpenSBI-based vendor firmware of 31.8k and 24.7k lines, RustSBI, Zephyr test suites, and closed-source Star64 firmware (164 kB binary)"
+  why_useful_for_learning: "It is a modern, small, readable demonstration that Popek-Goldberg trap-and-emulate still works and still pays, applied at the one privilege level most people assume cannot be virtualized."
+  priority: P0
+  related: [VIRT-SOSP25-03, VIRT-SOSP25-12, "Keystone", "ACE confidential VM monitor", "Dorami"]
+  relations:
+    - {type: ALTERNATIVE, target: "Dorami", basis: "Dorami deprivileges firmware by binary scanning plus vendor firmware modification; Miralis achieves the same goal by classical virtualization with no firmware changes"}
+    - {type: LAYER_BELOW, target: "ACE confidential VM monitor", basis: "Miralis hosts ACE as a policy module, so the confidential-VM monitor now sits above a virtualized M-mode and excludes firmware from its TCB"}
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-03, basis: "both are correctness arguments for privileged isolation monitors, one by symbolic execution against an ISA model, one by runtime test oracles"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Threshold note: Arm EL3 is stated to be non-virtualizable in this style because cpsid does not trap, which is a useful negative result about Popek-Goldberg on real ISAs."
+
+- id: VIRT-SOSP25-05
+  title: "Oasis: Pooling PCIe Devices Over CXL to Boost Utilization"
+  title_correction: null
+  authors: [Yuhong Zhong, Daniel S. Berger, Pantea Zardoshti, Enrique Saurez, Jacob Nelson, Dan R. K. Ports, Antonis Psistakis, Joshua Fried, Asaf Cidon]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764812
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://www.yuhong-zhong.com/papers/Oasis_SOSP25.pdf
+  classification: SUPPORT
+  classification_note: "Applying the brief's disaggregation rule: Oasis multiplexes *physical* PCIe devices across hosts over a CXL memory fabric and explicitly frames itself as pooling rather than virtualization -- its allocator hands out physical devices and it builds no per-tenant virtual device with independent, migratable state."
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T2, T9]
+  physical_resource: PCIe/CXL fabric
+  logical_abstraction: "A pod-wide logical PCIe device pool: a frontend driver on every host exposes a packet-I/O or block interface to local instances, backed by a physical device that may live on another host."
+  problem: "PCIe devices are 20-40% of server capex and 13% of power at Azure yet are provisioned per host for peak demand, leaving them stranded and idle; PCIe switches cost ~$80,000 per rack and RDMA disaggregation does not fit all device classes."
+  mechanism: "I/O buffers and signalling messages are placed in shared, non-cache-coherent CXL 2.0 memory; a frontend driver on each host forwards requests over a message channel to a backend driver on the host that owns the physical device, which drives it via native DPDK/SPDK queue pairs and never inspects the buffers; a logically centralised pod allocator whose state lives in CXL memory assigns instances to the least loaded device and can migrate them for load balance or failover."
+  isolation_mechanism: "Software-enforced only: instances are confined to their allocated TX buffer region, RX packets are copied out of per-NIC shared buffers into instance-local memory so instances cannot inspect each other's traffic, and NIC flow tagging identifies destinations without CPU payload inspection; drivers and devices are assumed fully trusted and no IOMMU is used."
+  multiplexing_mechanism: "One physical device is shared by instances on multiple hosts through per-instance buffer regions plus backend queue pairs, with the allocator placing instances greedily on the lowest-load device."
+  state_mechanism: "Allocator state (instance-to-device mappings) and all I/O buffers live in shared CXL memory, which is what makes reassignment on failure possible without transferring in-device state; there is no device-state capture or migration."
+  overhead_bottleneck: "Cross-host signalling over non-coherent CXL: a naive channel is far too slow, so the paper's message-channel design with epoch bits and targeted cache-line invalidation to enable prefetching is what brings it to 14 MOp/s at 0.6 us."
+  primary_tradeoff: "Pooling physical devices over CXL -> gains roughly 2x device utilization and cheap failover without PCIe switches, but costs 4-7 us of added I/O latency, a dedicated busy-polling core per driver, a fully trusted driver/device TCB, and no tolerance of CXL link failure."
+  quantitative_claims:
+    - "latency overhead: 4-7 us at P50/P90/P99 across Python HTTP, Rust Rocket, nginx, Tomcat and memcached, versus a local-NIC Junction baseline"
+    - "NIC utilization: aggregated P99.99 improves from 18% to 37% when two hosts multiplex one NIC, with ~1 us added latency for the second host"
+    - "failover: 38 ms interruption for UDP, 133 ms for TCP including retransmission"
+    - "message channel: 14 MOp/s at 0.6 us latency with the optimized non-coherent design"
+    - "CXL bandwidth consumed: 0.2 GB/s idle from busy-polling, 13.5 GB/s at 4 MOp/s with 1500 B packets"
+    - "motivation from Azure production: only 20% P99.99 NIC bandwidth utilization; 27% of NIC bandwidth and 33% of SSD capacity unallocated/stranded"
+    - "testbed: two AMD EPYC hosts (9825 144-core, 9015 8-core), one 256 GB DDR5-4800 CXL 2.0 device with x8 lanes per host, 100 Gbit ConnectX-5 NICs"
+  why_useful_for_learning: "It shows exactly where the boundary between device pooling and device virtualization lies, and what the split frontend/backend driver structure costs once the backend is on another machine instead of in the local hypervisor."
+  priority: P1
+  related: [VIRT-SOSP25-15, VIRT-SOSP25-16, VIRT-SOSP25-01]
+  relations:
+    - {type: CONTRASTS_WITH, target: VIRT-SOSP25-01, basis: "Oasis sidesteps device-state migration entirely by keeping all I/O state in shared CXL memory and reassigning physical devices, whereas device-assisted live migration attacks the in-device state problem directly"}
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-16, basis: "both build host-crossing resource expansion over a fabric, one for devices over CXL, one for memory over RDMA"}
+    - {type: ALTERNATIVE, target: VIRT-SOSP25-15, basis: "both reclaim idle I/O-path capacity in hyperscale clouds, Oasis by pooling devices across hosts, Tai Chi by reclaiming idle SmartNIC cycles on one host"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "THRESHOLD CALL (CORE vs SUPPORT). Argument for CORE: the frontend driver hands instances a device-like interface backed by a remote physical device, which is structurally the virtio split-driver pattern. Argument for SUPPORT, which I took: the paper's own framing is pooling ('Oasis bridges containers or VMs with devices located at other hosts' as distinct from virtualization bridging VMs with local devices), the allocator assigns physical devices rather than instantiating virtual ones, there is no virtual device state, no IOMMU/SR-IOV, and no device-state migration. The brief's disaggregation rule -- CORE only when a virtual resource abstraction is built over the pool -- resolves it to SUPPORT."
+
+- id: VIRT-SOSP25-06
+  title: "PhoenixOS: Concurrent OS-level GPU Checkpoint and Restore with Validated Speculation"
+  title_correction: null
+  authors: [Xingda Wei, Zhuobin Huang, Tianle Sun, Yingyi Hao, Rong Chen, Mingcong Han, Jinyu Gu, Haibo Chen]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764813
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://arxiv.org/html/2405.12079v4
+  classification: CORE
+  classification_note: "It virtualizes GPU execution state at the CUDA driver-API boundary -- buffers, contexts, streams and queued kernels -- and reconstructs that state transparently on another context or another machine, which is checkpoint/restore of virtualized accelerator state rather than a scheduling policy."
+  drop_reason: null
+  taxonomy_primary: T4
+  taxonomy_secondary: [T6, T8]
+  physical_resource: GPU
+  logical_abstraction: "A checkpointable, migratable GPU process: the application keeps using unmodified CUDA while the OS service owns a dataflow (kernel DAG) representation of its GPU state and a pool of pre-initialised execution contexts to restore into."
+  problem: "GPUs bypass the OS and paging, so the dirty bits and copy-on-write that make CPU checkpoint/restore concurrent do not exist, forcing stop-the-world GPU C/R with hundreds of milliseconds of downtime."
+  mechanism: "PhoenixOS interposes on CUDA driver APIs and maintains a runtime kernel DAG whose nodes are kernels and buffers and whose edges are read/write dependencies; buffer access sets are inferred from kernel launch arguments (treating 8-byte arguments as candidate device addresses filtered against allocated ranges) and this speculation is validated by offline PTX binary instrumentation used only during C/R; the DAG then supports software substitutes for the missing hardware features -- soft copy-on-write (copy a buffer before a kernel touches a buffer currently being checkpointed), a soft dirty bit, and soft on-demand restore that loads buffers in topological order so kernels start as soon as inputs arrive."
+  isolation_mechanism: "N/A -- single-GPU, single-process scope; the paper explicitly does not address multi-process isolation or GPU multiplexing."
+  multiplexing_mechanism: "N/A for tenants; an execution-context pool multiplexes pre-initialised CUDA contexts across successive restores to remove context-creation cost."
+  state_mechanism: "Checkpoint images are held in host memory with background SSD flush; for live migration they are sent over RDMA peer-to-peer into the target GPU's memory, with a second stop phase retransmitting dirty buffers or, if the dirty set is too large, shipping the DAG and re-executing kernels instead."
+  overhead_bottleneck: "GPU memory copy dominates both checkpoint and restore, and GPU context creation adds 50-83% of restore time -- the three costs the design attacks."
+  primary_tradeoff: "Speculating on kernel buffer access from launch arguments and validating by instrumentation -> gains concurrent, transparent GPU C/R with ~1 ms stop time, but costs 2-21% instrumentation slowdown during C/R on opaque kernels, per-API manual rules, and a fallback path when speculation fails."
+  quantitative_claims:
+    - "stop time: ~1 ms versus 726 ms for a stop-the-world Singularity-style baseline (GPT-2)"
+    - "checkpointing: 5.5-72.2% faster than the stop-the-world baseline; 12.4-62.3% faster than PyTorch framework-level checkpointing"
+    - "live migration: 58.0-95.2% faster; Llama-2-13B downtime 7.9 s -> 0.4 s"
+    - "restore / cold start: 3.2-19.5x faster than the OS-level baseline, 6.8-111.9x faster than framework-level, up to 82% reduction for serverless cold start"
+    - "instrumentation overhead: 2-21% slowdown during C/R only, on the under-20% of kernels that are opaque; negligible during normal execution"
+    - "image size with deduplication: 56-97% smaller for inference, e.g. Llama-2 inference 48.1 GB -> 970.7 MB"
+    - "speculation accuracy: reported 100% on the evaluated training and inference applications, with no validation failures observed"
+    - "API rules: up to 50 of 2,449 CUDA 12.3 APIs needed manual rules, ~2 human-days"
+    - "testbed: two servers, 8x A100 80GB each, dual Xeon Gold 6348 (56 cores), 1 TB host memory, 200 Gbps InfiniBand"
+  why_useful_for_learning: "It is the clearest worked example of what 'state' means for accelerator virtualization and why device-bypass architectures make migration and checkpointing hard."
+  priority: P1
+  related: [VIRT-SOSP25-01, VIRT-SOSP25-14, VIRT-SOSP25-07, "NVIDIA cuda-checkpoint"]
+  relations:
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-01, basis: "both capture and move device state that the OS cannot see because the device bypasses it"}
+    - {type: ALTERNATIVE, target: "NVIDIA cuda-checkpoint", basis: "the paper's Driver-C baseline is NVIDIA's closed-source driver-level checkpoint, against which PhoenixOS argues for an OS-level DAG abstraction"}
+    - {type: USES_MECHANISM_FROM, target: VIRT-SOSP25-07, basis: "Aegaeon's fast model switching needs exactly the GPU state save/restore primitives PhoenixOS generalises; both treat KV cache / device buffers as the migratable unit"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: "Read the arXiv manuscript (2405.12079), whose earlier revisions carry the title PARALLELGPUOS; content matches the SOSP 2025 PhoenixOS paper but the published version was not reachable (ACM DL 403), so numbers are from the preprint."
+
+- id: VIRT-SOSP25-07
+  title: "Aegaeon: Effective GPU Pooling for Concurrent LLM Serving on the Market"
+  title_correction: null
+  authors: [Yuxing Xiang, Xue Li, Kun Qian, Yufan Yang, Diwen Zhu, Wenyuan Yu, Ennan Zhai, Xuanzhe Liu, Xin Jin, Jingren Zhou]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764815
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://ennanzhai.github.io/pub/sosp25-aegaeon.pdf
+  classification: SUPPORT
+  classification_note: "Per the brief's GPU rule this is a scheduler over existing GPUs, not a virtual GPU abstraction: 'pooling' means temporal multiplexing of many models on one GPU at token granularity, with no vGPU partition, no GPU state virtualization and no hardware isolation."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T9, T8, T4]
+  physical_resource: GPU
+  logical_abstraction: "A shared GPU pool in which each of many models appears to have a resident serving instance, realised by preempting and reloading models between token steps."
+  problem: "In a model marketplace over 94% of models receive only 1.35% of requests, so dedicating GPU instances per model wastes 17.7% of GPUs on 1.35% of traffic, while request-level autoscaling causes head-of-line blocking and long TTFT."
+  mechanism: "Aegaeon auto-scales at token granularity: between individual decode steps it can offload the current model's KV cache, load the next model's weights and resume, so the number of concurrently *active* models can fall below the steady-state expectation that bounds request-level schemes; the switch is made cheap by initialising the inference engine and workers once per GPU and caching everything except weights and KV cache, a self-managed bump-allocated VRAM buffer that bypasses PyTorch GC with host-memory weight caching and optional prefetch on a separate CUDA stream, slab allocation for a unified KV cache across model shapes, and CUDA-event-based fine-grained KV transfer synchronisation; prefill and decode instances are disaggregated with grouped FCFS and weighted round-robin schedulers respectively."
+  isolation_mechanism: "Logical only -- scheduler queues and per-request KV block tracking; no hardware or context-level isolation between co-resident models."
+  multiplexing_mechanism: "Purely temporal: models occupy the GPU at different times under token-granularity preemption; requests from different models are never batched together, so there is no spatial sharing."
+  state_mechanism: "Model weights are cached in host memory and staged into a self-managed VRAM buffer; KV cache is swapped in and out through slab-allocated unified blocks with CUDA events tracking transfer state, and a daemon thread drives move lists asynchronously."
+  overhead_bottleneck: "Model-switch cost, which component reuse plus explicit memory management reduces by 97% (component reuse alone removes 80%)."
+  primary_tradeoff: "Token-level rather than request-level autoscaling -> gains ~7 models per GPU and 82% fleet reduction in production, but costs sub-second switch stalls, dependence on memory slack for prefetch and KV staging, and degrades under very tight SLOs where spatial multiplexing (MuxServe) becomes competitive."
+  quantitative_claims:
+    - "goodput: 1.5-9x more goodput, or 2-2.5x higher sustainable request arrival rate, versus ServerlessLLM/ServerlessLLM+/MuxServe"
+    - "density: up to 7 models per GPU; up to 70 models on 10 decoding instances"
+    - "autoscaling overhead reduced by 97% (component reuse alone accounts for 80%)"
+    - "switch latency: ~50% of autoscaling operations sub-second, worst case under 1 s; per-request KV cache transfer under 1 s; memory fragmentation under 20%"
+    - "production at Alibaba Cloud Model Studio: 1,192 -> 213 H20 GPUs for 47 models (82% reduction), GPU utilization rising from 13.3-33.9% to 48.1%, over three months of deployment with no reported SLO violations"
+    - "lab testbed: 16x NVIDIA H800 80GB across two nodes, 2 TB DDR5 per node, models 6B-14B plus 72B with TP=4, ShareGPT traces at 0.05-0.75 RPS"
+  why_useful_for_learning: "It quantifies, at production scale, what pure time-division multiplexing of a GPU costs and how far memory-state movement (not compute) is the real limit on accelerator sharing density."
+  priority: P1
+  related: [VIRT-SOSP25-14, VIRT-SOSP25-06, VIRT-SOCC25-10, "MuxServe", "ServerlessLLM"]
+  relations:
+    - {type: CONTRASTS_WITH, target: VIRT-SOSP25-14, basis: "LithOS partitions one GPU spatially at TPC granularity with hardware-level isolation; Aegaeon multiplexes it temporally at token granularity with none -- the two poles of accelerator sharing"}
+    - {type: USES_MECHANISM_FROM, target: VIRT-SOSP25-06, basis: "both depend on saving and restoring GPU-resident state cheaply; Aegaeon hand-rolls it for weights and KV cache, PhoenixOS generalises it as an OS service"}
+    - {type: ALTERNATIVE, target: "MuxServe", basis: "the paper's spatial-multiplexing baseline, which it shows wins only under very tight SLOs"}
+  existing_corpus_overlap: ai_hpc_systems
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Heavily production-flavoured (Alibaba Cloud deployment) but appears in the single undifferentiated SOSP 2025 accepted list with no industry track, so publication_type is ARCHIVAL_MAIN_PAPER."
+
+- id: VIRT-SOSP25-08
+  title: Unlocking True Elasticity for the Cloud-Native Era with Dandelion
+  title_correction: null
+  authors: [Tom Kuchler, Pinghe Li, Yazhuo Zhang, Lazar Cvetkovic, Boris Goranov, Tobias Stocker, Leon Thomm, Simone Kalbermatter, Tim Notter, Andrea Lattuada, Ana Klimovic]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764803
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://arxiv.org/html/2505.01603v2
+  classification: CORE
+  classification_note: "Its contribution is the isolation substrate itself: by restricting functions to pure compute it removes the guest OS from the sandbox and then implements four interchangeable isolation backends (CHERI, rWasm, process, guest-kernel-less KVM) with microsecond cold start."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T8, T1, T7]
+  physical_resource: CPU core
+  logical_abstraction: "A DAG of pure compute functions plus platform-provided communication functions; each compute function gets a bounded contiguous memory context and a file-like in-memory filesystem, with no POSIX, no syscalls and no network stack."
+  problem: "Serverless platforms cannot be elastic because cold start costs tens of milliseconds -- at least 8 ms just to load a microVM snapshot and re-establish networking -- so providers keep ~16x more DRAM in idle warm sandboxes than in executing functions."
+  mechanism: "Dandelion changes the programming model so that user code is pure, deterministic and syscall-free, which removes the guest OS, device emulation and network setup from the sandbox; a sandbox is then just a contiguous memory region into which an executable is loaded, so it can be created per request across four pluggable backends -- CHERI capability bounds inside one address space (~89 us), rWasm compiled to safe Rust (~241 us), ptrace-confined Linux processes (~486 us), and identity-mapped KVM VMs with no guest kernel (~889 us); a custom libc (hlibc) provides file-like I/O without syscalls, and a proportional-integral controller reassigns cores between run-to-completion compute engines and green-threaded communication engines based on queue growth."
+  isolation_mechanism: "Backend-dependent: CHERI capability bounds, Rust-compiler-enforced memory safety for rWasm, ptrace syscall blocking for processes, or hardware virtualization for the guest-kernel-less KVM backend; in all cases the function has no access to host resources and its untrusted output is parsed by a ~100-line Rust parser, while platform-owned communication functions validate HTTP input."
+  multiplexing_mechanism: "Cores are partitioned between compute engines (one task run to completion per core, no context switching) and communication engines (cooperative green threads), with the split adjusted at runtime by the controller."
+  state_mechanism: "There is deliberately no state across invocations: data flows along DAG edges and contexts are freed once downstream functions have consumed outputs, which is precisely why no snapshot is needed."
+  overhead_bottleneck: "In the baselines, guest-OS snapshot loading and network re-establishment (>8 ms); in Dandelion, data copying between contexts and the code-quality penalty of the safe backends."
+  primary_tradeoff: "Dropping POSIX for pure functions -> gains microsecond cold start, ~1 MB per sandbox instead of ~30 MB, and stable rather than bimodal latency, but costs application portability (existing POSIX code must be refactored into a DAG) and rules out stateful workloads such as OLTP, gaming and training."
+  quantitative_claims:
+    - "cold start: 89 us (CHERI), 241 us (rWasm), 486 us (process), 889 us (KVM) versus ~120 ms for Firecracker snapshot restore"
+    - "memory: 4% committed (109 MB average) versus 2619 MB for Knative autoscaling on an Azure Functions trace, a 96% reduction, with p99 latency 46% lower"
+    - "throughput: 4800 RPS (KVM backend) on 128x128 matmul versus 3000 RPS Firecracker and 2600 RPS Wasmtime"
+    - "image compression p99: 19.64 ms, 38.6% lower than Firecracker and 67.1% lower than Wasmtime; run-to-run variance 1.30% versus 389.6% (Firecracker) and 6.11% (Wasmtime)"
+    - "query processing: 40% lower latency and 67% lower cost than AWS Athena on Star Schema Benchmark short queries"
+    - "composition: at 16 chained phases, 4.6x faster than Firecracker cold start but 4 ms slower than Firecracker warm sandboxes"
+    - "hardware: dual-socket Intel Xeon E5-2630v3 (16 cores, 256 GB) and an Arm Morello board (4 cores, 16 GB) for the CHERI backend"
+  why_useful_for_learning: "It isolates the question 'what does the guest OS actually cost in a sandbox?' by building the same service on four different isolation mechanisms and measuring each."
+  priority: P1
+  related: [VIRT-SOSP25-11, VIRT-SOSP25-13, VIRT-SOSP25-09, VIRT-SOCC25-01, "Firecracker", "Hyperlight Wasm"]
+  relations:
+    - {type: USES_MECHANISM_FROM, target: VIRT-SOSP25-11, basis: "Dandelion's fastest backend is CHERI capability isolation, the same hardware mechanism CHERIoT RTOS builds its compartments on"}
+    - {type: ALTERNATIVE, target: VIRT-SOSP25-13, basis: "both attack FaaS start cost by avoiding multiple address spaces -- Dandelion by removing the guest OS, uFork by forking within one address space"}
+    - {type: TRADEOFF_PAIR, target: "Firecracker", basis: "Firecracker keeps POSIX and pays snapshot restore cost; Dandelion drops POSIX and pays portability cost"}
+    - {type: LAYER_BELOW, target: VIRT-SOSP25-09, basis: "Quilt optimises workflow packing above an unchanged isolation substrate; Dandelion replaces the substrate itself"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: null
+
+- id: VIRT-SOSP25-09
+  title: "Quilt: Resource-aware Merging of Serverless Workflows"
+  title_correction: null
+  authors: [Yuxuan Zhang, Sebastian Angel]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764830
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://www.cis.upenn.edu/~sga001/papers/quilt-sosp25.pdf
+  classification: CONTEXT
+  classification_note: "Per the brief's serverless rule this is the consuming layer, not the mechanism: Quilt leaves container, runtime and kernel isolation untouched and only changes which functions are packed into one process, treating the platform as a black box."
+  drop_reason: null
+  taxonomy_primary: T8
+  taxonomy_secondary: [T9, T5]
+  physical_resource: CPU core
+  logical_abstraction: "A merged serverless function: several workflow functions compiled into one binary that existing unmodified platforms deploy as a single function."
+  problem: "Decomposing a workflow into per-function containers pays API-gateway indirection, new TCP/HTTP connections per call and chained cold starts, but merging everything into one function causes resource fragmentation and throttling."
+  mechanism: "Quilt lifts functions to LLVM IR, renames conflicting symbols, replaces HTTP invocation calls with direct calls (using string-based shims across C, C++, Swift, Go and Rust because functions only ever exchange REST payloads), and debloats/dedups libraries; which functions to merge is chosen by constraint-aware clustering of the call graph -- ILP for graphs up to 20 vertices and a 'downstream impact' heuristic beyond that -- subject to per-container CPU and memory limits."
+  isolation_mechanism: "Unchanged platform containers between tenants and workflows; within one tenant's workflow the merged functions share an address space, which the paper justifies by arguing the trust boundary is the workflow, not the function."
+  multiplexing_mechanism: "None introduced; the underlying platform's autoscaling and load balancing continue to multiplex the merged functions."
+  state_mechanism: "N/A -- no virtualization state; merge decisions are computed offline from distributed-tracing profiles and baked into the deployed binary."
+  overhead_bottleneck: "Inter-function invocation overhead (gateway, connection setup, cold-start chains) for short functions; and, if merging ignores limits, resource fragmentation causing throttling or OOM at high load."
+  primary_tradeoff: "Merging functions into one process -> gains large latency and throughput wins for millisecond-scale functions but costs per-function fault isolation (one crash kills the merged workflow), per-function billing clarity, and independent scaling."
+  quantitative_claims:
+    - "median workflow completion time improvement: 45.63%-70.95%"
+    - "throughput: 2.05x-12.87x, e.g. compose-post 11.24x synchronous and 12.87x asynchronous"
+    - "tail (99th percentile) latency improvement: 15.64%-85.47%"
+    - "merged binary size: 3.4%-86.7% smaller than the sum of individual binaries"
+    - "merge decision time: under 0.27 s median for graphs up to 200 nodes; compilation ~1-2 minutes as a one-time background step"
+    - "setup: 6-machine cluster (3 workers with 128-core Xeons), Fission primary plus OpenWhisk and OpenFaaS, DeathStarBench social-network / hotel-reservation / movie-review workflows with 2-15 functions"
+    - "benefit qualifier: concentrated on workflows whose functions run tens of milliseconds or less; multi-second functions see minimal improvement"
+  why_useful_for_learning: "It makes the cost of fine-grained isolation boundaries legible -- the same decomposition that buys independent scaling is what the measured 2-12x throughput gap pays for."
+  priority: P3
+  related: [VIRT-SOSP25-08, VIRT-SOCC25-01, VIRT-SOCC25-09]
+  relations:
+    - {type: LAYER_ABOVE, target: VIRT-SOSP25-08, basis: "Quilt packs functions above a fixed isolation substrate whereas Dandelion redesigns that substrate; read together they separate policy from mechanism in serverless"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: null
+
+- id: VIRT-SOSP25-10
+  title: "Coyote v2: Raising the Level of Abstraction for Data Center FPGAs"
+  title_correction: null
+  authors: [Benjamin Ramhorst, Dario Korolija, Maximilian Jakob Heer, Jonas Dann, Luhao Liu, Gustavo Alonso]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764845
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://arxiv.org/html/2504.21538v1
+  classification: CORE
+  classification_note: "The contribution is the FPGA virtualization layer itself: multiple isolated vFPGA regions each with its own hardware MMU/TLB over host DRAM and FPGA HBM, credit-based bandwidth partitioning between them, and dynamic partial reconfiguration of both services and applications."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T2, T3, T9]
+  physical_resource: FPGA
+  logical_abstraction: "A vFPGA: an isolated reconfigurable region with shared virtual memory across host DRAM and FPGA HBM, multithreaded stream interfaces (cThreads), interrupts, and an RDMA-capable network endpoint that speaks virtual addresses."
+  problem: "About 75% of FPGA development effort goes into infrastructure rather than the application, and existing shells fix networking and memory management statically, offer no per-application multithreading, and lack generic interfaces and interrupts -- so FPGAs cannot be first-class datacenter citizens."
+  mechanism: "Coyote v2 is a three-layer shell: a thin platform-specific static layer (PCIe XDMA, driver, ICAP reconfiguration controller), a dynamically reconfigurable *services* layer holding memory management and networking, and an application layer of multiple parallel vFPGAs; memory is virtualized by a hybrid MMU with on-chip SRAM TLBs and host-driver page-fault handling, supporting 4 KB to 1 GB pages and HBM striping across banks, and BALBOA provides a RoCE v2 100G RDMA stack that operates on virtual addresses; moving services out of the static layer is what lets them be reconfigured at runtime via ICAP at ~800 MB/s."
+  isolation_mechanism: "A per-vFPGA hardware MMU gives each region its own address translation, and a per-vFPGA per-stream credit-based backpressure scheme stops one region from stalling others; each application also has its own host address space."
+  multiplexing_mechanism: "Spatial partitioning of fabric into vFPGAs, plus 4 KB packetization and round-robin interleaving on bandwidth-constrained links (PCIe, network) for fair sharing, plus per-vFPGA multithreading where software cThreads map onto shared hardware pipeline stages distinguished by AXI TID."
+  state_mechanism: "TLBs live in on-chip SRAM with page tables in the host kernel driver; per-vFPGA isolation metadata sits in hardware MMU and control registers; credit counters in hardware queues; control/status via AXI4-Lite mapped to user space; interrupts via MSI-X surfaced as Linux eventfd."
+  overhead_bottleneck: "Routing congestion limits practical vFPGA count to about eight to ten, and MMU-mediated translation caps HBM bandwidth scaling so peak bandwidth requires bypassing the abstraction."
+  primary_tradeoff: "Raising the FPGA abstraction with per-vFPGA virtual memory, reconfigurable services and multithreading -> gains 15-20% faster iteration, order-of-magnitude faster reconfiguration and GPU-like deployment ergonomics, but costs ~10% extra fabric resources, a congestion-bounded number of regions, and HBM throughput that tapers unless the MMU is bypassed."
+  quantitative_claims:
+    - "synthesis: application-only flow linking against a pre-routed shell is 15-20% faster in total time than the shell-only flow"
+    - "reconfiguration: kernel-only 51-85 ms, total 536-929 ms including disk I/O, versus 55-71 s for full Vivado reprogramming"
+    - "ICAP throughput: ~800 MB/s versus 19-145 MB/s for prior controllers"
+    - "HBM: linear throughput scaling from 1 to 4 channels with minimal virtual-memory overhead, approaching 400+ GB/s at 8 channels"
+    - "multi-tenant AES ECB: fair bandwidth distribution across vFPGAs with cumulative throughput flat at the ~12 GB/s PCIe limit (no arbiter overhead)"
+    - "multithreading: AES CBC single thread saturates at ~280 MB/s and 32 KB; 8 threads scale near-linearly to ~2.1 GB/s (7x idle-time reduction)"
+    - "HyperLogLog: throughput comparable to Coyote v1 at ~10% higher resource utilization; on-demand kernel reconfiguration 57 ms"
+    - "hls4ml NN inference: order of magnitude faster than a PYNQ+Vitis baseline (acknowledged as not fully optimized), ~15% resource utilization, under 10 lines of Python to deploy"
+    - "boards: AMD Alveo U55C, U250, U280, 250 MHz system clock, 450 MHz HBM"
+  why_useful_for_learning: "It is the reference example of building a full OS-style virtualization stack -- address translation, isolation, fair bandwidth sharing, reconfiguration -- for a non-CPU, non-GPU accelerator."
+  priority: P1
+  related: [VIRT-SOSP25-14, VIRT-SOCC25-05, "AmorphOS", "OPTIMUS", "Coyote v1"]
+  relations:
+    - {type: EXTENSION, target: "Coyote v1", basis: "the paper states it extends v1 by moving services into the dynamic layer, adding multithreading, generic interfaces and interrupts"}
+    - {type: ALTERNATIVE, target: "AmorphOS", basis: "compared directly: AmorphOS lacks networking, shared virtual memory and service reconfiguration"}
+    - {type: ALTERNATIVE, target: "OPTIMUS", basis: "compared directly: OPTIMUS only spatially partitions static regions, without dynamic reconfiguration or multithreading"}
+    - {type: SAME_BRANCH, target: VIRT-SOCC25-05, basis: "Funky orchestrates FPGA virtualization in a cloud-native control plane, one layer above the shell abstraction Coyote v2 provides"}
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-14, basis: "both spatially partition an accelerator with hardware-enforced per-partition isolation, on FPGA fabric and on GPU TPCs respectively"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: "THRESHOLD CALL (CORE vs SUPPORT), resolved to CORE: unlike Oasis this paper does build virtual resources over the physical one -- named vFPGAs with independent address translation, isolation and bandwidth shares -- and the shell's static layer plays the hypervisor role. Read from the arXiv v1 manuscript; the published version (ACM DL) was unreachable."
+
+- id: VIRT-SOSP25-11
+  title: "CHERIoT RTOS: An OS for Fine-Grained Memory-Safe Compartments on Low-Cost Embedded Devices"
+  title_correction: null
+  authors: [Saar Amar, Tony Chen, David Chisnall, Nathaniel Wesley Filardo, Ben Laurie, Hugo Lefeuvre, Kunyan Liu, Simon W. Moore, Robert Norton-Wright, Margo Seltzer, Yucong Tao, Robert N. M. Watson, Hongyan Xia]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764844
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://api.repository.cam.ac.uk/server/api/core/bitstreams/db4a3848-5f29-4786-bc5e-668d27799f0e/content
+  classification: SUPPORT
+  classification_note: "No VM, hypervisor or virtual resource appears, but it is the definitive account of the capability-based compartment -- the third isolation mechanism alongside page tables and MPUs -- and it is the exact hardware substrate Dandelion's fastest sandbox and uFork's micro-processes are built on."
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary: [T5, T7]
+  physical_resource: CPU core
+  logical_abstraction: "A compartment: a statically defined unit of code plus data, reachable only through declared entry points, sharing one address space with all others but able to fault, recover and micro-reboot independently."
+  problem: "Embedded devices omit memory protection to cut cost yet are now internet-connected; MPU/TrustZone give only coarse isolation (typically 8 regions), do not harden compartment interfaces, and do nothing about supply-chain attacks or temporal memory safety."
+  mechanism: "Every pointer is a CHERI capability carrying cursor, bounds and permissions with an unforgeable tag bit, so spatial safety is checked in hardware on each access; CHERIoT adds permit-load-mutable and permit-load-global for deep immutability and deep no-capture, and sealed capabilities (sentries) to hand out callable functions without exposing their data; a ~355-instruction 'switcher' is the only code that can unseal the sealed capability naming a callee's export table, and on each cross-compartment call it pushes a trusted-stack frame, clears non-argument registers and truncates and zeroes the stack capability; temporal safety uses a load filter that clears the tag of any capability loaded from a revoked 8-byte heap granule plus a hardware revoker that sweeps memory invalidating capabilities to freed objects, with the allocator quarantining freed memory until a sweep completes."
+  isolation_mechanism: "Hardware capability bounds and permissions, sealing, per-compartment import/export tables restricting which compartments and MMIO devices are reachable, and switcher-private trusted stacks."
+  multiplexing_mechanism: "A single shared quota-controlled heap lets phases with different memory needs time-division-multiplex SRAM instead of each pre-allocating its peak; threads are preemptively scheduled onto the core by a scheduler compartment, with futex-based locks, message queues and blocking."
+  state_mechanism: "Per-compartment import/export tables and per-thread trusted stacks live in switcher-only SRAM; revocation bits sit in a separate SRAM region, one set per 8-byte heap granule; allocator quotas and quarantine lists live inside the allocator compartment."
+  overhead_bottleneck: "Cross-compartment call cost driven by register clearing and stack zeroing (209 cycles empty, up to 1284 worst case), and the hardware revoker, which becomes the allocator's bottleneck for large objects."
+  primary_tradeoff: "Capability compartments instead of MMU/MPU domains -> gains unbounded fine-grained isolation with object-level sharing and fault-tolerant micro-reboots in tens of KB of SRAM, but costs ~4.5% more area than a 16-entry PMP, ~20.65% CoreMark slowdown, and non-deterministic allocation latency while revocation sweeps run."
+  quantitative_claims:
+    - "area: CHERIoT adds ~4.5% more area than a 16-entry PMP"
+    - "CoreMark overhead: 20.65% versus non-CHERI RISC-V 32E (load filter ~8%, widened memory bus ~8%)"
+    - "compartment call: 209 cycles empty, 452 cycles with a 256 B stack, 1284 cycles worst case with 1 KiB on both sides"
+    - "interrupt latency: 1028 cycles (31 us at 33 MHz)"
+    - "footprint: base system 25.9 KB code + 3.7 KB data (18.4 KB code once the loader is erased at boot); base+network stack 151.8 KB code + 20.4 KB data; 83 B per additional compartment"
+    - "example IoT deployment: 13 compartments with MQTT/TLS in 243 KB total (182 KB code, 28 KB data, 33 KB heap)"
+    - "allocator: ~5 MiB/s sustained for buffers over 1 KiB; revoker becomes the bottleneck above ~80 KiB allocations"
+    - "API latencies: unseal 44.8 cycles, allocate sealed object 2432.2 cycles, ephemeral claim 182 cycles, heap claim+unclaim 3714 cycles, fault+unwind 109-413 cycles"
+    - "platform: Arty A7-100T FPGA at 33 MHz with 256 KiB SRAM, compiled -Oz"
+  why_useful_for_learning: "It gives concrete cycle and byte costs for a hardware isolation boundary that is neither a page table nor a VM, which is the reference point for judging what container and microVM boundaries cost."
+  priority: P2
+  related: [VIRT-SOSP25-08, VIRT-SOSP25-13, VIRT-SOSP25-12, VIRT-SOSP25-17]
+  relations:
+    - {type: LAYER_BELOW, target: VIRT-SOSP25-08, basis: "Dandelion's 89 us CHERI backend relies on exactly these capability bounds for sandbox isolation"}
+    - {type: LAYER_BELOW, target: VIRT-SOSP25-13, basis: "uFork uses CHERI capability tags to relocate pointers and to isolate micro-processes within one address space"}
+    - {type: ALTERNATIVE, target: VIRT-SOSP25-12, basis: "capability compartments versus MPU/PMP regions as the isolation mechanism for microcontroller-class devices; the paper argues MPUs' ~8 domains force over-privileging"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "THRESHOLD CALL (embedded isolation, in or out of scope), resolved to SUPPORT/T10: the paper never mentions VMs or hypervisors, so it is not CORE, but it is not DROP either because CHERI compartments are a load-bearing alternative isolation mechanism that two CORE papers in this same batch (Dandelion, uFork) build directly on. Read the Cambridge repository accepted version; ACM DL PDF was 403."
+
+- id: VIRT-SOSP25-12
+  title: "TickTock: Verified Isolation in a Production Embedded OS"
+  title_correction: null
+  authors: [Vivien Rindisbacher, Evan Johnson, Nico Lehmann, Tyler Potyondy, Pat Pannuto, Stefan Savage, Deian Stefan, Ranjit Jhala]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764856
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://ranjitjhala.github.io/static/sosp25-ticktock.pdf
+  classification: SUPPORT
+  classification_note: "It contains no virtualization -- the paper says Tock 'cannot rely on virtual memory and memory management units' -- but it verifies the exact hardware resource, RISC-V PMP and Arm MPU registers, that Miralis multiplexes to create virtual PMP entries, and it isolates the general failure mode where a kernel's logical view of protection diverges from what hardware enforces."
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary: [T7]
+  physical_resource: CPU core
+  logical_abstraction: "A verified process memory region: each user process sees code, stack and heap it can reach and provably nothing of the kernel or of other processes, enforced by MPU/PMP rather than page tables."
+  problem: "Tock ships in Google's Ti50 security chip, Microsoft Pluton and TPMs, but its MPU configuration logic was unverified, and a mismatch between the kernel's idea of a process's memory layout and the regions the MPU actually enforces silently breaks isolation."
+  mechanism: "The authors split Tock's monolithic MPU interface into a RegionDescriptor trait abstracting hardware region properties and an MPU trait handling region creation/update, which decouples kernel requirements from hardware constraints; they then verify with Flux, an SMT-backed refinement-type checker for Rust, placing invariants on structures like AppBreaks to tie memory_start/app_break/kernel_break relationships to the bits actually written into Arm RBAR/RASR registers via associated refinements; interrupt and context-switch assembly is verified against FluxArm, a new executable formal semantics of ARMv7-M, because leaving the CPU privileged across a context switch would bypass the MPU entirely."
+  isolation_mechanism: "Hardware MPU regions on Arm and PMP entries on RISC-V configured by a privileged Rust kernel; capsules (drivers) are isolated at the language level by forbidding unsafe Rust; the verification is what ties the two together."
+  multiplexing_mechanism: "A small fixed number of hardware protection regions is multiplexed across processes by reprogramming them on context switch -- the paper's redesign returns the actual enforced layout rather than recomputing it, which is where the bugs were."
+  state_mechanism: "Protection state lives entirely in MPU/PMP registers plus the kernel's AppBreaks bookkeeping; it is reprogrammed on every context switch and there is no migration or persistence."
+  overhead_bottleneck: "Context switch dominates at ~32.7k cycles, which the redesign leaves essentially unchanged; verification time, not runtime, was the thing the granular abstraction fixed."
+  primary_tradeoff: "Refinement types over a granular MPU abstraction -> gains machine-checked isolation plus faster grant/brk paths and a 9x drop in verification time, but costs 3,603 lines of annotation over 22,131 lines of source, 125 trusted functions, and a two-region cap imposed by Rust/Flux const-generic limits."
+  quantitative_claims:
+    - "bugs found: five previously unknown MPU configuration bugs and two interrupt-handling bugs that break isolation"
+    - "context switch overhead: 0.3% (32,740 vs 32,640 cycles on Arm)"
+    - "allocate_grant: 50% faster (641 vs 1290 cycles); brk syscall 21.7% faster"
+    - "memory: 7,780 bytes allocated with 5.6% unused, versus Tock's 8,192 bytes with 3.1% unused"
+    - "verification time: 36 s total for the granular design (mean 0.05 s per function) versus 5 min 19 s for the original monolithic design; interrupt verification 2 min 34 s; full kernel+interrupts ~3 min"
+    - "trust surface: 125 trusted functions and 3,603 lines of Flux annotations for 22,131 lines of source; 14 trusted functions proved separately in Lean"
+    - "differential testing: 21 Tock test applications run on both Tock and TickTock"
+  why_useful_for_learning: "It shows what it takes to prove that a privileged kernel's memory-protection bookkeeping agrees with the hardware registers, which is the same obligation a hypervisor carries for its stage-2 tables and virtual PMPs."
+  priority: P2
+  related: [VIRT-SOSP25-04, VIRT-SOSP25-03, VIRT-SOSP25-11, VIRT-SOSP25-17]
+  relations:
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-03, basis: "both check that a production isolation kernel's abstract view matches enforced hardware protection -- stage-2 page tables there, MPU/PMP registers here"}
+    - {type: LAYER_BELOW, target: VIRT-SOSP25-04, basis: "Miralis virtualizes the very PMP registers whose correct configuration TickTock verifies, so TickTock's bug classes are the correctness burden Miralis inherits and must multiplex"}
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-17, basis: "same OS (Tock) and same isolation architecture, examined formally here and retrospectively there"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "THRESHOLD CALL (embedded RTOS isolation, in or out of scope), resolved to SUPPORT/T10 rather than DROP. The paper is explicit that there is no MMU, no virtual memory and no hypervisor, which rules out CORE. It survives as SUPPORT on the brief's 'alternative mechanisms' mandate and on the direct PMP link to Miralis. An orchestrator wanting a tighter corpus could demote this to CONTEXT without losing a virtualization mechanism."
+
+# ---- SOSP 2025 papers absent from the seed list but found in the official program ----
+
+- id: VIRT-SOSP25-13
+  title: "μFork: Supporting POSIX fork Within a Single-Address-Space OS"
+  title_correction: null
+  authors: [John Alistair Kressel, Hugo Lefeuvre, Pierre Olivier]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764809
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://arxiv.org/html/2509.09439v2
+  classification: CORE
+  classification_note: "It builds a process abstraction (micro-processes) inside a unikernel's single address space, with CHERI capability bounds as the isolation boundary and a new copy-on-pointer-access mechanism -- a lightweight-isolation architecture contribution, not an application of one."
+  drop_reason: null
+  taxonomy_primary: T5
+  taxonomy_secondary: [T2, T8]
+  physical_resource: DRAM
+  logical_abstraction: "A micro-process: a POSIX process (own PID, thread, contiguous memory region, duplicated file descriptors) that lives inside one shared address space, so unmodified applications get fork semantics without a second page table."
+  problem: "Single-address-space OSes and unikernels are lightweight precisely because they avoid multiple address spaces, but that is exactly why they cannot support fork -- the child's memory must sit at a different location in the same address space, breaking every absolute pointer in the copy."
+  mechanism: "Built on Unikraft, uFork reserves a contiguous virtual region for the child and initially maps it to the parent's physical pages; to fix absolute references it exploits CHERI's 128-bit tagged capabilities, scanning copied pages in 16-byte steps and relocating any word whose tag bit marks it a valid pointer; because a child merely *reading* a page containing a pointer would load a stale parent reference, plain copy-on-write is insufficient, so uFork adds copy-on-pointer-access (CoPA) using an extra page-table permission bit that faults on capability load; sealed capabilities give exception-less user/kernel domain switches so syscalls avoid trap overhead, and system permission bits plus copy-before-check buffer handling protect the kernel."
+  isolation_mechanism: "CHERI capability bounds restrict each micro-process to its own contiguous region, monotonicity prevents privilege escalation, parent capabilities are proactively relocated during copy so they cannot leak into the child, and sealed capabilities plus system permission bits enforce the user/kernel boundary without separate page tables."
+  multiplexing_mechanism: "One address space and one page-table hierarchy is shared by all micro-processes, which is what removes page-table switches from context switch and IPC; physical pages are shared until CoPA or a write forces a copy."
+  state_mechanism: "Micro-process state (PID, thread, capability bounds, private static heap) lives in the shared address space; on fork, memory state moves by page sharing plus tag-directed pointer relocation rather than by snapshot."
+  overhead_bottleneck: "Pointer relocation work during the copy, and virtual-address-space fragmentation from reserving large contiguous regions per micro-process."
+  primary_tradeoff: "Forking within a single address space -> gains 3.7x faster fork, 0.13 MB per process and trap-less IPC, but costs dependence on CHERI hardware and a fault-on-capability-load feature, plus address-space fragmentation and build-time-fixed private heaps."
+  quantitative_claims:
+    - "fork latency: 54 us for a minimal process versus 197 us on CheriBSD (3.7x) and 10.7 ms on Nephele (VM-based SASOS fork via Xen, 198x)"
+    - "per-process memory: 0.13 MB versus 0.29 MB (CheriBSD) and 1.6 MB (Nephele, 12.3x)"
+    - "Redis: 260 us fork latency on a 100 MB database; snapshot save 109 ms versus 158 ms (1.4x faster)"
+    - "CoPA benefit: fork of a 100 MB Redis DB drops from 23.2 ms and 144 MB (full synchronous copy) to 260 us and 6 MB"
+    - "FaaS: 24% higher throughput than CheriBSD on a fork-bound MicroPython Zygote workload"
+    - "Unixbench 1000 forks: 56 ms versus 198 ms (3.5x); pipe IPC 100k ops 245 ms versus 419 ms (43% faster)"
+    - "nginx: 9% single-core throughput improvement with 3 workers"
+    - "platform: Arm Morello board, 4 ARMv8.2-A cores at 2.5 GHz, 16 GB RAM"
+  why_useful_for_learning: "It is the sharpest available demonstration of what the address space actually buys you, by removing it and then paying, piece by piece, for every POSIX property that depended on it."
+  priority: P1
+  related: [VIRT-SOSP25-08, VIRT-SOSP25-11, VIRT-SOCC25-02]
+  relations:
+    - {type: LAYER_BELOW, target: VIRT-SOSP25-11, basis: "uFork depends on CHERI capability tags and bounds, the mechanism CHERIoT RTOS characterises in detail"}
+    - {type: ALTERNATIVE, target: VIRT-SOSP25-08, basis: "both cut FaaS start cost by refusing multiple address spaces, Dandelion by dropping the guest OS and uFork by retrofitting fork into a unikernel"}
+    - {type: SAME_BRANCH, target: VIRT-SOCC25-02, basis: "both are unikernel memory-efficiency mechanisms -- uFork sharing pages across forked micro-processes, load-time deduplication sharing pages across unikernel instances"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [preprint, official-web]
+  confidence: HIGH
+  notes: "OMISSION from the seed list, found in the official SOSP 2025 accepted-papers list. Read the arXiv v2 manuscript."
+
+- id: VIRT-SOSP25-14
+  title: "LithOS: An Operating System for Efficient Machine Learning on GPUs"
+  title_correction: null
+  authors: [Patrick H. Coppock, Brian Zhang, Eliot H. Solomon, Vasileios Kypriotis, Leon Yang, Bikash Sharma, Dan Schatzberg, Todd C. Mowry, Dimitrios Skarlatos]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764818
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: http://www.cs.cmu.edu/~dskarlat/publications/lithos_sosp25.pdf
+  classification: CORE
+  classification_note: "This is the GPU partition mechanism itself, not a scheduler over existing partitions: it masks TPCs to create dynamic hardware-isolated spatial partitions, and it manufactures the preemption primitive the GPU lacks by rewriting queue metadata to atomize kernels."
+  drop_reason: null
+  taxonomy_primary: T6
+  taxonomy_secondary: [T9, T5]
+  physical_resource: GPU
+  logical_abstraction: "A right-sized, quota-bounded slice of a GPU: each application gets a dynamically sized set of TPCs, with its kernels transparently split into schedulable atoms, without any change to framework, runtime or source."
+  problem: "GPU datacenters run below 30% utilization for inference and ~40% for training while burning over 1000 W per device; temporal schemes run one job at a time, MIG and MPS partition too coarsely and cause head-of-line blocking, and most fine-grained schemes need framework modifications."
+  mechanism: "LithOS interposes at the CUDA driver API as a drop-in library (LibLithOS) and schedules at TPC granularity, argued to be the finest level that stays portable; launch queues buffer work on the CPU so dispatch can be deferred, per-TPC timers plus an online latency predictor drive TPC stealing of idle capacity under another workload's quota; transparent preemption comes from a kernel atomizer that, with no access to source or PTX, wraps a kernel in a 'Prelude' that filters thread-block indices and injects it by modifying the Queue Metadata structure, so a kernel becomes independently schedulable atoms of 250-500 us; right-sizing fits l = m/t + b per kernel from two reference latencies to allocate the fewest TPCs meeting a latency slip target, and a DVFS controller derives a per-kernel-sequence frequency from aggregate sensitivity."
+  isolation_mechanism: "Disjoint TPC sets give hardware compute isolation that MPS does not (competing kernels do not share compute units), each application keeps its own address space, stolen work runs at lower hardware stream priority with per-TPC timers guarding against priority inversion, and GPU errors are interposed so only the faulty process dies."
+  multiplexing_mechanism: "Spatial via TPC masking under user-specified quotas (e.g. 75% high-priority / 25% best-effort), combined with temporal switching between atoms at microsecond granularity through deferred dispatch."
+  state_mechanism: "Scheduler, atomizer, latency predictor, right-sizing model and DVFS controller all live in CPU user space; on the GPU side TPC masks and hardware stream priorities are carried in modified QMD structures, with launch queues and per-kernel atomization metadata cached across repeated launches."
+  overhead_bottleneck: "Memory bandwidth contention, which TPC partitioning does not address and which still costs 4-13% under heavy contention; plus the ~50 ms DVFS transition latency that forces coarse frequency control."
+  primary_tradeoff: "Transparent TPC-granularity spatial partitioning with atomized preemption -> gains 13x tail-latency reduction versus MPS at 100% SLO attainment plus 26% capacity and 26% energy savings, but costs reverse-engineered QMD dependence on each new GPU architecture, no memory bandwidth or I/O isolation, and loss of the application semantics a framework-integrated system could exploit."
+  quantitative_claims:
+    - "tail latency: 13x reduction versus MPS and 4x versus the best state of the art, with throughput improved 1.3x-1.35x"
+    - "inference stacking (2 high-priority, 1 best-effort): 100% HP SLO attainment versus 45% for MPS and ~84% for TGS"
+    - "hybrid inference+training: P99 latency 1.2x ideal versus 5.83x for MPS; 1.35x aggregate throughput versus TGS; 4.7x tail-latency reduction versus MPS"
+    - "right-sizing: 26% mean capacity savings (up to 51%) at under 4% latency cost, with prediction R^2 of 0.92-0.99"
+    - "power management: 26% mean energy savings (up to 46%) at 7% latency cost"
+    - "overhead: 4% versus the native NVIDIA driver with no multitenancy; atomization under 1%"
+    - "best-effort latency misprediction rate: 11-14%"
+    - "testbed: one NVIDIA A100 SXM4 (108 SMs, 40 GB), 30 CPU cores, 216 GB host memory, CUDA 12.6, PyTorch 2.3, TensorRT 10.1, TensorRT-LLM 0.11.0; ResNet-50, RetinaNet, YOLOv4, Llama 3 8B, GPT-J 6B, BERT-Large inference under Poisson arrivals with training as best-effort"
+  why_useful_for_learning: "It is the clearest statement of why GPUs are hard to virtualize -- no preemption, no dirty bits, coarse vendor partitions -- and of how much can be recovered purely in software above the driver API."
+  priority: P1
+  related: [VIRT-SOSP25-07, VIRT-SOSP25-10, VIRT-SOSP25-06, VIRT-SOCC25-06, VIRT-SOCC25-14, "MIG", "MPS", "REEF", "TGS", "Orion"]
+  relations:
+    - {type: CONTRASTS_WITH, target: VIRT-SOSP25-07, basis: "spatial hardware-isolated partitioning versus temporal token-granularity multiplexing as the two ways to raise GPU density"}
+    - {type: ALTERNATIVE, target: "MIG", basis: "the paper positions TPC masking as finer and dynamic where MIG is GPC-granular and static"}
+    - {type: ALTERNATIVE, target: "MPS", basis: "MPS shares compute units with weak isolation and no priority; LithOS gives disjoint TPCs and priorities"}
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-10, basis: "both spatially partition an accelerator's fabric with per-partition hardware isolation"}
+  existing_corpus_overlap: ai_hpc_systems
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "OMISSION from the seed list, found in the official SOSP 2025 accepted-papers list. Arguably the single most important GPU-virtualization paper in this batch."
+
+- id: VIRT-SOSP25-15
+  title: "Tai Chi: A General High-Efficiency Scheduling Framework for SmartNICs in Hyperscale Clouds"
+  title_correction: null
+  authors: [Bang Di, Yun Xu, Kaijie Guo, Yibin Shen, Yu Li, Sanchuan Cheng, Hao Zheng, Fudong Qiu, "et al."]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764851
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://dibang2008.github.io/files/SOSP2025-0917.pdf
+  classification: CORE
+  classification_note: "Its named mechanism is 'hybrid virtualization': vCPUs are registered into the SmartNIC's native OS as if they were physical CPUs so that control-plane work becomes preemptible at microsecond granularity, and it is measured directly against type-1 and type-2 virtualization."
+  drop_reason: null
+  taxonomy_primary: T1
+  taxonomy_secondary: [T3, T9]
+  physical_resource: CPU core
+  logical_abstraction: "A hybrid CPU pool inside one SmartNIC OS: physical CPUs run polling data-plane services while vCPUs, visible to the OS as ordinary CPUs bindable by standard affinity, host control-plane tasks in idle cycles."
+  problem: "SmartNIC data-plane services (DPDK/SPDK for VM network and storage I/O) are provisioned for peak and idle 67.5% of cycles for 99% of runtime, yet naively co-scheduling control-plane work there breaks I/O SLOs because control-plane operations contain non-preemptible kernel routines up to 67 ms long."
+  mechanism: "Instead of type-1 or type-2 virtualization with a separate guest OS, Tai Chi integrates vCPUs into the native SmartNIC OS so native IPC semantics survive and legacy control-plane code needs no modification; softirq-based context switching schedules vCPUs onto physical CPUs when the data plane is idle (detected by empty-polling counts), and the SmartNIC's programmable I/O accelerator runs a hardware workload probe that spots arriving I/O during a 3.2 us preprocessing window and forces a VM exit, hiding the 2 us scheduling latency; a unified IPI orchestrator routes inter-processor interrupts between vCPU and pCPU domains using V-state/P-state tracking, and a vCPU preempted while holding a lock is immediately rescheduled on an idle pCPU to avoid deadlock."
+  isolation_mechanism: "Performance isolation rather than security isolation: vCPU contexts make long non-preemptible control-plane routines interruptible at microsecond granularity, and the hardware probe guarantees the data plane preempts control-plane work on I/O arrival."
+  multiplexing_mechanism: "Control-plane vCPUs are time-multiplexed onto the idle cycles of data-plane physical CPUs, with a 50 us initial vCPU time slice; control-plane tasks also drive emulated NICs (eNICs) and virtual block devices in coordination with host QEMU."
+  state_mechanism: "vCPU state lives in the SmartNIC OS as ordinary CPU state plus V-state/P-state tracking for interrupt routing; there is no migration of this state."
+  overhead_bottleneck: "Cache and TLB pollution from interleaving control-plane vCPUs onto data-plane cores, which accounts for the residual 0.7% data-plane overhead."
+  primary_tradeoff: "Hybrid rather than conventional virtualization -> gains 3.1x faster VM startup and 4x control-plane throughput at only 0.7% data-plane cost with zero legacy code changes, where type-1 costs 7% and type-2 costs 25.9% data-plane degradation, but costs heuristic empty-polling thresholds and an unaddressed cache/TLB isolation problem."
+  quantitative_claims:
+    - "control-plane performance: 4x faster task execution at 32 concurrent tasks"
+    - "VM startup latency: 3.1x reduction at high instance density (4x baseline)"
+    - "data-plane overhead: 0.7% average, 1.92% peak"
+    - "virtualization comparison: type-1 incurs 7% data-plane degradation and type-2 (QEMU+KVM) 25.9%, versus Tai Chi's 0.7%"
+    - "hardware probe: without it, maximum RTT overhead reaches 203%"
+    - "motivating measurement: 67.5% idle data-plane CPU cycles during 99% of runtime; control-plane kernel routines up to 67 ms non-preemptible"
+    - "setup: Alibaba Cloud production SmartNICs with 12 cores (8 data-plane, 4 control-plane baseline); netperf, fio, sockperf, MySQL, nginx; 300-500 heterogeneous control-plane tasks in C, Python, Java, Bash and Rust"
+    - "deployment: over three years in production at a top-tier cloud provider with no user-reported I/O SLO violations"
+  why_useful_for_learning: "It shows the DPU as a virtualization host in its own right, and quantifies why conventional guest-OS virtualization is unaffordable on the I/O datapath."
+  priority: P1
+  related: [VIRT-SOSP25-05, VIRT-SOCC25-19, "Triton: A Flexible Hardware Offloading Architecture for Accelerating Apsara vSwitch in Alibaba Cloud"]
+  relations:
+    - {type: ALTERNATIVE, target: VIRT-SOSP25-05, basis: "both recover wasted I/O capacity in hyperscale clouds, Tai Chi by reclaiming idle SmartNIC cycles on one host and Oasis by pooling devices across hosts"}
+    - {type: SAME_BRANCH, target: "Triton: A Flexible Hardware Offloading Architecture for Accelerating Apsara vSwitch in Alibaba Cloud", basis: "same Alibaba SmartNIC/CIPU platform and the same offloaded virtual-switch datapath that Tai Chi's data-plane services implement"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "OMISSION from the seed list, found in the official SOSP 2025 accepted-papers list; the concept scan flagged it on SmartNIC/DPU, vCPU and multi-tenancy. Author list truncated to the first 8 plus et al. Production paper but published in the undifferentiated SOSP main track."
+
+- id: VIRT-SOSP25-16
+  title: "Scalable Far Memory: Balancing Faults and Evictions"
+  title_correction: null
+  authors: [Yueyang Pan, Yash Lala, Musa Unal, Yujie Ren, Seung-seob Lee, Abhishek Bhattacharjee, Anurag Khandelwal, Sanidhya Kashyap]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3731569.3764842
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://rs3lab.github.io/assets/papers/2025/pan:mage.pdf
+  classification: SUPPORT
+  classification_note: "Under the brief's disaggregation rule this is SUPPORT, not CORE: Mage expands a machine's memory over RDMA but builds no virtual memory resource for a guest -- it re-engineers the host paging fault-in/eviction path -- and it is not pure page-table work either, since memory expansion over a fabric is the subject."
+  drop_reason: null
+  taxonomy_primary: T2
+  taxonomy_secondary: [T9]
+  physical_resource: DRAM
+  logical_abstraction: "Transparently extended process memory: the application sees more memory than the machine has, with remote pages faulted in over RDMA and evicted asynchronously."
+  problem: "Page-based far memory systems inherit virtual-memory machinery designed for millisecond disks and collapse at high thread counts on modern multi-core machines, because TLB coherence via cross-core interrupts, system-wide LRU lists and contended allocators all serialise."
+  mechanism: "Three principles: always-asynchronous decoupling, which forbids synchronous eviction on the fault-in path and offloads all eviction to a small pool of at most four dedicated threads that keep a free-page supply; cross-batch pipelined execution, which uses per-CPU TLB and RDMA staging buffers to run other batches' pipeline stages during RDMA wait time, amortising TLB coherence cost; and scalability-prioritised coordination avoidance, which shards LRU lists and free-page caches per CPU and accepts less precise eviction for less contention. Two implementations: MageLnx (17k lines in Linux 4.15, bypassing the swap layer) and MageLib (4,234 lines on the OSv library OS with unified page tables and one-sided RDMA)."
+  isolation_mechanism: "N/A -- single-application focus; dedicated evictor threads keep eviction work off application threads, and per-CPU sharding limits inter-thread interference, but there is no multi-tenant isolation or quota."
+  multiplexing_mechanism: "Local DRAM is multiplexed across a process's pages by the sharded eviction policy; no multiplexing across tenants."
+  state_mechanism: "Page state lives in per-CPU sharded LRU lists and free-page caches with VMA-level direct mapping replacing swap-entry allocation; remote pages live in a peer's DRAM reached by one-sided RDMA."
+  overhead_bottleneck: "TLB coherence via cross-core interrupts plus contention on shared page-accounting structures, which is why throughput collapses with thread count in prior systems."
+  primary_tradeoff: "Always-asynchronous, pipelined, coordination-avoiding paging -> gains up to 4.2x throughput and 94.5% tail-latency reduction at 48 threads, but costs global eviction accuracy (partitioned LRU), dedicated evictor cores, and a 200 Gbps-class network assumption."
+  quantitative_claims:
+    - "throughput: up to 4.2x over Hermit and 3.6-3.8x over DiLOS/Hermit; tail latency reduced by up to 94.5%"
+    - "GapBS page rank at 10% offload, 48 threads: 15-19% throughput drop (4.2x better than Hermit); XSBench ~10% drop"
+    - "sequential scan with prefetch: 6.4% throughput drop at 10% offload"
+    - "memcached at 24 threads: p99 latency in the 160-220 us range; +0.64 M ops/s load capacity over Hermit at 50% offload"
+    - "network utilization: MageLib reaches 181 Gbps (94% of RDMA bandwidth), 3.1-7.1x over DiLOS/Hermit; MageLnx reaches 139 Gbps, limited by Linux network stack contention"
+    - "sequential read p99: 12 us for MageLib versus 82-255 us for baselines"
+    - "virtualization caveat stated by the authors: MageLib and MageLnx run in KVM/QEMU VMs while Hermit runs bare metal, and MageLib shows an 8.6% regression versus Hermit at 100% local memory attributed to EPT translation and VM exits"
+    - "hardware: dual-socket Intel Xeon Gold 6348 (56 cores), 512 GB DRAM per server, Mellanox BlueField-2 at 200 Gbps"
+  why_useful_for_learning: "It gives the host-side counterpart to guest-delegated tiering: the same problem of where memory-expansion policy should live, answered by making the host path scale instead of handing policy to the guest."
+  priority: P2
+  related: [VIRT-SOSP25-02, VIRT-SOSP25-05, VIRT-SOCC25-20, "Hermit", "DiLOS"]
+  relations:
+    - {type: ALTERNATIVE, target: VIRT-SOSP25-02, basis: "opposite answers to where memory-expansion policy belongs -- Mage scales the host fault/eviction path, Demeter delegates the decision into the guest"}
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-05, basis: "both extend a host's resources across a fabric, memory over RDMA here and PCIe devices over CXL there"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "OMISSION from the seed list, found in the official SOSP 2025 accepted-papers list; flagged by the concept scan on disaggregation/far memory. Kept as SUPPORT rather than DROP because the brief's disaggregation rule assigns far memory to SUPPORT by default; a reader interested only in guest-visible memory virtualization can skip it."
+
+- id: VIRT-SOSP25-17
+  title: "Tock: From Research To Securing 10 Million Computers"
+  title_correction: null
+  authors: [Leon Schuermann, Brad Campbell, Branden Ghena, Philip Levis, Amit Levy, Pat Pannuto]
+  venue: SOSP
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://sigops.org/s/conferences/sosp/2025/accepted.html
+  fullpaper_source: https://tockos.org/assets/papers/2025-sosp-tock-decade.pdf
+  classification: CONTEXT
+  classification_note: "A ten-year retrospective on an isolation-focused embedded OS with no virtual resource abstraction anywhere; its value here is operational -- what MPU-plus-language isolation actually costs to sustain in shipped root-of-trust hardware."
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary: [T5]
+  physical_resource: CPU core
+  logical_abstraction: "A hardware-isolated, preemptively scheduled process on a device with no MMU, plus compile-time-isolated kernel extensions (capsules) and per-process kernel allocations (grants)."
+  problem: "Whether a research OS built on a new language and new hardware protection mechanisms can survive the transition to production security-critical deployment, and what that transition costs."
+  mechanism: "Processes are hardware-isolated by MPU and run untrusted application code in an unprivileged domain; capsules are the kernel extension mechanism, implemented as Rust structs forbidden from using unsafe code so their isolation is enforced at compile time with essentially no runtime overhead; grants remove the global kernel heap entirely by placing all dynamic kernel allocations in the requesting process's own memory region, so no process can exhaust kernel resources."
+  isolation_mechanism: "MPU-enforced process isolation combined with Rust type-system isolation for capsules, under a threat model of mutually distrustful applications whose data stays secret even from the kernel unless explicitly revealed, and which cannot deny each other service at runtime."
+  multiplexing_mechanism: "Preemptive scheduling of processes onto a single core with MPU reprogramming; grants time-share kernel memory by charging allocations to processes."
+  state_mechanism: "Static kernel allocations plus the kernel stack only; per-process dynamic state lives in the process's own grant region, so there is no shared kernel heap to migrate or exhaust."
+  overhead_bottleneck: "Not a performance paper; the identified costs are engineering ones -- Rust's memory model being tied to threaded synchronous execution forced a major redesign for asynchronous drivers, and downstream forks (Ti50) diverged from mainline."
+  primary_tradeoff: "Language-plus-MPU isolation with academic stewardship -> gains least privilege at virtually no CPU or state overhead and a decade of survival as both product and research platform, but costs poor reuse of existing driver and library code and an async programming model that fits root-of-trust state machines badly."
+  quantitative_claims:
+    - "deployment: root-of-trust hardware in datacenter servers and millions of laptops; described as deployed on tens of millions of computers"
+    - "named deployments: Google OpenSK (FIDO second factor), Google Ti50 (Chromebook root of trust), Microsoft Pluton (datacenter server root of trust), Signpost (urban sensing)"
+    - "unsafe-code trend: the number of unsafe blocks remained steady despite significant added features"
+    - "governance: three-quarters of the current leadership team are academics"
+  why_useful_for_learning: "It is the operational reality check on non-virtualization isolation: what a shipped, mutually-distrustful-tenant isolation kernel looks like after ten years, and which of its design bets paid."
+  priority: P3
+  related: [VIRT-SOSP25-12, VIRT-SOSP25-11]
+  relations:
+    - {type: SAME_BRANCH, target: VIRT-SOSP25-12, basis: "same OS and same MPU-based isolation architecture; TickTock verifies what this paper describes shipping"}
+    - {type: ALTERNATIVE, target: VIRT-SOSP25-11, basis: "MPU-plus-Rust isolation versus CHERI capability compartments for the same class of device; the CHERIoT paper cites Tock's 87 KB network stack as a size comparison"}
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "OMISSION from the seed list, found in the official SOSP 2025 accepted-papers list. It is a retrospective/experience paper, but SOSP 2025 published a single undifferentiated accepted-papers list with no industry, operational or short-paper track, so publication_type is ARCHIVAL_MAIN_PAPER; an orchestrator wanting to exclude retrospectives from regular-research statistics should treat this like an OPERATIONAL_REFERENCE."

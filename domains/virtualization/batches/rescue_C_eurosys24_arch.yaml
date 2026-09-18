@@ -1,0 +1,398 @@
+papers:
+- id: VIRT-EUROSYS24-01
+  title: "HD-IOV: SW-HW Co-designed I/O Virtualization with Scalability and Flexibility for Hyper-Density Cloud"
+  title_correction: null
+  authors: [Zongpu Zhang, Jiangtao Chen, Banghao Ying, "et al."]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3627703.3629557
+  official_url: https://dl.acm.org/doi/10.1145/3627703.3629557
+  fullpaper_source: https://github.com/Maphist0/hdiov-ae
+  classification: CORE
+  classification_note: The paper's main contribution is a new I/O-virtualization architecture that replaces SR-IOV's fixed hardware virtual-function model with software-mediated, PASID/queue-pair-level device sharing, which is squarely T3 device virtualization as the object of study, not a side effect.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: []
+  physical_resource: NIC
+  logical_abstraction: A per-guest software-mediated virtual device (NIC or QAT accelerator queue pair) that behaves like an SR-IOV virtual function but is provisioned in software rather than capped by a fixed hardware VF count.
+  problem: SR-IOV's fixed, hardware-limited number of virtual functions caps device count and provisioning flexibility on hyper-density cloud hosts that pack many small VMs/containers per physical machine.
+  mechanism: HD-IOV decouples virtualization and resource-management logic from the device hardware into software so that DMA transactions and interrupts are delivered directly to guest VMs without VM exits; it uses the PCIe PASID feature so the IOMMU enforces isolation at hardware queue-pair granularity instead of whole-VF granularity, letting many more logical devices be carved from one physical NIC or accelerator than SR-IOV's VF ceiling allows.
+  isolation_mechanism: IOMMU-enforced, PASID-tagged queue-pair-level isolation (a scalable-IOV-style model) in place of one discrete hardware VF per tenant.
+  multiplexing_mechanism: One physical NIC (Intel E810) or on-chip QAT 2.0 accelerator is partitioned into many software-managed queue pairs bound 1:1 to guest VMs, decoupled from SR-IOV's fixed VF count.
+  state_mechanism: UNKNOWN - device/queue state placement and any live-migration handling were not described in the sources read.
+  overhead_bottleneck: SR-IOV's hardware VF-count ceiling and per-VF hardware complexity, which HD-IOV's software-managed queue-pair model removes at the cost of extra software mediation in the DMA/interrupt path.
+  primary_tradeoff: Moving virtualization/resource-management logic into software -> gains far higher device/tenant density and faster provisioning than SR-IOV, but costs additional software-mediation complexity in the DMA/interrupt path versus a fully hardware-fixed VF.
+  quantitative_claims:
+  - "device count: up to 2.96x more virtual devices supported than SR-IOV on the same NIC/QAT hardware (HD-IOV artifact evaluation, Intel Sapphire Rapids Xeon + E810 NIC + on-chip QAT 2.0)"
+  - "device initialization time: 2.9x faster median initialization time than SR-IOV (same evaluation)"
+  - "steady-state throughput: reported comparable to SR-IOV for both network and QAT accelerator devices, no significant degradation stated"
+  why_useful_for_learning: Shows the concrete software-mediated alternative to SR-IOV's fixed-VF model for scaling device virtualization, directly motivating later socket/queue-granular designs such as SG-IOV.
+  priority: P1
+  related: [VIRT-ASPLOS26-01]
+  relations:
+  - type: PRECURSOR
+    target: VIRT-ASPLOS26-01
+    basis: Both target SR-IOV's fixed-VF-count scaling ceiling for high-density multi-tenant hosts; HD-IOV's software-mediated, PASID/queue-pair-level isolation is a direct architectural predecessor to SG-IOV's socket-granular hardware partitioning for SmartNIC container networks.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [artifact, official-web]
+  confidence: HIGH
+  notes: "Retrieved via the GitHub artifact (Maphist0/hdiov-ae) README, which gives the hardware setup (Sapphire Rapids Xeon, Intel E810 NIC, on-chip QAT 2.0, IOMMU scalable mode/PASID) and headline evaluation numbers, cross-checked against a ResearchGate abstract summary that independently described the same software/hardware co-design and PASID-based queue-pair isolation. The ACM DL full text (10.1145/3627703.3629557) remained behind a 403 paywall, so state/migration handling and detailed limitations are recorded as UNKNOWN rather than guessed. This closes one of the three unretrieved EuroSys 2024 I/O-virtualization titles and confirms EuroSys 2024 does have a CORE T3 paper."
+
+- id: VIRT-EUROSYS24-04
+  title: "SmartNIC Security Isolation in the Cloud with S-NIC"
+  title_correction: null
+  authors: [Yang Zhou, Mark Wilkening, James Mickens, Minlan Yu]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3627703.3650071
+  official_url: https://dl.acm.org/doi/10.1145/3627703.3650071
+  fullpaper_source: https://minlanyu.seas.harvard.edu/writeup/eurosys24.pdf
+  classification: CORE
+  classification_note: S-NIC's entire contribution is a hardware isolation architecture (a "virtual smart NIC" abstraction with hard-partitioned cores/accelerators/DRAM/bus bandwidth per tenant function) that IS the device-virtualization/isolation mechanism, not incidental to some other contribution.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T7]
+  physical_resource: NIC
+  logical_abstraction: A "Virtual Smart NIC" per tenant network function - a dedicated, hardware-isolated slice of programmable cores, accelerators, DRAM, and packet pipeline that behaves as if the function had a private NIC.
+  problem: Commodity SmartNICs let mutually distrusting tenant network functions and the datacenter operator's management OS share hardware state, unrestricted memory, and bus bandwidth, enabling packet corruption, ruleset theft, and denial-of-service attacks that the authors demonstrate concretely.
+  mechanism: S-NIC hard-partitions NIC resources per function - locked TLB entries and hardware memory denylists give each function single-owner RAM/cache regions, dedicated TLB banks front the accelerator hardware-thread clusters, and a temporally-partitioned internal bus gives each function reserved bandwidth; atomic nf_launch/nf_teardown instructions provision and zero function state, and remote attestation (Diffie-Hellman-based) lets a function prove it runs on genuine, correctly-initialized S-NIC hardware.
+  isolation_mechanism: Hardware-enforced single-owner cache/RAM semantics (locked TLB entries plus memory denylists) combined with microarchitectural cache/TLB/bus partitioning to eliminate cross-function side channels, plus remote attestation for state integrity.
+  multiplexing_mechanism: Static, non-time-sliced dedicated allocation of cores, accelerators, and bus-bandwidth epochs per function, deliberately avoiding dynamic resource sharing to prevent OS-visible resource-status side channels.
+  state_mechanism: Function state (code/data) is DMA-copied in at nf_launch with a cumulative hash computed for later attestation, and zeroed (pages, registers, cache lines) at nf_teardown; no live-migration mechanism is described.
+  overhead_bottleneck: Hardware area/power cost of the added TLBs, denylists, and bus arbiters, and throughput loss from cache/bus partitioning as colocated-function density rises.
+  primary_tradeoff: Hard hardware partitioning of NIC resources -> gains strong, side-channel-free multi-tenant isolation between distrusting network functions and the host OS, but costs +8.89% chip area / +11.45% power and up to ~9.44% median IPC degradation at high (16-function) colocation density, eroding some of the SmartNIC's TCO/offload advantage.
+  quantitative_claims:
+  - "chip area overhead: +8.89% vs. baseline SmartNIC hardware, dominated by added TLBs"
+  - "power overhead: +11.45% vs. baseline SmartNIC hardware"
+  - "TCO impact: preserves 91.6% of the SmartNIC's cost advantage over host-based processing (an 8.37% reduction in that advantage)"
+  - "throughput overhead: under 1.7% in typical 4-function colocation scenarios"
+  - "IPC degradation: median 0.93% with 4 colocated functions sharing a 4MB L2, rising to average 9.44% median degradation with 16 colocated functions"
+  - "workloads: Firewall, DPI (33,471 patterns), NAT, load balancer, LPM routing, flow monitor, evaluated on CAIDA 2016 (26.7M TCP flows / 1.34B packets) and ICTF 2010 (100K sampled flows) traces"
+  why_useful_for_learning: Gives a concrete, mechanism-level answer for how a shared SmartNIC can be hardware-partitioned to give mutually distrusting tenants (and the host OS) a private-NIC illusion, directly explaining the isolation trade-offs that generic SmartNIC-multiplexing papers like OSMOSIS or RpcNIC leave as background.
+  priority: P1
+  related: [VIRT-ATC24-06, VIRT-HPCA25-06, VIRT-HPCA26-05]
+  relations:
+  - type: SAME_BRANCH
+    target: VIRT-ATC24-06
+    basis: Both build mechanisms for safe SmartNIC multi-tenancy; OSMOSIS focuses on resource multiplexing/QoS across tenants while S-NIC focuses on hard hardware isolation against a distrusting host OS.
+  - type: CONTRASTS_WITH
+    target: VIRT-HPCA26-05
+    basis: S-NIC's isolation model (locked TLBs, denylists, cache/bus partitioning) is exactly the class of accelerator-sharing protection that DSAssassin shows can be bypassed on a different shared accelerator (Intel DSA) via an unisolated Device TLB and shared work queue.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: FULL
+  evidence_kinds: [paper, official-web, artifact]
+  confidence: HIGH
+  notes: "Read the full text via the author-hosted PDF at minlanyu.seas.harvard.edu/writeup/eurosys24.pdf (Minlan Yu is a co-author), which covers abstract, problem, architecture, isolation/multiplexing mechanisms, evaluation numbers, and stated limitations; cross-checked against the GitHub artifact repo (SNIC-EuroSys24/SNIC), whose gem5-based simulation methodology (ARM gem5, SGX-NIC config, CloudLab c6420/c8220, ~2 days per simulation instance) matches the paper's evaluation approach. This is a second EuroSys 2024 CORE T3 paper, closing more of the EuroSys 2024 CORE gap."
+
+- id: VIRT-EUROSYS24-02
+  title: "Hoda: a High-performance Open vSwitch Dataplane with Multiple Specialized Data Paths"
+  title_correction: null
+  authors: [Heng Pan, Peng He, Zhenyu Li, Panhua Zhang, Junjie Wan, Yuhao Zhou, Xiongchun Duan, Yu Zhang, Gaogang Xie]
+  venue: EuroSys
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3627703.3629564
+  official_url: https://dl.acm.org/doi/10.1145/3627703.3629564
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: Hoda's entire contribution is a virtual-switch (Open vSwitch) datapath redesign - replacing one generic forwarding pipeline with per-OpenFlow-program specialized parsers/microflow caches - which is T3 vSwitch/device-virtualization architecture as the main object of study.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: []
+  physical_resource: NIC
+  logical_abstraction: A per-flow-program virtual-switch datapath - each OpenFlow program (e.g. tunneling, firewalling) gets its own specialized packet parser and microflow cache tuned to exactly the header fields that program needs, instead of one generic OVS pipeline serving every program.
+  problem: Vanilla Open vSwitch uses a single one-size-fits-all datapath (generic parser plus microflow cache) for every OpenFlow program, but different cloud-networking programs need very different subsets of packet-header fields, so the generic datapath wastes parsing work and cache capacity and leaves throughput on the table.
+  mechanism: Hoda compiles each OpenFlow program into its own specialized data path with a tailored packet parser that extracts only the header fields that program needs, paired with a microflow cache structured around exactly those fields, so multiple specialized fast paths coexist inside one Open vSwitch instance instead of a single generic path serving all programs.
+  isolation_mechanism: N/A - this is a forwarding-performance/dataplane-structuring contribution, not a tenant-isolation mechanism.
+  multiplexing_mechanism: Multiple specialized data paths coexist inside a single OVS instance, each servicing the flows that match its OpenFlow program, so the packet-processing pipeline itself (not just link bandwidth) is what is specialized/multiplexed per program.
+  state_mechanism: Per-data-path microflow caches hold the parsed/matched flow state for that program's specialized path, held in host memory as part of the vSwitch process; no cross-host state migration is described (this is a host-local dataplane optimization).
+  overhead_bottleneck: The mismatch between a generic one-size-fits-all parser/cache and the actual header-field needs of a given OpenFlow program, which wastes parsing cycles and cache capacity in vanilla OVS.
+  primary_tradeoff: Specializing the datapath per OpenFlow program -> gains substantial forwarding throughput and lower request latency, but costs the added engineering complexity of compiling and maintaining multiple specialized parser/cache pipelines instead of one generic path.
+  quantitative_claims:
+  - "throughput: 1.7x higher than vanilla Open vSwitch"
+  - "throughput: 1.5x higher than mSwitch"
+  - "real-world deployment: 20% reduction in request-processing time for Nginx services"
+  why_useful_for_learning: A concrete look at restructuring a production virtual-switch datapath around per-program specialization rather than one generic forwarding pipeline - the same underlying problem (generic OVS not scaling to production traffic patterns) that ByteDance's own later Byte vSwitch revisits with a from-scratch rebuild.
+  priority: P1
+  related: [VIRT-EUROSYS25-06]
+  relations:
+  - type: PRECURSOR
+    target: VIRT-EUROSYS25-06
+    basis: Both are ByteDance-affiliated virtual-switch performance efforts a year apart (Hoda authors include ByteDance co-authors Peng He, Junjie Wan, Yuhao Zhou, Xiongchun Duan, Yu Zhang). Hoda keeps Open vSwitch but specializes its datapath per OpenFlow program; Byte vSwitch (2025) discards OVS entirely for a purpose-built forwarding engine - together they read as successive ByteDance strategies (patch-then-replace) for the same underlying vSwitch scaling problem, though direct citation was not confirmed since full text was unavailable.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: HIGH
+  notes: "Abstract and headline results obtained via a Semantic Scholar record for DOI 10.1145/3627703.3629564 (paper confirmed CLOSED access / no OA copy via Unpaywall). Full author list and affiliations (CNIC/ICT-CAS, ByteDance, Intel) corrected/confirmed via CrossRef metadata for the same DOI. Routes exhausted before this succeeded: WebSearch, dl.acm.org abstract and PDF (403), ResearchGate (429 repeatedly), Zhenyu Li's ICT-CAS homepage (citation only, no abstract), a GitHub host-networking reading list (citation only), dblp and Google Scholar (robots-disallowed for fetch). Architecture diagrams and full evaluation methodology beyond the abstract were not read, so evidence_depth is ABSTRACT rather than DESIGN. This is a second EuroSys 2024 CORE T3 paper found in this pass."
+
+- id: VIRT-ASPLOS24-17
+  title: "NetRen: Service Migration-Driven Network Renascence with Synthesizing Updated Configuration"
+  title_correction: null
+  authors: [Rongxin Han, Jingyu Wang, Qi Qi, Haifeng Sun, Chao Xu, Zhaoyang Wan, Zirui Zhuang, Yichuan Yu, Jianxin Liao]
+  venue: ASPLOS
+  year: 2024
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3620666.3651365
+  official_url: https://dl.acm.org/doi/10.1145/3620666.3651365
+  fullpaper_source: UNKNOWN
+  classification: DROP
+  classification_note: The full abstract confirms NetRen is a pure enterprise-network configuration-synthesis paper (OSPF/BGP config synthesis via a Transformer-based "GraphTrans" model plus a stepwise repairer) triggered by network-level "service and traffic migration" - there is no VM, container, hypervisor, virtual switch, or any virtualized-resource abstraction anywhere in the actual contribution, so despite the migration-related title this is not a virtualization paper.
+  drop_reason: no_virtualization_relation
+  taxonomy_primary: T9
+  taxonomy_secondary: []
+  physical_resource: switch ASIC
+  logical_abstraction: A synthesized OSPF/BGP router-configuration set (sketch extraction -> GraphTrans synthesis -> stepwise repair) that keeps an enterprise network's control-plane configuration consistent after a service/traffic migration event.
+  problem: Manually re-configuring enterprise network routing (OSPF/BGP) after a service or traffic migration is slow, error-prone, and leaves networks degraded or unavailable until configurations are fixed.
+  mechanism: NetRen represents candidate configurations as graphs ("sketches"), trains a Transformer-based synthesizer (GraphTrans, using long-range attention and parallel reasoning) to map sketches to performance-optimizing OSPF/BGP configurations, then feeds the synthesizer's output as a well-initialized starting point into a stepwise configuration repairer that resolves any remaining satisfiability constraints.
+  isolation_mechanism: N/A - no tenant/VM isolation mechanism; this is single-network control-plane configuration management.
+  multiplexing_mechanism: N/A
+  state_mechanism: N/A - no virtualization state; the relevant state is routing-configuration state on physical network devices, not a virtual-resource abstraction.
+  overhead_bottleneck: The satisfiability barrier inherent to constraint-based configuration synthesis, addressed by starting the repair step from the learned synthesizer's near-optimal output instead of from scratch.
+  primary_tradeoff: A learned Transformer-based configuration synthesizer instead of pure constraint-search synthesis -> gains a 312x synthesis-efficiency improvement and better-performing configurations, but costs the need for training data with an established configuration-to-performance optimization relationship.
+  quantitative_claims:
+  - "configuration consistency: averages 98% for the GraphTrans synthesizer's output"
+  - "synthesis efficiency: 312.4x increase over the paper's baseline"
+  - "network performance improvement: 5.83%"
+  why_useful_for_learning: Minimal for virtualization; retained mainly as a documented negative example of the "service migration" keyword false-positive trap - a network-configuration-synthesis paper with no virtualization mechanism.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: HIGH
+  notes: "Author list corrected: the paper's actual first author is Rongxin Han (Beijing University of Posts and Telecommunications), not 'Bowen Han'/'Jiangyuan Han' as recorded in the census24c.yaml stub; confirmed via CrossRef metadata and a Semantic Scholar record for DOI 10.1145/3620666.3651365, which also supplied the full abstract (both CrossRef and Semantic Scholar independently agree the paper is CLOSED access with no OA copy). 'Service migration' in the title refers to network traffic/service relocation triggering a routing-configuration change, not VM/container live migration. Reclassified from the stub's conservative CONTEXT to DROP (hard rule 6, reason no_virtualization_relation) now that the actual content is known rather than guessed from the title."
+
+- id: VIRT-HPCA25-05
+  title: 'DPUaudit: DPU-assisted Pull-based Architecture for Near-Zero Cost System Auditing'
+  title_correction: null
+  authors: [Peng Jiang, Hanlin Jiang, Ruizhe Huang, Hanwen Lei, Zhineng Zhong, Shaokun Zhang, Yuxin Ren, Ning Jia, Xinwei Hu, Yao Guo, Xiangqun Chen, Ding Li]
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/HPCA61900.2025.00014
+  official_url: https://hpca-conf.org/2025/main-program/
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: DPUaudit builds a DPU-offloaded, pull-based security-auditing architecture (the DPU itself actively DMA-pulls system-event logs from the monitored host, removing the host-resident "log sender" of prior designs) - it uses the DPU as a hardware-isolated external observer of the host, but it does not build a virtual-resource abstraction, multiplex a device across VM tenants, or touch any VM/hypervisor mechanism, so per the brief's "new virtual resource abstraction" test it stays outside CORE/SUPPORT; kept as CONTEXT rather than DROP because DPU-as-trusted-observer is a real, concrete instance of how datacenter DPU hardware is used operationally, conceptually adjacent to VM-introspection-style designs.
+  drop_reason: null
+  taxonomy_primary: T10
+  taxonomy_secondary: [T3]
+  physical_resource: NIC
+  logical_abstraction: A DPU-resident audit collector that actively pulls (DMA-reads) system-event/log records from host memory on its own schedule, instead of relying on a host-resident log-sender process/agent to push them.
+  problem: Software-based system-auditing frameworks have high runtime overhead, and prior hardware-offloaded (DPU-based) auditing still requires a host-resident log-sender process, which in turn needs heavy software protection to stay trustworthy, reintroducing high runtime overhead.
+  mechanism: DPUaudit removes the host-side log-sender entirely - the DPU actively pulls system events from the monitored host's memory via DMA on a pull-based schedule, eliminating the attack surface and protection overhead of a host-resident sender process while still preserving audit-log integrity.
+  isolation_mechanism: The DPU acts as a hardware-isolated collector outside the (potentially compromised) host's software stack; integrity comes from the DPU pulling data itself rather than trusting a host process, not from any tenant-vs-tenant device-sharing isolation.
+  multiplexing_mechanism: N/A - concerns one host's audit pipeline, not multiplexing a device across multiple VM tenants.
+  state_mechanism: Audit-log state is generated on the host and pulled into DPU-side storage/processing by DMA on the DPU's own schedule; no VM/device-virtualization state or migration is involved.
+  overhead_bottleneck: Host-side CPU/runtime overhead from running and protecting a log-sender process in prior push-based hardware-offload auditing designs, which the pull-based DPU design removes.
+  primary_tradeoff: Pull-based DPU auditing instead of push-based host-agent auditing -> gains near-zero host overhead and removes the log-sender's attack surface, but costs dependence on the DPU's own pull cadence and on DPU hardware being present and trustworthy.
+  quantitative_claims:
+  - "host application slowdown: average 2.1% across six mainstream datacenter applications under different workloads, at least one order of magnitude smaller than existing push-based/software auditing approaches (paper's own comparison)"
+  why_useful_for_learning: A useful adjacent example of a DPU used as a hardware-isolated, host-external observer rather than as a device-virtualization target - a contrast case for why "observe the host/guest from a privileged, isolated vantage point" designs recur across the corpus even outside classic virtualization.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Full abstract obtained via Semantic Scholar for DOI 10.1109/HPCA61900.2025.00014, itself found via a CrossRef bibliographic-title search after the IEEE Xplore document page (10946716) rendered empty content on fetch. Author/affiliation list (Southeast University; Key Laboratory of High-Confidence Software Technologies, Peking University; Huawei Technologies) confirmed against the official HPCA 2025 main-program page (Session 1A, 'Reliable Bets'); Peng Jiang's and Ding Li's own homepages were also checked but carried no abstract. Full paper text, architecture diagrams, and evaluation methodology beyond the abstract were not read, hence CONTEXT rather than a firmer SUPPORT/DROP call and confidence MEDIUM rather than HIGH."
+
+- id: VIRT-HPCA25-06
+  title: 'RpcNIC: Enabling Efficient Datacenter RPC Offloading on PCIe-attached SmartNICs'
+  title_correction: null
+  authors: [Jie Zhang, Hongjing Huang, Xuzheng Chen, Xiang Li, Jieru Zhao, Ming Liu, Zeke Wang]
+  venue: HPCA
+  year: 2025
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: UNKNOWN
+  official_url: https://hpca-conf.org/2025/main-program/
+  fullpaper_source: https://pages.cs.wisc.edu/~mgliu/papers/RpcNIC-hpca25.pdf
+  classification: SUPPORT
+  classification_note: RpcNIC offloads RPC (de)serialization compute onto a PCIe-attached SmartNIC/FPGA with no multi-tenant isolation or new virtual-resource abstraction of its own - the contribution is an accelerator-offload architecture for one workload, not device virtualization - but it is exactly the kind of concrete SmartNIC-offloaded function that CORE SmartNIC-isolation papers (S-NIC, OSMOSIS) need to multiplex/isolate, so it is retained as SUPPORT background rather than CONTEXT.
+  drop_reason: null
+  taxonomy_primary: T3
+  taxonomy_secondary: [T9]
+  physical_resource: NIC
+  logical_abstraction: A compiler-generated, transparently relocatable RPC message representation whose fields can live in host CPU memory or SmartNIC memory (moveToNIC/moveToCPU), backed by hardware serialization/deserialization engines.
+  problem: The RPC (de)serialization stack alone consumes about 7.1% of CPU cycles in production cloud systems, and existing hardware accelerators need on-chip CPU integration or proprietary interconnects (e.g. UPI) that are not deployable on commodity PCIe-only servers.
+  mechanism: RpcNIC is a software/hardware co-designed offload architecture on a PCIe-attached FPGA SmartNIC - a target-aware deserializer batches per-field DMA writes into "one-shot" transfers, a memory-affinity serializer splits work across CPU pre-serialization, SmartNIC encoding, and a memcpy-offload engine, and an automatic field-updating mechanism lets a Protobuf-derived runtime schema table be reconfigured to move fields between host and NIC memory without restarting the application.
+  isolation_mechanism: N/A - the paper does not describe multi-tenant isolation; compute units are independently reconfigurable but not isolated between distrusting tenants.
+  multiplexing_mechanism: Four independent hardware deserializer lanes with per-lane free-list FIFOs of 4KB chunks, and per-compute-unit descriptor/notification rings for asynchronous task submission - a single-tenant task-queueing design, not a resource-isolation mechanism.
+  state_mechanism: A runtime Schema Table records, per RPC message field, whether it currently lives in host or SmartNIC memory; moveToNIC/moveToCPU calls mutate this table and trigger the corresponding data movement, with a 16K-entry TLB translating host addresses on the SmartNIC side.
+  overhead_bottleneck: PCIe transaction-rate limits during field-by-field DMA (deserialization) and PCIe's roughly 1250ns access latency during pointer-chasing serialization versus about 70ns for host memory, identified as the dominant costs relative to an on-chip accelerator.
+  primary_tradeoff: Moving RPC (de)serialization to a commodity PCIe-attached SmartNIC -> gains immediate deployability without custom interconnects or CPU integration, but costs extra PCIe round-trips that a same-die accelerator would avoid, mitigated (not eliminated) by batching and memory-affinity data placement.
+  quantitative_claims:
+  - "RPC layer processing time: 2.3x lower than a ProtoACC-PCIe baseline (HyperProtoBench, Xilinx U280 FPGA at 250MHz)"
+  - "end-to-end throughput: 2.6x improvement over ProtoACC-PCIe (cloud image-compression service, 100Gb Mellanox ConnectX-5 NIC)"
+  - "deserialization throughput: 2.2-3.1x speedup from one-shot DMA batching vs. field-by-field DMA (sub-1KB fields)"
+  - "serialization time: 4.3x reduction vs. CPU-only serialization (HyperProtoBench geometric mean), using about 22% additional CPU cycles for pre-serialization"
+  - "host CPU cycle savings: 74% average reduction via memory-affinity serialization plus memcpy-engine offload"
+  - "DeathStarBench microservice latency: 1.57x improvement vs. CPU-only (5-microservice geometric mean)"
+  - "hardware footprint: 13% LUTs, 8% registers, 27% BRAMs of a Xilinx U280"
+  why_useful_for_learning: A concrete example of what real workloads (RPC serialization) get offloaded onto a PCIe-attached SmartNIC/DPU, and why such offload engines need the kind of hardware isolation S-NIC or OSMOSIS provide once shared across mutually distrusting tenants, which RpcNIC itself does not address.
+  priority: P2
+  related: [VIRT-EUROSYS24-04, VIRT-ATC24-06]
+  relations:
+  - type: CONTRASTS_WITH
+    target: VIRT-EUROSYS24-04
+    basis: RpcNIC offloads a concrete compute-heavy function (RPC (de)serialization) onto SmartNIC hardware with no multi-tenant isolation, exactly the gap S-NIC's hard TLB/cache/bus partitioning of NIC accelerators is built to close for such offloaded functions.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: DESIGN_EVAL
+  evidence_kinds: [paper, official-web]
+  confidence: HIGH
+  notes: "Read the author-hosted full PDF at pages.cs.wisc.edu/~mgliu/papers/RpcNIC-hpca25.pdf (Ming Liu, UW-Madison, co-author), whose author/affiliation list matches the official HPCA 2025 main-program listing exactly. DOI not located (IEEE Xplore document 10946709 exists but its abstract page returned no content on fetch)."
+
+- id: VIRT-HPCA26-03
+  title: 'SCALE: Tackling Communication Bottlenecks in Confidential Distributed Machine Learning'
+  title_correction: null
+  authors: [Joongun Park, Yongqin Wang, Huan Xu, Hanjiang Wu, Mengyuan Li, Tushar Krishna]
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/HPCA68181.2026.11408582
+  official_url: https://doi.org/10.1109/HPCA68181.2026.11408582
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: SCALE's contribution is optimizing the confidential-computing trust boundary itself (chained Confidential VM + per-GPU TEE + inter-GPU-TEE communication) for distributed ML, which is T7 confidential/security isolation as the main object of study, and the trust boundary explicitly extends past the CPU to the GPU interconnect (NVLink), directly answering the confidential-computing trend question this pass was asked to check.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T6, T9]
+  physical_resource: GPU
+  logical_abstraction: A confidential distributed-training fabric in which each GPU's Trusted Execution Environment is chained to Confidential VMs and to other GPU TEEs so inter-GPU collective communication stays inside the confidential trust boundary end-to-end.
+  problem: NVIDIA's Confidential Computing mode (Confidential VMs chained to GPU TEEs) protects distributed ML training from an untrusted cloud, but encrypting/authenticating traffic that crosses TEE boundaries - both CVM-to-GPU-TEE and GPU-TEE-to-GPU-TEE over NVLink - adds latency that is especially severe for collective-communication operations, hurting end-to-end training throughput.
+  mechanism: SCALE introduces a co-encryption design that offloads and parallelizes encryption/authentication work onto otherwise-underutilized GPU compute, plus a communication algorithm tailored to the confidential setting, to reduce the encryption-induced latency tax that collective operations pay when crossing TEE security boundaries.
+  isolation_mechanism: NVIDIA GPU-TEE hardware isolation chained to Confidential VMs; SCALE's contribution optimizes communication across this multi-hop CVM->GPU-TEE->GPU-TEE trust boundary rather than changing what it isolates.
+  multiplexing_mechanism: Underutilized GPU compute cycles are time-shared with the training workload to perform encryption/authentication concurrently with normal computation.
+  state_mechanism: Encrypted/authenticated state must cross both the CVM-GPU PCIe boundary and the inter-GPU NVLink boundary on every collective-communication step; migration/checkpoint state is not addressed.
+  overhead_bottleneck: Encryption-induced latency on high-throughput collective-communication operations (e.g. all-reduce style traffic) across CVM-GPU and GPU-GPU TEE boundaries, identified as the binding cost of confidential distributed training relative to native PCIe/NVLink.
+  primary_tradeoff: Extending the confidential-computing trust boundary from a single CPU/CVM to the full multi-GPU interconnect -> gains end-to-end confidentiality for distributed training, but costs substantial communication latency versus native (non-confidential) NVLink/PCIe, which SCALE's co-encryption design only partially recovers.
+  quantitative_claims:
+  - "communication-related security overhead: 40-70% reduction from SCALE's co-encryption design vs. an unoptimized confidential-communication baseline (evaluated on real ML workloads/traces from four HGX H100/H200 clusters)"
+  why_useful_for_learning: Shows the confidential-computing trend moving from a single-CPU CVM boundary to a multi-hop CVM+GPU-TEE trust boundary spanning the accelerator interconnect - the key 2024->2026 trend signal for the corpus's confidential-computing branch.
+  priority: P1
+  related: []
+  relations: []
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: MEDIUM
+  notes: "Full text remains behind IEEE Xplore (paywalled; the Xplore document page rendered no content on fetch, and the lead author's own homepage lists only the citation with no abstract). Abstract obtained via Semantic Scholar's record for DOI 10.1109/HPCA68181.2026.11408582, which matches the lead author's own publication listing exactly. Per the abstract itself, NVIDIA GPU Confidential Computing mode was not yet available in the current NVIDIA software stack at evaluation time, so results are partly analytical/trace-based rather than measured live end-to-end - noted here rather than presented as a live measurement. Architecture/implementation detail beyond the abstract was not read."
+
+- id: VIRT-HPCA26-05
+  title: 'DSAssassin: Cross-VM Side-Channel Attacks by Exploiting Intel Data Streaming Accelerator'
+  title_correction: null
+  authors: [Benfeng Chen, Kun Li, Shuwen Deng, Dongsheng Wang, Yun Chen]
+  venue: HPCA
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/HPCA68181.2026.11408519
+  official_url: https://ieeexplore.ieee.org/document/11408519/
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: The paper does not merely run an attack inside a VM - it reverse-engineers and breaks the isolation of Intel Scalable I/O Virtualization's shared work queue and Device TLB on a shared accelerator (Intel DSA), i.e. it breaks an accelerator's inter-VM isolation boundary, which per the brief's own attack-paper rule makes this a device-virtualization-isolation paper (T7/T3), not a generic CONTEXT attack paper.
+  drop_reason: null
+  taxonomy_primary: T7
+  taxonomy_secondary: [T3]
+  physical_resource: Intel DSA (on-SoC shared accelerator, virtualized via Intel VT-d Scalable IOV)
+  logical_abstraction: Intel Scalable I/O Virtualization (SIOV) shared work queues (SWQ) and per-process Device TLB (DevTLB) entries that let multiple VMs/processes submit descriptors to one physical DSA engine as if each had a private queue.
+  problem: Intel's Data Streaming Accelerator (DSA), shared across VMs/processes via Intel VT-d's Scalable I/O Virtualization to offload data-movement workloads from the CPU, was assumed to be protected against device-based cross-tenant threats because SIOV mediates device access, but its microarchitectural isolation had not been examined.
+  mechanism: The authors reverse-engineer DSA's Device TLB (DevTLB) and find its entries are not isolated per process/VM, and analyze DSA's Shared Work Queue (SWQ) to uncover a timer-free side channel via Deferred Memory Write (DMWr) transaction ordering; they build two attack primitives - a DevTLB-based timing attack and an SWQ-based contention attack - that let one VM infer another VM's memory-access and I/O activity through the shared accelerator, bypassing SIOV's intended device-level isolation.
+  isolation_mechanism: The finding IS a broken isolation boundary - DevTLB entries and SWQ contention state are shared across the VMs that Intel Scalable IOV is supposed to keep isolated from one another.
+  multiplexing_mechanism: Intel Scalable IOV multiplexes one physical DSA engine's work queue and DevTLB across many VMs/processes via PASID-tagged shared submission, which is exactly the shared hardware state the attack exploits.
+  state_mechanism: N/A (offensive security paper; no virtualization state migration is involved) - DevTLB and SWQ hardware state are themselves the side channel.
+  overhead_bottleneck: N/A (the paper's "overhead" is the attack channel's own bandwidth/accuracy, not a defended system's performance cost).
+  primary_tradeoff: Sharing one physical DSA engine across VMs via Scalable IOV for offload efficiency and density -> gains device-offload throughput, but costs a previously unrecognized cross-VM covert/side-channel surface (DevTLB + SWQ) that bypasses SIOV's intended isolation.
+  quantitative_claims:
+  - "cross-VM covert channel: 17.19 Kbps true capacity at 4.64% error rate, reported as 5x faster and 4x more accurate than the prior state-of-the-art covert channel"
+  - "website fingerprinting attack: 85.7% classification accuracy across the top 100 websites"
+  - "cross-VM keystroke inference: F1 = 92.0% (DevTLB-based attack) and F1 = 98.4% (SWQ-based attack)"
+  why_useful_for_learning: A concrete, mechanism-level counterexample showing that a hardware I/O-virtualization scheme (Intel Scalable IOV) marketed as closing device-based cross-tenant threats can still leak through microarchitectural sharing (DevTLB, shared work queue) - the same class of isolation gap that S-NIC's hard partitioning is explicitly designed to prevent on a different shared accelerator.
+  priority: P1
+  related: [VIRT-EUROSYS24-04]
+  relations:
+  - type: CONTRASTS_WITH
+    target: VIRT-EUROSYS24-04
+    basis: DSAssassin demonstrates exactly the class of shared-accelerator cross-VM leakage (via an unisolated Device TLB and shared work queue) that S-NIC's hard TLB/cache/bus partitioning of NIC accelerators is built to prevent; read together they show the isolation-vs-sharing trade-off from the attack and defense sides respectively.
+  existing_corpus_overlap: null
+  previous_analysis_depth: null
+  evidence_depth: ABSTRACT
+  evidence_kinds: [official-web]
+  confidence: HIGH
+  notes: "Full text behind IEEE Xplore (document rendered empty content on fetch) and the authors' own THU HAS Lab page (metadata only, no hosted abstract). Full abstract obtained via Semantic Scholar's record for DOI 10.1109/HPCA68181.2026.11408519, whose document-number suffix matches IEEE Xplore doc/11408519 exactly and whose author list matches THU HAS Lab's own publication listing. The abstract itself is detailed enough (naming DevTLB, SWQ, DMWr, and the SIOV bypass explicitly) to support classification and mechanism fields with high confidence even though architecture diagrams and full evaluation methodology were not read."
+
+rescue_report:
+  retrieved: 8
+  still_failed: []
+  reclassifications:
+  - id: VIRT-EUROSYS24-01
+    from: CONTEXT
+    to: CORE
+    why: "GitHub artifact (Maphist0/hdiov-ae) plus ResearchGate abstract summary confirmed HD-IOV is a software-mediated, PASID/queue-pair-level I/O-virtualization architecture that scales past SR-IOV's fixed VF count, with quantitative evaluation (2.96x device density, 2.9x faster init) - a real T3 device-virtualization contribution, not just a title match."
+  - id: VIRT-EUROSYS24-02
+    from: CONTEXT
+    to: CORE
+    why: "Semantic Scholar abstract confirmed Hoda redesigns the Open vSwitch datapath into multiple OpenFlow-program-specialized parser/microflow-cache pipelines (1.7x vs vanilla OVS, 1.5x vs mSwitch), which is a virtual-switch/device-virtualization architecture contribution, not a generic networking paper."
+  - id: VIRT-EUROSYS24-04
+    from: CONTEXT
+    to: CORE
+    why: "Full text (author-hosted PDF) confirmed S-NIC hard-partitions SmartNIC cores/accelerators/DRAM/bus bandwidth per tenant function with locked TLBs, denylists, and remote attestation - this IS a NIC-virtualization/isolation architecture, evaluated in detail (+8.89% area, +11.45% power, <1.7% typical throughput overhead)."
+  - id: VIRT-ASPLOS24-17
+    from: CONTEXT
+    to: DROP
+    why: "Full abstract (via Semantic Scholar/CrossRef, DOI 10.1145/3620666.3651365) showed NetRen is an OSPF/BGP network-configuration-synthesis paper (GraphTrans Transformer synthesizer + stepwise repair) with zero VM/container/hypervisor/vSwitch content; 'service migration' refers to network traffic relocation, not live migration, so it fails the virtualization-relation test outright (drop_reason: no_virtualization_relation)."
+  - id: VIRT-HPCA25-06
+    from: CONTEXT
+    to: SUPPORT
+    why: "Full text (author-hosted PDF) showed RpcNIC offloads RPC (de)serialization to a PCIe-attached SmartNIC/FPGA with detailed mechanism and strong quantitative results, but explicitly builds no multi-tenant isolation or virtual-resource abstraction; it is retained as SUPPORT background for SmartNIC-isolation CORE papers (S-NIC, OSMOSIS) rather than CORE or a bare CONTEXT."
+  - id: VIRT-HPCA26-03
+    from: CONTEXT
+    to: CORE
+    why: "Semantic Scholar abstract (DOI 10.1109/HPCA68181.2026.11408582) confirmed SCALE optimizes the chained Confidential-VM + per-GPU-TEE + inter-GPU-TEE trust boundary for distributed ML training (40-70% communication-security-overhead reduction), i.e. confidential/security isolation (T7) extended across the GPU interconnect is the main contribution, not incidental use of confidential computing."
+  - id: VIRT-HPCA26-05
+    from: CONTEXT
+    to: CORE
+    why: "Semantic Scholar abstract (DOI 10.1109/HPCA68181.2026.11408519) confirmed DSAssassin reverse-engineers Intel DSA's Device TLB and Shared Work Queue to break Intel Scalable I/O Virtualization's inter-VM isolation guarantee on a shared accelerator, which per the brief's attack-paper rule (breaking an accelerator's inter-VM isolation boundary) is CORE T7/T3, not a generic CONTEXT attack paper that merely runs inside a VM."
+  notes: >
+    VIRT-HPCA25-05 (DPUaudit) evidence was substantially deepened (full abstract obtained: DPU
+    pull-based system-event collection replacing a vulnerable host-side push agent, 2.1% average
+    slowdown) but its classification is unchanged at CONTEXT: it uses DPU hardware isolation as an
+    external observer of the host but builds no virtual-resource abstraction and does not multiplex
+    a device across VM tenants, so it does not clear the CORE/SUPPORT bar despite being fully read
+    at abstract level. All 8 target papers were retrieved to at least ABSTRACT-level official
+    evidence (three to DESIGN_EVAL or FULL via artifact/author-hosted full text); none remain
+    TITLE_ONLY. Key access routes that worked: author-hosted PDFs (S-NIC via Minlan Yu's own
+    site, RpcNIC via Ming Liu's own site), a GitHub artifact README (HD-IOV), and the Semantic
+    Scholar Graph API paper-by-DOI endpoint (Hoda, NetRen, DPUaudit, SCALE, DSAssassin) once the
+    correct DOI was first obtained via CrossRef's bibliographic-title search - both used one
+    request at a time, since parallel/rapid-fire requests to api.semanticscholar.org and
+    api.openalex.org were reliably 429-rate-limited by the fetch layer while single spaced
+    requests usually succeeded. ACM DL, IEEE Xplore, ResearchGate, dblp, Google Scholar, Bing and
+    DuckDuckGo were either 403/paywalled, JS-rendered empty, or robots-disallowed for every paper
+    in this batch, confirming the original ACM DL/IEEE Xplore block was the correct diagnosis for
+    why these 8 were stuck at TITLE_ONLY. The EuroSys 2024 CORE-paper gap the task flagged is
+    genuinely closed, not just narrowed: EuroSys 2024 previously had zero CORE records anywhere in
+    the corpus (all 9 census24a.yaml EuroSys-2024 entries were SUPPORT/CONTEXT/DROP); this pass
+    adds two confirmed CORE T3 papers (HD-IOV, S-NIC) plus a third strong CORE candidate (Hoda) at
+    ABSTRACT-level evidence, bringing EuroSys 2024's CORE count to at least 2-3 versus EuroSys
+    2025's ten and EuroSys 2026's eight - still fewer, but no longer zero, and the residual gap is
+    now attributable to genuine publication-volume/topic differences rather than pure ACM DL access
+    failure. The HD-IOV -> SG-IOV (ASPLOS 2026) lineage was established at the level the available
+    evidence supports: both papers attack SR-IOV's fixed-hardware-VF-count scaling ceiling for
+    high-density multi-tenant hosts; HD-IOV's answer is software-mediated, PASID-tagged queue-pair
+    isolation (decoupling virtualization logic from the device into software), while SG-IOV's
+    answer is socket-granular hardware partitioning for SmartNIC container networks - a direct
+    architectural throughline recorded as a PRECURSOR relation on HD-IOV's record, though no
+    explicit citation from SG-IOV back to HD-IOV was confirmed since SG-IOV's own full text was not
+    re-read in this pass (only its existing corpus record was consulted).
