@@ -95,10 +95,37 @@ batch마다 "배제한 논문에도 record를 만들었는가"의 정책이 달�
 MICRO 2024는 배제 논문도 DROP record로 보존해 17건 중 7건이 DROP이다.
 **연도별 비교는 유효하나(§GLOBAL_AUDIT Q1), venue별 비교는 이 수치로 하면 안 된다.**
 
-### 3.6 데이터 정합성 미해결 1건
+### 3.6 데이터 정합성 — DOI 필드는 재검증 없이 인용하지 말 것
 
-`VIRT-CCGRID24-03`과 `VIRT-CCGRID24-06`이 동일 DOI(10.1109/CCGrid59990.2024.00075)를 갖는다.
-최소 한쪽은 오기다.
+독립 verification pass(12건 표본)에서 **DOI 오류가 확인되었다.** 발견되어 정정된 것:
+
+| id | 잘못된 DOI | 실제로 가리키던 것 | 정정 |
+|---|---|---|---|
+| `VIRT-CCGRID24-03` | 10.1109/CCGrid59990.2024.00075 | 무관한 논문 (Quantum-Classical Computing 교육) | 10.1109/CCGrid59990.2024.00084 |
+| `VIRT-CCGRID24-06` | 10.1109/CCGrid59990.2024.00075 | 위와 동일 | 10.1109/CCGrid59990.2024.00064 |
+| `VIRT-ASPLOS24-03` (GMLake) | 10.1145/3620666.3651353 | `VIRT-ASPLOS24-16` (GMT) | 10.1145/3620665.3640423 (Crossref 확인) |
+
+정정 후 전 corpus 재검사 결과: 형식 오류 0건, 중복 DOI 0건, DOI 보유 257/410건.
+**그러나 표본 12건 중 2건(약 1/6)에서 DOI 오류가 나왔다는 사실은, 아직 검사하지 않은
+나머지 레코드에도 같은 유형의 오류가 있을 수 있음을 뜻한다.**
+
+- 서지 정보를 인용·링크 목적으로 쓰려면 **전수 DOI resolution pass가 선행되어야 한다.**
+- 반면 **질적·기구 서술 내용은 표본에서 신뢰할 만한 것으로 확인되었다.** 조작된 mechanism
+  서술은 발견되지 않았고, `evidence_depth` 자기 표기는 실제 접근 가능성과 일치했다
+  (초록만 접근 가능한 논문이 FULL로 표기된 사례 없음).
+
+기타 verification 지적 사항:
+- `VIRT-EUROSYS25-03`(HyperAlloc)의 STREAM 수치 1건이 저자 PDF에서 확인되지 않았다.
+  해당 claim에 `[VERIFY: ...]` 경고를 인라인으로 남겼다. 나머지 6건은 축자 일치.
+- `VIRT-EUROSYS24-01`(HD-IOV) 저자 목록이 3명+et al.로 축약되어 있다(원 출처는 10명 전원 표기).
+- `VIRT-OSDI26-06`(Nixie)의 OSDI 2026 채택 여부는 재확인에서도 공식 프로그램상 확인되지 않았다
+  (arXiv에는 존재). 기존 기록의 flag가 유지된다.
+
+전체 verification 결과는 `synthesis/VERIFICATION.md`에 있다.
+
+### 3.7 데이터 정합성 미해결
+
+현재 알려진 미해결 정합성 문제는 없다(위 3건은 정정 완료). 다만 §3.6의 전수 DOI 검증 권고는 유효하다.
 
 ## 4. 이번 작업에서 수행한 것
 
@@ -122,7 +149,7 @@ MICRO 2024는 배제 논문도 DROP record로 보존해 17건 중 7건이 DROP�
    T3·T4 두 branch의 연결점이라 영향이 크다.
 3. **SoCC 2024 publication_type 확정** 22건.
 4. **TITLE_ONLY 63건 재시도** (§3.4).
-5. **CCGrid24 중복 DOI 정정.**
+5. **전수 DOI resolution pass** — 표본에서 1/6 오류율이 나왔다(§3.6). 인용 용도로 쓰기 전 필수.
 6. batch 1~4(EuroSys25, SOSP25, ASPLOS25, Middleware25, CCGrid25)의 `venue_populations`
    backfill — 해당 agent들이 session limit으로 batch report를 남기지 못했다.
 7. `POSSIBLE_EXPANSION` 검토 — NSDI(network virtualization/vSwitch/NFV),
