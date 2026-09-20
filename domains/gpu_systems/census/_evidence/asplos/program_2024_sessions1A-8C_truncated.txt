@@ -1,0 +1,133 @@
+1A|Explainable Port Mapping Inference with Sparse Performance Counters for AMD's Zen Architectures
+1A|Longnail: High-Level Synthesis of Portable Custom Instruction Set Extensions for RISC-V Processors from Descriptions in the Open-Source CoreDSL Language
+1A|SEER: Super-Optimization Explorer for High-Level Synthesis using E-graph Rewriting
+1A|HIDA: A Hierarchical Dataflow Compiler for High-Level Synthesis
+1B|TCCL: Discovering Better Communication Paths for PCIe GPU Clusters
+1B|Centauri: Enabling Efficient Scheduling for Communication-Computation Overlap in Large Model Training via Communication Partitioning
+1B|T3: Transparent Tracking & Triggering for Fine-grained Overlap of Compute & Collectives
+1B|Two-Face: Combining Collective and One-Sided Communication for Efficient Distributed SpMM
+1C|A Quantitative Analysis and Guidelines of Data Streaming Accelerator in Modern Intel Xeon Scalable Processors
+1C|Thesios: Synthesizing Accurate Counterfactual I/O Traces from I/O Samples
+1C|A Journey of a 1,000 Kernels Begins with a Single Step: A Retrospective of Deep Learning on GPUs
+1C|Expanding Datacenter Capacity with DVFS Boosting: A safe and scalable deployment experience
+1D|Rubix: Reducing the Overhead of Secure Rowhammer Mitigations via Randomized Line-to-Row Mapping
+1D|TAROT: A CXL SmartNIC-Based Defense Against Multi-bit Errors by Row-Hammer Attacks
+1D|Pythia: Compiler-Guided Defense Against Non-Control Data Attacks
+1D|Everywhere All at Once: Co-Location Attacks on Public Cloud FaaS
+2A|Plankton: Reconciling Binary Code and Debug Information
+2A|What You Trace is What You Get: Dynamic Stack-Layout Recovery for Binary Recompilation
+2A|Accurate Disassembly of Complex Binaries Without Use of Compiler Metadata
+2A|FITS: Inferring Intermediate Taint Sources for Effective Vulnerability Analysis of IoT Device Firmware
+2B|Avoiding Instruction-Centric Microarchitectural Timing Channels Via Binary-Code Transformations
+2B|Last-Level Cache Side-Channel Attacks Are Feasible in the Modern Public Cloud
+2B|Pathfinder: High-Resolution Control-Flow Attacks Exploiting the Conditional Branch Predictor
+2B|Pentimento: Data Remanence in Cloud FPGAs
+2C|Kimbap: A Node-Property Map System for Distributed Graph Analytics
+2C|TrackFM: Far-out Compiler Support for a Far Memory World
+2C|Scaling Up Memory Disaggregated Applications with SMART
+2C|CC-NIC: a Cache-Coherent Interface to the NIC
+2D|SpecInfer: Accelerating Large Language Model Serving with Tree-based Speculative Inference and Verification
+2D|ExeGPT: Constraint-Aware Resource Scheduling for LLM Inference
+2D|Proteus: A High-Throughput Inference-Serving System with Accuracy Scaling
+2D|SpotServe: Serving Generative Large Language Models on Preemptible Instances
+3A|Flexible Non-intrusive Dynamic Instrumentation for WebAssembly
+3A|ShapleyIQ: Influence Quantification by Shapley Values for Performance Debugging of Microservices
+3A|Loupe: Driving the Development of OS Compatibility Layers
+3A|Amanda: Unified Instrumentation Framework for Deep Neural Networks
+3B|GIANTSAN: Efficient Memory Sanitization with Segment Folding
+3B|Enforcing C/C++ Type and Scope at Runtime for Control-Flow and Data-Flow Integrity
+3B|Lightweight Fault Isolation: Practical, Efficient, and Secure Software Sandboxing
+3B|FreePart: Hardening Data Processing Software via Framework-based Partitioning and Isolation
+3C|DREAM: A Dynamic Scheduler for Dynamic Real-time Multi-model ML Workloads
+3C|SoCFlow: Efficient and Scalable DNN Training on SoC-Clustered Edge Servers
+3C|Training Job Placement in Clusters with Statistical In-Network Aggregation
+3C|RAP: Resource-aware Automated GPU Sharing for Multi-GPU Recommendation Model Training and Input Preprocessing
+3D|MAGIS: Memory Optimization via Coordinated Graph Transformation and Scheduling for DNN
+3D|8-bit Transformer Inference and Fine-tuning for Edge Accelerators
+3D|Cocco: Hardware-Mapping Co-Exploration towards Memory Capacity-Communication Optimization
+3D|Atalanta: A Bit is Worth a "Thousand" Tensor Values
+4A|Harp: Leveraging Quasi-Sequential Characteristics to Accelerate Sequence-to-Graph Mapping of Long Reads
+4A|GSCore: Efficient Radiance Field Rendering via Architectural Support for 3D Gaussian Splatting
+4A|BeeZip: Towards An Organized and Scalable Architecture for Data Compression
+4A|ACES: Accelerating Sparse Matrix Multiplication with Adaptive Execution Flow and Concurrency-Aware Cache Optimizations
+4A|Explainable-DSE: An Agile and Explainable Exploration of Efficient HW/SW Codesigns of Deep Learning Accelerators Using Bottleneck Analysis
+4B|LambdaFS: A Scalable and Elastic Distributed File System Metadata Service using Serverless Functions
+4B|FaaSMem: Improving Memory Efficiency of Serverless Computing with Memory Pool Architecture
+4B|CodeCrunch: Improving Serverless Performance via Function Compression and Cost-Aware Warmup Location Optimization
+4B|RainbowCake: Mitigating Cold-starts in Serverless with Layer-wise Container Caching and Sharing
+4B|Flame: A Centralized Cache Controller for Serverless Computing
+4C|Characterizing Power Management Opportunities for LLMs in the Cloud
+4C|Going Green for Less Green: Optimizing the Cost of Reducing Cloud Carbon Emissions
+4C|FOCAL: A First-Order Carbon Model to Assess Processor Sustainability
+4C|Predict; Don't React for Enabling Efficient Fine-Grain DVFS in GPUs
+4C|SUIT: Secure Undervolting with Instruction Traps
+4D|Kaleidoscope: Precise Invariant-Guided Pointer Analysis
+4D|Lifting Micro-Update Models from RTL for Formal Security Analysis
+4D|Formal Mechanised Semantics of CHERI C: Capabilities, Undefined Behaviour, and Provenance
+4D|Lightweight, Modular Verification for WebAssembly-to-Native Instruction Selection
+4D|Verifying Rust Implementation of Page Tables in a Software Enclave Hypervisor
+5A|C4CAM: A Compiler for CAM-based In-memory Accelerators
+5A|BaCO: A Fast and Portable Bayesian Compiler Optimization Framework
+5A|Merlin: Multi-tier Optimization of eBPF Code for Performance and Compactness
+5A|Automatic Generation of Vectorizing Compilers for Customizable Digital Signal Processors
+5A|Fast Instruction Selection for Fast Digital Signal Processing
+5B|An Encoding Scheme to Enlarge Practical DNA Storage Capacity by Reducing Primer-Payload Collisions
+5B|Design of Novel Analog Compute Paradigms with Ark
+5B|LightRidge: An End-to-end Agile Design Framework for Diffractive Optical Neural Networks
+5B|EagleEye: Nanosatellite constellation design for high-coverage, high-resolution sensing
+5B|Energy Efficient Convolutions with Temporal Arithmetic
+5C|Getting a Handle on Unmanaged Memory
+5C|Cornucopia Reloaded: Load Barriers for CHERI Heap Temporal Safety
+5C|Characterizing a Memory Allocator at Warehouse Scale
+5C|More Apps, Faster Hot-Launch on Mobile Devices via Fore/Background-aware GC-Swap Co-design
+5C|MiniMalloc: A Lightweight Memory Allocator for Hardware-Accelerated Machine Learning
+5D|Codesign of quantum error-correcting codes and modular chiplets in the presence of defects
+5D|MECH: Multi-Entry Communication Highway for Superconducting Quantum Chiplets
+5D|QuFEM: Fast and Accurate Quantum Readout Calibration Using the Finite Element Method
+5D|A Fault-Tolerant Million Qubit-Scale Distributed Quantum Computer
+5D|Promatch: Extending the Reach of Real-Time Quantum Error Correction with Adaptive Predecoding
+6A|Greybox Fuzzing for Concurrency Testing
+6A|Multi-Dimensional and Message-Guided Fuzzing for Robotic Programs in Robot Operating System
+6A|CSSTs: A Dynamic Data Structure for Partial Orders in Concurrent Execution Analysis
+6A|UBFuzz: Finding Bugs in Sanitizer Implementations
+6B|AttAcc! Unleashing the Power of PIM for Batched Transformer-based Generative Model Inference
+6B|SpecPIM: Accelerating Speculative Inference on PIM-Enabled System via Architecture-Dataflow Co-Exploration
+6B|PIM-DL: Expanding the Applicability of Commodity DRAM-PIMs for Deep Learning via Algorithm-System Co-Optimization
+6B|NeuPIMs: NPU-PIM Heterogeneous Acceleration for Batched LLM Inferencing
+6C|Felix: Optimizing Tensor Programs with Gradient Descent
+6C|Optimizing Deep Learning Inference via Global Analysis and Tensor Expressions
+6C|PyTorch 2: Faster Machine Learning Through Dynamic Python Bytecode Transformation and Graph Compilation
+6C|Optimal Kernel Orchestration for Tensor Programs with Korch
+6D|Elivagar: Efficient Quantum Circuit Search for Classification
+6D|Red-QAOA: Efficient Variational Optimization through Circuit Reduction
+6D|VarSaw: Application-tailored Measurement Error Mitigation for Variational Quantum Algorithms
+6D|ProxiML: Building Machine Learning Classifiers for Photonic Quantum Computing
+7A|FEASTA: A Flexible and Efficient Accelerator for Sparse Tensor Algebra in Machine Learning
+7A|CMC: Video Transformer Acceleration via CODEC Assisted Matrix Condensing
+7A|Tandem Processor: Grappling with Emerging Operators in Neural Networks
+7A|Carat: Unlocking Value-Level Parallelism for Multiplier-Free GEMMs
+7B|NetRen: Service Migration-Driven Network Renascence with Synthesizing Updated Configuration
+7B|Hydride: A Retargetable and Extensible Synthesis-based Compiler for Modern Hardware Architectures
+7B|RTL-Repair: Fast Symbolic Repair of Hardware Design Code
+7B|SIRO: Empowering Version Compatibility in Intermediate Representations via Program Synthesis
+7C|MemSnap uCheckpoints: A Data Single Level Store for Fearless Persistence
+7C|Grafu: Unleashing the Full Potential of Future Value Computation for Out-of-core Synchronous Graph Processing
+7C|CrossPrefetch: Accelerating I/O Prefetching for Modern Storage
+7C|Palantir: Hierarchical Similarity Detection for Post-Deduplication Delta Compression
+7D|TGLite: A Lightweight Programming Framework for Continuous-Time Temporal Graph Neural Networks
+7D|MaxK-GNN: Extremely Fast GPU Kernel Design for Accelerating Graph Neural Networks Training
+7D|Hector: An Efficient Programming and Compilation Framework for Implementing Relational Graph Neural Networks in GPU Architectures
+7D|Sleuth: A Trace-Based Root Cause Analysis System for Large-Scale Microservices with Graph Neural Networks
+8A|PDIP: Priority Directed Instruction Prefetching
+8A|Limoncello: Prefetchers for Scale
+8A|PATHFINDER: Practical Real-Time Learning for Data Prefetching
+8A|Skip It: Take Control of Your Cache!
+8A|RPG2: Robust Profile-Guided Runtime Prefetch Generation
+8B|METAL: Caching Multi-level Indexes in Domain-Specific Architectures
+8B|GMT: GPU Orchestrated Memory Tiering for the Big Data Era
+8B|GMLake: Efficient and Transparent GPU Memory Defragmentation for Large-scale DNN Training with Virtual Memory Stitching
+8B|Direct Memory Translation for Virtualized Clouds
+8B|WASP: Workload-Aware Self-Replicating Page-Tables for NUMA Servers
+8C|Supporting Descendants in SIMD-Accelerated JSONPath
+8C|Boost Linear Algebra Computation Performance via Efficient VNNI Utilization
+8C|A shared compilation stack for distributed-memory parallelism in stencil DSLs
