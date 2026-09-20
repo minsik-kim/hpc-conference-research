@@ -1,0 +1,778 @@
+{
+ "corrections": [
+  {
+   "id": "FGCS-001",
+   "doi": "10.1016/j.future.2023.12.002",
+   "journal": "FGCS",
+   "field": "census_year",
+   "old": 2024,
+   "new": 2023,
+   "evidence": "OpenAlex publication_date 2023-12-04 and Crossref created 2023-12-04 for this DOI; DOI stem j.future.2023.12 is the Elsevier acceptance month. pool3 carries no online date, so the year was taken from the 2024-04 issue cover date.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "FGCS-001",
+   "doi": "10.1016/j.future.2023.12.002",
+   "journal": "FGCS",
+   "field": "in_census_window",
+   "old": true,
+   "new": false,
+   "evidence": "First public availability 2023-12-04 falls outside the stated 2024-01-01..2026-12-31 window; the record must leave the FGCS 2024 INCLUDED count.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TQE-007",
+   "doi": "10.1109/tqe.2023.3347106",
+   "journal": "TQE",
+   "field": "census_year",
+   "old": 2024,
+   "new": 2023,
+   "evidence": "OpenAlex publication_date 2023-12-26. TQE census years were assigned by volume (v5=2024), not by first availability.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TQE-007",
+   "doi": "10.1109/tqe.2023.3347106",
+   "journal": "TQE",
+   "field": "in_census_window",
+   "old": true,
+   "new": false,
+   "evidence": "IEEE Early Access 2023-12-26 is outside the 2024-2026 window; removes one record from TQE 2024 INCLUDED.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TCAD-057",
+   "doi": "10.1109/tcad.2025.3626447",
+   "journal": "TCAD",
+   "field": "census_year",
+   "old": 2026,
+   "new": 2025,
+   "evidence": "OpenAlex publication_date 2025-10-28; DOI stem tcad.2025. Census year had been taken from the 2026-06 issue cover date.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TQE-ALL",
+   "doi": "",
+   "journal": "TQE",
+   "field": "census_year_basis",
+   "old": "volume cover year (v5=2024, v6=2025, v7=2026)",
+   "new": "year of first public availability (IEEE Early Access date)",
+   "evidence": "206 of 246 TQE records carry a placeholder online date of YYYY-01-01 in pool3, so no first-availability date was ever applied; TQE_census.md states the volume convention explicitly. At least 10 TQE records have an IEEE DOI year earlier than the assigned census year.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "FGCS-058",
+   "doi": "10.1016/j.future.2025.108095",
+   "journal": "FGCS",
+   "field": "census_year",
+   "old": 2026,
+   "new": 2025,
+   "evidence": "OpenAlex publication_date 2025-08-22; DOI stem j.future.2025. Verdict BORDERLINE, so headline INCLUDED counts are unaffected.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "FGCS-027",
+   "doi": "10.1016/j.future.2024.107623",
+   "journal": "FGCS",
+   "field": "census_year",
+   "old": 2025,
+   "new": 2024,
+   "evidence": "Elsevier DOI stem j.future.2024.* with a 2025-05 issue cover date and no recorded online date; Elsevier article-number DOIs carry the online-first year. Exact date INSUFFICIENT_EVIDENCE. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "FGCS-028",
+   "doi": "10.1016/j.future.2024.107646",
+   "journal": "FGCS",
+   "field": "census_year",
+   "old": 2025,
+   "new": 2024,
+   "evidence": "Same pattern as FGCS-027. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQE-001",
+   "doi": "10.1109/tqe.2023.3333224",
+   "journal": "TQE",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023 indicates Early Access in 2023, as externally confirmed for the sibling record TQE-007 (2023-12-26). Per-record dates INSUFFICIENT_EVIDENCE. Verdict EXCLUDED so INCLUDED counts are unaffected; the TQE 2024 denominator drops.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQE-002",
+   "doi": "10.1109/tqe.2023.3336514",
+   "journal": "TQE",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023 indicates Early Access in 2023, as externally confirmed for the sibling record TQE-007 (2023-12-26). Per-record dates INSUFFICIENT_EVIDENCE. Verdict EXCLUDED so INCLUDED counts are unaffected; the TQE 2024 denominator drops.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQE-003",
+   "doi": "10.1109/tqe.2023.3337328",
+   "journal": "TQE",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023 indicates Early Access in 2023, as externally confirmed for the sibling record TQE-007 (2023-12-26). Per-record dates INSUFFICIENT_EVIDENCE. Verdict EXCLUDED so INCLUDED counts are unaffected; the TQE 2024 denominator drops.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQE-004",
+   "doi": "10.1109/tqe.2023.3338970",
+   "journal": "TQE",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023 indicates Early Access in 2023, as externally confirmed for the sibling record TQE-007 (2023-12-26). Per-record dates INSUFFICIENT_EVIDENCE. Verdict BORDERLINE so INCLUDED counts are unaffected; the TQE 2024 denominator drops.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQE-005",
+   "doi": "10.1109/tqe.2023.3341151",
+   "journal": "TQE",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023 indicates Early Access in 2023, as externally confirmed for the sibling record TQE-007 (2023-12-26). Per-record dates INSUFFICIENT_EVIDENCE. Verdict EXCLUDED so INCLUDED counts are unaffected; the TQE 2024 denominator drops.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQE-006",
+   "doi": "10.1109/tqe.2023.3343625",
+   "journal": "TQE",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023 indicates Early Access in 2023, as externally confirmed for the sibling record TQE-007 (2023-12-26). Per-record dates INSUFFICIENT_EVIDENCE. Verdict BORDERLINE so INCLUDED counts are unaffected; the TQE 2024 denominator drops.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQE-008",
+   "doi": "10.1109/tqe.2023.3347476",
+   "journal": "TQE",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023 indicates Early Access in 2023, as externally confirmed for the sibling record TQE-007 (2023-12-26). Per-record dates INSUFFICIENT_EVIDENCE. Verdict EXCLUDED so INCLUDED counts are unaffected; the TQE 2024 denominator drops.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-001",
+   "doi": "10.1109/tcad.2023.3297972",
+   "journal": "TCAD",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023; census year was taken from the 2024 issue cover date. Per-record Early Access dates INSUFFICIENT_EVIDENCE. Verdict BORDERLINE.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-002",
+   "doi": "10.1109/tcad.2023.3311732",
+   "journal": "TCAD",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023; census year was taken from the 2024 issue cover date. Per-record Early Access dates INSUFFICIENT_EVIDENCE. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-003",
+   "doi": "10.1109/tcad.2023.3311734",
+   "journal": "TCAD",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023; census year was taken from the 2024 issue cover date. Per-record Early Access dates INSUFFICIENT_EVIDENCE. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-004",
+   "doi": "10.1109/tcad.2023.3325974",
+   "journal": "TCAD",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023; census year was taken from the 2024 issue cover date. Per-record Early Access dates INSUFFICIENT_EVIDENCE. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-005",
+   "doi": "10.1109/tcad.2023.3327102",
+   "journal": "TCAD",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023; census year was taken from the 2024 issue cover date. Per-record Early Access dates INSUFFICIENT_EVIDENCE. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-006",
+   "doi": "10.1109/tcad.2023.3329042",
+   "journal": "TCAD",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023; census year was taken from the 2024 issue cover date. Per-record Early Access dates INSUFFICIENT_EVIDENCE. Verdict BORDERLINE.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-007",
+   "doi": "10.1109/tcad.2023.3340608",
+   "journal": "TCAD",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023; census year was taken from the 2024 issue cover date. Per-record Early Access dates INSUFFICIENT_EVIDENCE. Verdict BORDERLINE.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-008",
+   "doi": "10.1109/tcad.2023.3345251",
+   "journal": "TCAD",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023; census year was taken from the 2024 issue cover date. Per-record Early Access dates INSUFFICIENT_EVIDENCE. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TC-001",
+   "doi": "10.1109/tc.2021.3066614",
+   "journal": "TC",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2021 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2021; the record entered the sweep only through its 2024-02 issue cover date. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TC-002",
+   "doi": "10.1109/tc.2023.3337308",
+   "journal": "TC",
+   "field": "census_year",
+   "old": 2024,
+   "new": "2023 (OUT_OF_WINDOW)",
+   "evidence": "IEEE DOI year 2023; 2024-02 issue cover date. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TC-032",
+   "doi": "10.1109/tc.2025.3630119",
+   "journal": "TC",
+   "field": "census_year",
+   "old": 2026,
+   "new": 2025,
+   "evidence": "IEEE DOI year 2025; 2026-02 issue cover date. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-056",
+   "doi": "10.1109/tcad.2025.3611101",
+   "journal": "TCAD",
+   "field": "census_year",
+   "old": 2026,
+   "new": 2025,
+   "evidence": "IEEE DOI year 2025; 2026-05 issue cover date. Verdict EXCLUDED.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQE-077",
+   "doi": "10.1109/tqe.2024.3520805",
+   "journal": "TQE",
+   "field": "census_year",
+   "old": 2025,
+   "new": 2024,
+   "evidence": "IEEE DOI year 2024; recorded online date is the 2025-01-01 volume placeholder. Verdict BORDERLINE.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "all_records.json",
+   "doi": "",
+   "journal": "ALL",
+   "field": "gate1/gate2/gate3 coverage",
+   "old": "present for 29 of 559 records (FGCS only)",
+   "new": "gate justifications for all 8 journals",
+   "evidence": "The per-journal files store the gates under different names (TCAD: gate1_classical_systems_problem; TQC/TACO: classical_systems_problem/hpc_technique/heterogeneous_relevance; TC/TPDS/JPDC: only in the markdown; TQE: nowhere). The merge kept only the FGCS spelling, so 75 of 104 INCLUDED records carry no gate text in the merged file.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TQE-ALL",
+   "doi": "",
+   "journal": "TQE",
+   "field": "per-record gate justification",
+   "old": "absent (all 246 records)",
+   "new": "gate1/gate2/gate3 recorded per record",
+   "evidence": "TQE_records.json has no gate fields and TQE_census.md asserts only 'Every entry passed all three gates' with analysis prose instead. 28 INCLUDED records therefore have no auditable gate reasoning.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TC/TPDS/JPDC",
+   "doi": "",
+   "journal": "TC,TPDS,JPDC",
+   "field": "gate fields in JSON",
+   "old": "absent",
+   "new": "present (as in the markdown)",
+   "evidence": "TC_records.json, TPDS_records.json and JPDC_records.json carry no gate fields although TC_TCAD_TPDS_JPDC_census.md prints Gate 1/2/3 bullets for each INCLUDED record. JSON and markdown diverge.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "FGCS-079",
+   "doi": "10.1016/j.future.2026.108686",
+   "journal": "FGCS",
+   "field": "artifact_url",
+   "old": "\"UNKNOWN\" (literal string) with artifact_status PUBLIC_CODE",
+   "new": "\"\" with artifact_status PARTIAL",
+   "evidence": "A PUBLIC_CODE status with the literal string UNKNOWN as its URL is self-contradictory; the record's own artifact_note says the repository URLs were not recoverable.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-025",
+   "doi": "10.1109/tcad.2023.3344689",
+   "journal": "TCAD/TC",
+   "field": "artifact_url",
+   "old": "https://arxiv.org/abs/2311.18160",
+   "new": "\"\" (move the value to arxiv_id)",
+   "evidence": "An arXiv abstract page is a preprint record, not a code or data artifact; all ten of these records already carry artifact_status UNKNOWN, so the URL field misdescribes what was checked.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TCAD-027",
+   "doi": "",
+   "journal": "TCAD/TC",
+   "field": "artifact_url",
+   "old": "https://arxiv.org/abs/2402.14065",
+   "new": "\"\" (move the value to arxiv_id)",
+   "evidence": "An arXiv abstract page is a preprint record, not a code or data artifact; all ten of these records already carry artifact_status UNKNOWN, so the URL field misdescribes what was checked.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TCAD-030",
+   "doi": "",
+   "journal": "TCAD/TC",
+   "field": "artifact_url",
+   "old": "https://arxiv.org/abs/2409.03185",
+   "new": "\"\" (move the value to arxiv_id)",
+   "evidence": "An arXiv abstract page is a preprint record, not a code or data artifact; all ten of these records already carry artifact_status UNKNOWN, so the URL field misdescribes what was checked.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TCAD-033",
+   "doi": "",
+   "journal": "TCAD/TC",
+   "field": "artifact_url",
+   "old": "https://arxiv.org/abs/2407.05953",
+   "new": "\"\" (move the value to arxiv_id)",
+   "evidence": "An arXiv abstract page is a preprint record, not a code or data artifact; all ten of these records already carry artifact_status UNKNOWN, so the URL field misdescribes what was checked.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TCAD-043",
+   "doi": "",
+   "journal": "TCAD/TC",
+   "field": "artifact_url",
+   "old": "https://arxiv.org/abs/2507.17043",
+   "new": "\"\" (move the value to arxiv_id)",
+   "evidence": "An arXiv abstract page is a preprint record, not a code or data artifact; all ten of these records already carry artifact_status UNKNOWN, so the URL field misdescribes what was checked.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TCAD-051",
+   "doi": "",
+   "journal": "TCAD/TC",
+   "field": "artifact_url",
+   "old": "https://arxiv.org/abs/2503.10340",
+   "new": "\"\" (move the value to arxiv_id)",
+   "evidence": "An arXiv abstract page is a preprint record, not a code or data artifact; all ten of these records already carry artifact_status UNKNOWN, so the URL field misdescribes what was checked.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TC-029",
+   "doi": "",
+   "journal": "TCAD/TC",
+   "field": "artifact_url",
+   "old": "https://arxiv.org/abs/2310.11021",
+   "new": "\"\" (move the value to arxiv_id)",
+   "evidence": "An arXiv abstract page is a preprint record, not a code or data artifact; all ten of these records already carry artifact_status UNKNOWN, so the URL field misdescribes what was checked.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TCAD-001",
+   "doi": "",
+   "journal": "TCAD/TC",
+   "field": "artifact_url",
+   "old": "https://arxiv.org/abs/2111.03132",
+   "new": "\"\" (move the value to arxiv_id)",
+   "evidence": "An arXiv abstract page is a preprint record, not a code or data artifact; all ten of these records already carry artifact_status UNKNOWN, so the URL field misdescribes what was checked.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TCAD-045",
+   "doi": "",
+   "journal": "TCAD/TC",
+   "field": "artifact_url",
+   "old": "https://arxiv.org/abs/2411.02782",
+   "new": "\"\" (move the value to arxiv_id)",
+   "evidence": "An arXiv abstract page is a preprint record, not a code or data artifact; all ten of these records already carry artifact_status UNKNOWN, so the URL field misdescribes what was checked.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TCAD-063",
+   "doi": "",
+   "journal": "TCAD/TC",
+   "field": "artifact_url",
+   "old": "https://arxiv.org/abs/2507.17170",
+   "new": "\"\" (move the value to arxiv_id)",
+   "evidence": "An arXiv abstract page is a preprint record, not a code or data artifact; all ten of these records already carry artifact_status UNKNOWN, so the URL field misdescribes what was checked.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "ALL",
+   "doi": "",
+   "journal": "ALL",
+   "field": "deep_dive_priority scale",
+   "old": "numeric 3/4/5 (FGCS) vs HIGH/MEDIUM/LOW (7 journals)",
+   "new": "one scale",
+   "evidence": "The two scales cannot be ranked against each other, which defeats the purpose of the field for cross-journal deep-dive selection.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TC-041",
+   "doi": "10.1109/tc.2026.3724836",
+   "journal": "TC",
+   "field": "arxiv_id / abstract_status",
+   "old": "none listed / NO_ABSTRACT / TITLE_ONLY_NO_ABSTRACT",
+   "new": "arXiv:2502.11316; abstract available",
+   "evidence": "arXiv:2502.11316 'Standalone FPGA-Based QAOA Emulator for Weighted-MaxCut on Embedded Devices' is the preprint. Its abstract reports O(N^2)->O(N) complexity reduction, ~3x more qubits than comparable designs on mid-tier FPGAs and 1.53x-852x energy savings against software QAOA on embedded processors, which confirms the INCLUDED verdict on evidence rather than title.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "FGCS-055",
+   "doi": "10.1016/j.future.2025.108270",
+   "journal": "FGCS",
+   "field": "arxiv_id",
+   "old": "(empty)",
+   "new": "2503.15439",
+   "evidence": "arXiv:2503.15439 is the LuGo preprint; its abstract confirms the recorded 50.68x time reduction and >31x gate/depth reduction against a standard QPE implementation.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "FGCS-064",
+   "doi": "10.1016/j.future.2026.108484",
+   "journal": "FGCS",
+   "field": "arxiv_id",
+   "old": "(empty)",
+   "new": "2408.11311",
+   "evidence": "arXiv:2408.11311 is the HiMA preprint. Note the journal version differs from the preprint: 102-qubit processor (preprint: 72) and an explicit 3.55x CLOPS improvement that the preprint does not state.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "FGCS-002",
+   "doi": "",
+   "journal": "",
+   "field": "conference_extension_evidence",
+   "old": "RELATED_LINEAGE with no stated evidence",
+   "new": "either a stated predecessor or UNKNOWN",
+   "evidence": "CRITERIA.md requires RELATED_LINEAGE to rest on a named related prior conference paper or shared system name. TQC and TACO record that evidence; these seven do not.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "FGCS-057",
+   "doi": "",
+   "journal": "",
+   "field": "conference_extension_evidence",
+   "old": "RELATED_LINEAGE with no stated evidence",
+   "new": "either a stated predecessor or UNKNOWN",
+   "evidence": "CRITERIA.md requires RELATED_LINEAGE to rest on a named related prior conference paper or shared system name. TQC and TACO record that evidence; these seven do not.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "FGCS-073",
+   "doi": "",
+   "journal": "",
+   "field": "conference_extension_evidence",
+   "old": "RELATED_LINEAGE with no stated evidence",
+   "new": "either a stated predecessor or UNKNOWN",
+   "evidence": "CRITERIA.md requires RELATED_LINEAGE to rest on a named related prior conference paper or shared system name. TQC and TACO record that evidence; these seven do not.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TC-027",
+   "doi": "",
+   "journal": "",
+   "field": "conference_extension_evidence",
+   "old": "RELATED_LINEAGE with no stated evidence",
+   "new": "either a stated predecessor or UNKNOWN",
+   "evidence": "CRITERIA.md requires RELATED_LINEAGE to rest on a named related prior conference paper or shared system name. TQC and TACO record that evidence; these seven do not.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TC-040",
+   "doi": "",
+   "journal": "",
+   "field": "conference_extension_evidence",
+   "old": "RELATED_LINEAGE with no stated evidence",
+   "new": "either a stated predecessor or UNKNOWN",
+   "evidence": "CRITERIA.md requires RELATED_LINEAGE to rest on a named related prior conference paper or shared system name. TQC and TACO record that evidence; these seven do not.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-010",
+   "doi": "",
+   "journal": "",
+   "field": "conference_extension_evidence",
+   "old": "RELATED_LINEAGE with no stated evidence",
+   "new": "either a stated predecessor or UNKNOWN",
+   "evidence": "CRITERIA.md requires RELATED_LINEAGE to rest on a named related prior conference paper or shared system name. TQC and TACO record that evidence; these seven do not.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TCAD-066",
+   "doi": "",
+   "journal": "",
+   "field": "conference_extension_evidence",
+   "old": "RELATED_LINEAGE with no stated evidence",
+   "new": "either a stated predecessor or UNKNOWN",
+   "evidence": "CRITERIA.md requires RELATED_LINEAGE to rest on a named related prior conference paper or shared system name. TQC and TACO record that evidence; these seven do not.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQC-019",
+   "doi": "10.1145/3705194",
+   "journal": "TQC",
+   "field": "artifact_url",
+   "old": "https://github.com/cda-tum/mqt-predictor",
+   "new": "https://github.com/munich-quantum-toolkit/predictor",
+   "evidence": "The cda-tum URL resolves only by GitHub redirect to munich-quantum-toolkit/predictor; the artifact itself is confirmed correct.",
+   "severity": "COSMETIC"
+  },
+  {
+   "id": "TQC-035",
+   "doi": "10.1145/3705007",
+   "journal": "TQC",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE (retain BIBLIOGRAPHY_HUB)",
+   "evidence": "The record's own Gate 2 text reads 'Editorial framing rather than a technique', which is a stated Gate 2 failure. Article type is SPECIAL_ISSUE_INTRO, so the original-research count does not change.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TCAD-038",
+   "doi": "10.1109/tcad.2025.3540424",
+   "journal": "TCAD",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "The accelerator is a coherent optical Ising machine solving a QUBO, which is CRITERIA.md false-positive class 2. The offload framing is defensible but the census places every other Ising/annealing record at BORDERLINE or EXCLUDED.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TCAD-025",
+   "doi": "",
+   "journal": "TCAD",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "The recorded claim is 'reduced crosstalk and decoherence effects under parallel two-qubit operation', i.e. a fidelity objective. The TCAD agent's own stated decision rule puts fidelity-objective mapping papers at BORDERLINE.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TC-031",
+   "doi": "",
+   "journal": "TC",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "QuanGuard's contribution is device fingerprinting for fraud detection; the recorded metric is device-identification accuracy. Gate 1 describes the quantum cloud's allocation behaviour as context, not as a quantity the paper improves, so the record passes on Gate 1 framing alone.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TQC-066",
+   "doi": "10.1145/3746220",
+   "journal": "TQC",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "qSIEVE's stated objective is qubit overhead at a given logical error rate, i.e. a QEC-architecture result. Gate 2 rests on an analogy to systolic dataflow rather than a classical systems measurement.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TQE-163",
+   "doi": "10.1109/tqe.2025.3649617",
+   "journal": "TQE",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "The objective is remote entanglement rate against the RHG bond-failure threshold for optically networked ion modules, which sits in false-positive classes 4 and 6. No classical systems quantity is recorded, and TQE carries no gate justification to test.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TQC-059",
+   "doi": "10.1145/3718348",
+   "journal": "TQC",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "Minor embedding for a quantum annealer. FGCS-063, the same problem in the same window, is BORDERLINE. The two journals treat identical work differently.",
+   "severity": "MATERIAL"
+  },
+  {
+   "id": "TQC-022",
+   "doi": "10.1145/3678184",
+   "journal": "TQC",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "The record itself states the comparisons are across devices and algorithms rather than against a classical solver baseline, which is the 'application accuracy comparison only' shape CRITERIA.md excludes.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQC-077",
+   "doi": "",
+   "journal": "TQC",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "Quadratisation is QUBO problem preparation for annealing and QAOA toolchains; the runtime advantage is recorded without figures and without a named comparator beyond 'prior quadratisation methods'.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQC-016",
+   "doi": "",
+   "journal": "TQC",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "Gate 2 is a methodological analogy to VLSI standard cells; the layout speed-up is recorded as BASELINE_UNCLEAR with no quantified comparator, and the record's own deep-dive priority is LOW.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQE-108",
+   "doi": "",
+   "journal": "TQE",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "Control-electronics waveform memory compression, the nearest neighbour of false-positive class 6. No classical systems quantity beyond on-chip memory footprint is recorded.",
+   "severity": "MINOR"
+  },
+  {
+   "id": "TQE-034",
+   "doi": "10.1109/tqe.2024.3404502",
+   "journal": "TQE",
+   "field": "verdict (PROPOSED)",
+   "old": "INCLUDED",
+   "new": "BORDERLINE",
+   "evidence": "The classical systems content is the avoidance of classical simulation when constructing benchmarks, not a classical systems mechanism; the record names no runtime, memory or communication quantity.",
+   "severity": "MINOR"
+  }
+ ],
+ "addendum_candidates": [
+  {
+   "doi": "10.1016/j.future.2026.108731",
+   "title": "Closed-loop calculations of electronic structure on a quantum processor and a classical supercomputer at full scale",
+   "online": "2026-07-29",
+   "volume": "186",
+   "note": "This is the EXISTENCE_CHECK_SEED 'closed-loop quantum processor + Fugaku work'. It is absent from the 81-record FGCS pool."
+  },
+  {
+   "doi": "10.1016/j.future.2026.108746",
+   "title": "DistributedEstimator: Distributed training of quantum neural networks via circuit cutting",
+   "online": "2026-08-02",
+   "volume": "186",
+   "note": "Circuit cutting plus distributed training; on its title it is a candidate for the circuit_cutting_reconstruction branch."
+  },
+  {
+   "doi": "10.1016/j.future.2026.108709",
+   "title": "Performance benchmarking of Tensor Trains for quantum-inspired homogenization on TPU, GPU, and CPU architectures",
+   "online": "2026-07-18",
+   "volume": "186",
+   "note": "Quantum-inspired tensor trains; likely false-positive class 2, but it belongs in the screened pool."
+  },
+  {
+   "doi": "10.1016/j.future.2026.108754",
+   "title": "Editorial on future generation computer systems (FGCS) special collection on advances in quantum computing: Methods, algorithms, and systems Vol III",
+   "online": "2026-08-04",
+   "volume": "186",
+   "note": "SPECIAL_ISSUE_INTRO. The FGCS agent already flagged its absence."
+  }
+ ],
+ "corrected_counts": {
+  "note": "INCLUDED counts after applying the three MATERIAL census-year corrections only (FGCS-001 and TQE-007 out of window, TCAD-057 2026->2025). Proposed demotions are NOT applied.",
+  "included_by_journal_by_year": {
+   "FGCS": {
+    "2024": 6,
+    "2025": 8,
+    "2026": 6,
+    "total": 20,
+    "original_research": 18
+   },
+   "TQE": {
+    "2024": 7,
+    "2025": 13,
+    "2026": 7,
+    "total": 27,
+    "original_research": 27
+   },
+   "TQC": {
+    "2024": 8,
+    "2025": 9,
+    "2026": 10,
+    "total": 27,
+    "original_research": 24
+   },
+   "TACO": {
+    "2024": 1,
+    "2025": 2,
+    "2026": 1,
+    "total": 4,
+    "original_research": 4
+   },
+   "TPDS": {
+    "2024": 0,
+    "2025": 0,
+    "2026": 2,
+    "total": 2,
+    "original_research": 2
+   },
+   "TC": {
+    "2024": 2,
+    "2025": 3,
+    "2026": 2,
+    "total": 7,
+    "original_research": 7
+   },
+   "JPDC": {
+    "2024": 0,
+    "2025": 0,
+    "2026": 1,
+    "total": 1,
+    "original_research": 0
+   },
+   "TCAD": {
+    "2024": 6,
+    "2025": 7,
+    "2026": 1,
+    "total": 14,
+    "original_research": 14
+   }
+  },
+  "grand_total_included_before": 104,
+  "grand_total_included_after": 102,
+  "grand_total_included_original_research_before": 98,
+  "grand_total_included_original_research_after": 96,
+  "included_by_year_after": {
+   "2024": 30,
+   "2025": 42,
+   "2026": 30
+  },
+  "if_all_12_proposed_demotions_accepted": {
+   "grand_total_included": 90,
+   "grand_total_included_original_research": 85
+  }
+ }
+}
