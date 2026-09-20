@@ -711,7 +711,7 @@ papers:
   venue: CCGrid
   year: 2024
   publication_type: SHORT_PAPER
-  doi: 10.1109/CCGrid59990.2024.00075
+  doi: 10.1109/CCGrid59990.2024.00084
   official_url: https://2024.ccgrid-conference.org/doctoral-symposium/
   fullpaper_source: UNKNOWN
   classification: CORE
@@ -742,7 +742,7 @@ papers:
   evidence_depth: ABSTRACT
   evidence_kinds: [official-web]
   confidence: MEDIUM
-  notes: 'Publication type confirmed as Doctoral Symposium (not main track) via the authors'' own Binghamton publications page; IEEE Xplore page returned no extractable content. Excluded from main-track population counts; see excluded_by_pubtype.'
+  notes: 'Publication type confirmed as Doctoral Symposium (not main track) via the authors'' own Binghamton publications page; IEEE Xplore page returned no extractable content. Excluded from main-track population counts; see excluded_by_pubtype. [verification 2026-09-18] DOI corrected 10.1109/CCGrid59990.2024.00075 -> 10.1109/CCGrid59990.2024.00084; the old value resolves to an unrelated paper (Crossref). New value from Crossref bibliographic search, not resolver-confirmed.'
 
 - id: VIRT-CCGRID24-04
   title: 'vASP: Full VM Life-cycle Protection Based on Active Security Processor Architecture'
@@ -828,7 +828,7 @@ papers:
   venue: CCGrid
   year: 2024
   publication_type: ARCHIVAL_MAIN_PAPER
-  doi: 10.1109/CCGrid59990.2024.00075
+  doi: 10.1109/CCGrid59990.2024.00064
   official_url: https://2024.ccgrid-conference.org/program/
   fullpaper_source: UNKNOWN
   classification: CONTEXT
@@ -856,7 +856,7 @@ papers:
   evidence_depth: TITLE_ONLY
   evidence_kinds: [program-only]
   confidence: LOW
-  notes: 'Access failed on 5 routes: IEEE Xplore document page (empty content, 2 attempts), IEEE Xplore direct PDF (418 error), ResearchGate (429 rate-limited), Semantic Scholar API (429/proxy-rejected), and two co-authors'' personal/lab pages (bibliographic listing only, no abstract). Flagged in access_failures given the title''s strong resemblance to VIRT-CCGRID24-01 (SweetspotVM), a confirmed CORE oversubscription paper.'
+  notes: 'Access failed on 5 routes: IEEE Xplore document page (empty content, 2 attempts), IEEE Xplore direct PDF (418 error), ResearchGate (429 rate-limited), Semantic Scholar API (429/proxy-rejected), and two co-authors'' personal/lab pages (bibliographic listing only, no abstract). Flagged in access_failures given the title''s strong resemblance to VIRT-CCGRID24-01 (SweetspotVM), a confirmed CORE oversubscription paper. [verification 2026-09-18] DOI corrected 10.1109/CCGrid59990.2024.00075 -> 10.1109/CCGrid59990.2024.00064; the old value resolves to an unrelated paper (Crossref). New value from Crossref bibliographic search, not resolver-confirmed.'
 
 - id: VIRT-CCGRID24-07
   title: 'DeepVM: Integrating Spot and On-Demand VMs for Cost-Efficient Deep Learning Clusters in the Cloud'

@@ -97,7 +97,7 @@ papers:
   - 'DMA-safe reclaim with passthrough NIC via VFIO: 54.6 GiB/s (HyperAlloc+VFIO) vs 17.7 GiB/s (virtio-mem+VFIO), 20 GiB VM'
   - 'memory footprint: 17% lower average footprint than virtio-balloon free-page reporting (Clang 16.0 compilation, 16 GiB VM, 6 runs, sampled at 1 Hz)'
   - 'automatic reclamation CPU cost: 0.51 +/- 0.18% (HyperAlloc) vs 0.15 +/- 0.42% (default virtio-balloon) during Clang compilation on a 12-vCPU guest'
-  - 'STREAM 1st percentile during shrink/grow: 70.1 GB/s (HyperAlloc) vs 31.9 GB/s (virtio-mem) vs 30.9 GB/s (virtio-balloon), 12 threads'
+  - 'STREAM 1st percentile during shrink/grow: 70.1 GB/s (HyperAlloc) vs 31.9 GB/s (virtio-mem) vs 30.9 GB/s (virtio-balloon), 12 threads [VERIFY: this STREAM figure could not be located in the author PDF on spot-check; paper shows 18.4 GB/s for a virtio-mem+VFIO condition. Do not cite without rechecking.]'
   - 'install path: ~6% slower than a virtio-mem EPT fault because of the extra QEMU user-space context switch'
   why_useful_for_learning: It is the cleanest modern statement of the VM memory de/inflation design space - balloon vs hotplug vs shared-allocator - and of why device passthrough (IOMMU pinning) is what breaks classic ballooning.
   priority: P1

@@ -92,7 +92,7 @@ papers:
   venue: ASPLOS
   year: 2024
   publication_type: ARCHIVAL_MAIN_PAPER
-  doi: 10.1145/3620666.3651353
+  doi: 10.1145/3620665.3640423
   official_url: https://www.asplos-conference.org/asplos2024/main-program/index.html#8B
   fullpaper_source: https://arxiv.org/abs/2401.08156
   classification: CORE
@@ -122,7 +122,7 @@ papers:
   evidence_depth: DESIGN
   evidence_kinds: [preprint, official-web]
   confidence: HIGH
-  notes: Summarized from the arXiv abstract/preprint (2401.08156); did not verify the full evaluation section beyond the headline numbers reported by the fetch.
+  notes: 'Summarized from the arXiv abstract/preprint (2401.08156); did not verify the full evaluation section beyond the headline numbers reported by the fetch. [verification 2026-09-18] DOI corrected 10.1145/3620666.3651353 -> 10.1145/3620665.3640423 (Crossref-confirmed: the old value resolves to GMT, VIRT-ASPLOS24-16).'
 
 - id: VIRT-ASPLOS24-04
   title: "Lightweight Fault Isolation: Practical, Efficient, and Secure Software Sandboxing"

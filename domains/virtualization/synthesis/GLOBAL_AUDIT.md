@@ -257,7 +257,9 @@ rescue/audit pass에서 분류 또는 증거 수준이 바뀐 28건.
    특히 SOSP25-01(RDMA device migration)은 mechanism/isolation/state 필드가 UNKNOWN이다.
 5. **TITLE_ONLY 63건 잔존.** 2차 rescue에서도 회수 실패한 BASK(EuroSys26),
    Fault Escaping(ASPLOS26), ConMonitor·Snapipeline·TianMen(SoCC24) 등.
-6. **중복 DOI 1건.** VIRT-CCGRID24-03과 VIRT-CCGRID24-06이 동일 DOI
-   (10.1109/CCGrid59990.2024.00075)를 갖는다. 최소 한쪽은 오기이며 미해결이다.
-7. **HPDC 2026, ASPLOS 2026 population 미확정.** 전자는 사이트 TLS 인증서 오류,
+6. **HPDC 2026, ASPLOS 2026 population 미확정.** 전자는 사이트 TLS 인증서 오류,
    후자는 공식 페이지의 "167 unique papers" 주장과 실제 scrape 결과가 불일치한다.
+
+해결 기록: VIRT-CCGRID24-03/06의 중복·오류 DOI는 각각
+`10.1109/CCGrid59990.2024.00084`와 `10.1109/CCGrid59990.2024.00064`로 정정됐고,
+전 corpus 중복 DOI 재검사는 0건이다.

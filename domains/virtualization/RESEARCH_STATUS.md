@@ -118,8 +118,9 @@ MICRO 2024는 배제 논문도 DROP record로 보존해 17건 중 7건이 DROP�
 - `VIRT-EUROSYS25-03`(HyperAlloc)의 STREAM 수치 1건이 저자 PDF에서 확인되지 않았다.
   해당 claim에 `[VERIFY: ...]` 경고를 인라인으로 남겼다. 나머지 6건은 축자 일치.
 - `VIRT-EUROSYS24-01`(HD-IOV) 저자 목록이 3명+et al.로 축약되어 있다(원 출처는 10명 전원 표기).
-- `VIRT-OSDI26-06`(Nixie)의 OSDI 2026 채택 여부는 재확인에서도 공식 프로그램상 확인되지 않았다
-  (arXiv에는 존재). 기존 기록의 flag가 유지된다.
+- `VIRT-OSDI26-06`(Nixie)은 2026-09-21 최종 pass에서 USENIX 공식 OSDI 2026
+  presentation page(`https://www.usenix.org/conference/osdi26/presentation/xu-yechen`)로
+  제목·저자·venue·pages(2085–2101)를 확인했다. 이전의 venue 미확인 flag는 해소됐다.
 
 전체 verification 결과는 `synthesis/VERIFICATION.md`에 있다.
 

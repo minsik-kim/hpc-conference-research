@@ -24,8 +24,10 @@
    `VIRT-SOSP25-01`을 최우선(mechanism 필드 전부 UNKNOWN, T3·T4 연결점).
 3. **SoCC 2024 publication_type 22건 확정.**
 4. **TITLE_ONLY 63건 재시도.**
-5. **CCGrid24 중복 DOI 정정** (`VIRT-CCGRID24-03` / `-06`).
-6. **batch 1~4 venue_populations backfill** (EuroSys25, SOSP25, ASPLOS25, Middleware25, CCGrid25).
+5. **batch 1~4 venue_populations backfill** (EuroSys25, SOSP25, ASPLOS25, Middleware25, CCGrid25).
+
+완료된 정합성 조치: CCGrid24 DOI 2건과 GMLake DOI 1건 정정, 누락됐던
+`batches/batch6c.yaml`(CCGrid26/HPDC26 13건) 복원, raw batch와 merged layer 동기화.
 
 ## 접근 경로에 대해 알아낸 것 (다음 작업자에게 가장 유용한 정보)
 

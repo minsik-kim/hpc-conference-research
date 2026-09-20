@@ -1,0 +1,970 @@
+---
+papers:
+- id: VIRT-CCGRID26-01
+  title: 'TelePod: Live Migration for Stateful Containers'
+  title_correction:
+  authors:
+  - Mingjie Yan
+  - Atharva Ranade
+  - Xin Zhang
+  - Kartik Gopalan
+  venue: CCGrid
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid68966.2026.00038
+  official_url: https://ieeexplore.ieee.org/document/11619030
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: The paper's entire contribution is a new stateful-container
+    live-migration mechanism (pre-copy iterative memory transfer plus overlapped transmission-restoration
+    on a modified CRIU); migration mechanism itself, not an application that merely
+    uses migration, is the object of study.
+  drop_reason:
+  taxonomy_primary: T4
+  taxonomy_secondary:
+  - T5
+  - T1
+  physical_resource: DRAM
+  logical_abstraction: A live, network-transparent stateful-container execution point
+    that can move across hosts while preserving in-memory data and active network
+    connections, decoupling total migration time from downtime.
+  problem: Stateful containers (active databases, multiplayer game servers) cannot
+    simply be destroyed and restarted like stateless containers, because doing so
+    loses volatile in-memory data and live network connections; prior container migration
+    approaches suffer high memory/state transfer overhead and service interruption.
+  mechanism: TelePod extends Checkpoint/Restore In Userspace (CRIU) with (1) pre-copy
+    iterative memory transfer, where the source container keeps running while dirty
+    pages are iteratively re-sent, and (2) an overlapped transmission-restoration
+    process, where the destination begins restoring container state while the source
+    is still transmitting remaining dirty pages.
+  isolation_mechanism: N/A for new contribution; relies on existing Linux namespace/cgroup
+    container isolation boundaries as captured and restored by CRIU.
+  multiplexing_mechanism: N/A (point-to-point single-container migration, not a resource-sharing
+    mechanism).
+  state_mechanism: Volatile process memory (heap/stack), open file descriptors, and
+    network-connection state live in the CRIU checkpoint image; moved via iterative
+    pre-copy of dirty memory pages while the destination concurrently restores already-transferred
+    process/namespace state, rather than a single stop-and-copy transfer.
+  overhead_bottleneck: Memory dirty-rate and total transferred state volume, as in
+    classical VM live migration; the overlapped restore hides destination-side restoration
+    latency behind the remaining page transfer instead of serializing it after transfer
+    completes.
+  primary_tradeoff: Overlapping destination-side restoration with source-side dirty-page
+    transmission -> gains downtime reduction comparable to hypervisor-based VM live
+    migration, but costs implementation complexity from coordinating concurrent CRIU
+    dump/restore state across source and destination versus a simpler stop-and-copy
+    migration.
+  quantitative_claims: []
+  why_useful_for_learning: Shows how container live migration reproduces the same
+    pre-copy/dirty-page mechanics as hypervisor VM migration on a different (namespace/cgroup)
+    isolation substrate, and explicitly claims parity with hypervisor VM migration
+    performance for both traditional and confidential VMs, making it a bridge paper
+    between the T4 (migration) and T5 (container isolation) branches.
+  priority: P1
+  related:
+  - Post-Copy/Pre-copy VM live migration (Clark et al., NSDI 2005)
+  - CRIU (Checkpoint/Restore In Userspace)
+  relations:
+  - type: USES_MECHANISM_FROM
+    target: VM pre-copy live migration (Clark et al., NSDI 2005)
+    basis: Abstract explicitly frames TelePod's technique as combining pre-copy iterative
+      memory transfer (the classical hypervisor live-migration technique) with a new
+      overlapped transmission-restoration step, and benchmarks against hypervisor-based
+      VM migration performance.
+  - type: USES_MECHANISM_FROM
+    target: CRIU (Checkpoint/Restore In Userspace)
+    basis: Prototype is explicitly 'based on modified Checkpoint/Restore In Userspace
+      (CRIU)'.
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: 'Won CCGrid 2026 Best Student Paper Award (confirmed via ccgrid2026.org/paper-awards.html),
+    which corroborates main-track (not workshop) status alongside the Crossref container-title/page-range
+    evidence (pp. 297-306 in the main CCGrid68966.2026 proceedings). Full-text access
+    failed after 3+ routes: (1) IEEE Xplore document page renders no static content
+    (JS-gated) and DOI/robots.txt access to Xplore is blocked to automated fetch;
+    (2) Kartik Gopalan''s Binghamton homepage only lists publications through 2016
+    and its ''complete list''/''publications.html''/''pubs.html'' links either had
+    no resolvable href or returned ROBOTS_DISALLOWED/404; (3) the paper''s ResearchGate
+    page (411086635) exists but returned HTTP 429 (rate-limited) on repeated attempts.
+    Classification and design summary above rest on the full official abstract (obtained
+    via Crossref/Semantic Scholar metadata), which is detailed enough to describe
+    the mechanism but not the evaluation numbers, hence no quantitative_claims and
+    evidence_depth ABSTRACT rather than DESIGN_EVAL as the brief would ideally want
+    for a P1 CORE paper.'
+- id: VIRT-CCGRID26-02
+  title: Larger Cloud Servers, Fewer Hosts? On the Evolution of VM Sizes in IaaS Platforms
+  title_correction:
+  authors:
+  - Pierre Jacquet
+  - Camille Coti
+  - Marcos Dias de Assuncao
+  venue: CCGrid
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid68966.2026.00037
+  official_url: https://doi.org/10.1109/CCGrid68966.2026.00037
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Pure measurement/characterization of how VM instance-type catalogs
+    and real client usage have evolved across major cloud providers over two decades;
+    it studies virtualization's consumption patterns and consolidation outcomes rather
+    than contributing any virtualization mechanism.
+  drop_reason:
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T1
+  physical_resource: CPU core
+  logical_abstraction: The VM instance type/size (a fixed vCPU+memory+other-resource
+    bundle) offered by IaaS catalogs, treated as a unit of consumption distinct from
+    the underlying physical host hardware.
+  problem: Physical hardware evolution (CPU, memory, storage) is well characterized,
+    but how the virtual resource configurations (VM instance types) that most cloud
+    users actually consume have evolved, and whether that evolution keeps pace with
+    or diverges from hardware trends, is largely unstudied.
+  mechanism: Using historical VM instance-type catalogs and large-scale usage traces
+    from major cloud providers, the paper analyzes both the supply side (catalog offerings
+    over ~20 years) and the demand side (which instance sizes clients actually select)
+    of VM sizing.
+  isolation_mechanism: N/A (measurement study).
+  multiplexing_mechanism: Physical host capacity is divided among VM instances of
+    the observed size distribution; the paper's central measurement is how many such
+    instances are consolidated per host over time.
+  state_mechanism: N/A.
+  overhead_bottleneck: N/A (characterization paper); the closest analogue is unrealized
+    consolidation headroom, i.e., hardware capacity growth not translating into more
+    instances per host.
+  primary_tradeoff: 'Cloud providers expanding VM catalogs toward larger configurations
+    and raising minimum allocations -> gives users bigger default footprints and simplifies
+    provider capacity planning, but weakens consolidation density: despite growing
+    hardware capacity, the number of instances consolidated per host has stayed roughly
+    flat.'
+  quantitative_claims:
+  - active-VM footprint from minimal allocations roughly doubled between 2019 and
+    2025 across the studied cloud providers
+  - client demand remains concentrated on the smallest catalog options even as larger
+    options are offered and increasingly selected
+  - instances consolidated per host has remained stable over time despite growing
+    hardware capacity
+  why_useful_for_learning: 'A production-scale operational datapoint for the CORE
+    VM-sizing/consolidation literature: real IaaS VM sizes are growing roughly in
+    step with hardware, which largely cancels out the consolidation gains bigger physical
+    hosts would otherwise enable — directly relevant to any later trend question about
+    production-scale VM management.'
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: 'Full text not accessed: author HAL/institutional pages (hal.science) returned
+    an anti-bot ''Anubis'' access-denied page, and IEEE Xplore is JS-gated. Classification
+    and figures above are drawn from the complete official abstract (Crossref/Semantic
+    Scholar), which the task explicitly treats as sufficient depth for a P3 CONTEXT/operational
+    datapoint.'
+- id: VIRT-CCGRID26-03
+  title: Priority-Aware GPU Co-Scheduling for High Performance Computing
+  title_correction:
+  authors:
+  - Naman Kulshreshtha
+  - Tapasya Patki
+  - Aniruddha Marathe
+  - Tom Scogland
+  - Rong Ge
+  venue: CCGrid
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid68966.2026.00021
+  official_url: https://doi.org/10.1109/CCGrid68966.2026.00021
+  fullpaper_source: UNKNOWN
+  classification: SUPPORT
+  classification_note: Adds a priority-aware scheduling policy on top of NVIDIA MPS's
+    existing GPU-sharing abstraction rather than proposing a new virtual-GPU/partition
+    mechanism; per the brief's threshold rule, a scheduler layered over existing GPU
+    sharing is SUPPORT, not CORE.
+  drop_reason:
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T9
+  physical_resource: GPU
+  logical_abstraction: NVIDIA MPS-shared GPU execution contexts, extended with an
+    explicit priority ordering among co-located jobs.
+  problem: NVIDIA MPS lets multiple jobs share a GPU concurrently but has no notion
+    of job priority, so co-locating a latency/throughput-critical job (e.g., an HPC
+    application) with a best-effort job (e.g., LLM training) can degrade the important
+    job's turnaround time.
+  mechanism: A priority-aware GPU co-scheduling policy layered on top of MPS that
+    governs which co-located jobs get preferential access to GPU execution resources;
+    evaluated on a realistic mixed workload combining large-language-model training
+    with HPC applications.
+  isolation_mechanism: Relies on MPS's existing process-level GPU-sharing boundary;
+    the paper does not change the isolation boundary, only the scheduling priority
+    of jobs sharing it.
+  multiplexing_mechanism: NVIDIA MPS spatial multiplexing of GPU streaming multiprocessors
+    across concurrent processes, now ordered by an explicit priority policy.
+  state_mechanism: N/A (GPU execution-context state itself is managed by MPS, unchanged
+    by this paper).
+  overhead_bottleneck: Without priority differentiation, high-priority jobs suffer
+    contention-induced turnaround-time inflation when MPS co-locates them with lower-priority
+    jobs.
+  primary_tradeoff: Adding priority-aware co-scheduling on top of MPS -> gains large
+    turnaround-time improvements for high-priority jobs, at the cost of a more complex
+    scheduling policy than MPS's default best-effort sharing (the abstract does not
+    quantify the turnaround-time cost imposed on deprioritized jobs).
+  quantitative_claims:
+  - 1.71x turnaround-time improvement for high-priority single-GPU jobs (mixed LLM-training
+    + HPC workload, vs. baseline MPS scheduling)
+  - 1.21x turnaround-time improvement for high-priority multi-GPU jobs (same workload)
+  why_useful_for_learning: 'A concrete, current example of the CORE-vs-SUPPORT line
+    for GPU sharing: it explicitly targets ''limitations in existing tools like NVIDIA''s
+    MPS'' but contributes a scheduling policy over MPS rather than a new virtual-GPU
+    abstraction, illustrating why GPU-sharing schedulers default to SUPPORT.'
+  priority: P1
+  related:
+  - VIRT-CCGRID26-04
+  relations:
+  - type: CONTRASTS_WITH
+    target: VIRT-CCGRID26-04
+    basis: Both papers modify GPU resource-sharing behavior at the driver/scheduler
+      layer (MPS priority vs. SVM migration/eviction) without introducing a new virtual-GPU
+      abstraction, illustrating two different SUPPORT-level improvements to existing
+      GPU virtualization/sharing mechanisms.
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: 'Full text not accessed: IEEE Xplore document page is JS-gated; LLNL''s OSTI.gov
+    (Patki/Marathe/Scogland are LLNL authors, likely subject to DOE public-access
+    mandate) blocked automated access via robots.txt; Rong Ge''s Clemson personal/publications
+    pages are stale (last updated ~2021-2022, do not list this paper). Classification
+    and quantitative claims above come from the complete official abstract (Semantic
+    Scholar), which does include specific result numbers, but design/evaluation-setup
+    detail beyond the abstract was not reached.'
+- id: VIRT-CCGRID26-04
+  title: Enhanced SVM for Improving Application Performance Under GPU Memory Oversubscription
+  title_correction:
+  authors:
+  - Bennett Cooper
+  - Thomas R. W. Scogland
+  - Rong Ge
+  venue: CCGrid
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid68966.2026.00020
+  official_url: https://doi.org/10.1109/CCGrid68966.2026.00020
+  fullpaper_source: UNKNOWN
+  classification: SUPPORT
+  classification_note: Improves the migration-granularity and eviction policy inside
+    AMD's existing Shared Virtual Memory (SVM) driver under GPU memory oversubscription;
+    it enhances an existing GPU virtual-memory mechanism rather than introducing a
+    new virtual-GPU/partition abstraction, so it is SUPPORT.
+  drop_reason:
+  taxonomy_primary: T6
+  taxonomy_secondary:
+  - T2
+  physical_resource: GPU
+  logical_abstraction: AMD Shared Virtual Memory (SVM) — a unified virtual address
+    space spanning host and GPU memory that the driver pages in and out of physical
+    GPU memory on demand.
+  problem: When the working set of GPU kernels exceeds physical GPU memory, SVM's
+    default fixed migration granularity and FIFO eviction policy cause thrashing (pages
+    evicted and then immediately re-migrated back), severely degrading performance
+    under oversubscription.
+  mechanism: 'Two enhancements implemented directly in the SVM driver: (1) runtime-configurable
+    page migration granularity in place of one fixed size, and (2) a priority-based
+    eviction policy replacing FIFO so pages likely to be reused soon are less likely
+    to be evicted first.'
+  isolation_mechanism: N/A (single-context memory-oversubscription handling, not a
+    multi-tenant isolation boundary).
+  multiplexing_mechanism: GPU physical memory capacity is time-multiplexed among the
+    virtual address space's pages via on-demand host<->GPU migration.
+  state_mechanism: Page residency/location state is tracked and changed by the SVM
+    driver itself; this paper changes the granularity and eviction bookkeeping of
+    that state, not where it is kept.
+  overhead_bottleneck: 'Thrashing: eviction immediately followed by re-migration of
+    the same data, driven by a mismatch between fixed migration granularity and a
+    recency-blind FIFO eviction order.'
+  primary_tradeoff: Coarse fixed-granularity FIFO SVM -> simple driver logic but severe
+    thrashing under oversubscription; configurable granularity plus priority eviction
+    -> reduced thrashing and better performance, at the cost of added driver complexity
+    and a larger tuning surface.
+  quantitative_claims: []
+  why_useful_for_learning: Shows that GPU unified/shared virtual memory is paged much
+    like guest-physical VM memory (ballooning/reclamation), and that the same oversubscription/thrashing
+    trade-offs recur at the GPU virtual-memory layer — useful background for any CORE
+    paper on GPU virtualization or MIG/MPS-style GPU memory partitioning.
+  priority: P2
+  related:
+  - VIRT-CCGRID26-03
+  relations:
+  - type: CONTRASTS_WITH
+    target: VIRT-CCGRID26-03
+    basis: Both papers are SUPPORT-level improvements to existing GPU sharing/virtualization
+      mechanisms (SVM paging policy vs. MPS scheduling policy) rather than new virtual-GPU
+      abstractions.
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: 'Found via full-program scan, NOT on the seed list (see possible_omissions).
+    Full text not accessed: IEEE Xplore is JS-gated; Rong Ge''s Clemson personal and
+    publications pages are stale (last entries ~2021-2022) and do not list this paper.
+    Prior work by the same group (''In-Depth Analyses of Unified Virtual Memory System
+    for GPU Accelerated Computing'', SC21, and ''HELM: Characterizing Unified Memory
+    Accesses to Improve GPU Performance under Memory Oversubscription'', SC25) establishes
+    this as a continuing research line on GPU UVM/SVM oversubscription, though a formal
+    relation to those was not verified against this paper''s own text.'
+- id: VIRT-CCGRID26-05
+  title: 'LLM-Pilot: SLO-Aware and Cost-Efficient LLM Serving on Public Cloud VM Clusters
+    via Offloading'
+  title_correction:
+  authors:
+  - Jinwoo Kim
+  - Kihyun Kim
+  - Hyunsun Chung
+  - Jihoon Yang
+  - James J. Kim
+  - Dong Li
+  - Youngjae Kim
+  venue: CCGrid
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid68966.2026.00023
+  official_url: https://doi.org/10.1109/CCGrid68966.2026.00023
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: Optimizes which pre-packaged cloud VM instance type and KV-cache/attention-offloading
+    strategy to use for LLM serving; it consumes VM instance abstractions as a fixed
+    resource menu rather than contributing any virtualization mechanism.
+  drop_reason:
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T2
+  physical_resource: GPU
+  logical_abstraction: A cost model over pre-packaged public-cloud VM instance types
+    (fixed compute+memory+bandwidth bundles) used to select an offloading strategy
+    and VM configuration for LLM serving.
+  problem: KV-cache and attention-offloading techniques relieve GPU memory pressure
+    for LLM serving, but choosing the cost-optimal combination of offloading strategy
+    and cloud VM instance type is a high-dimensional decision problem because VM instances
+    bundle compute, memory, and bandwidth in fixed ratios.
+  mechanism: LLM-Pilot uses a hierarchical analytical model calibrated with linear
+    regression to jointly search offloading strategies (KV-cache offload, attention
+    offload) and VM instance configurations, optimizing cost subject to latency/throughput
+    SLOs.
+  isolation_mechanism: N/A.
+  multiplexing_mechanism: N/A (single-tenant serving cost optimization across VM instance
+    types, not multiplexing between tenants).
+  state_mechanism: KV-cache and attention state offloaded between GPU memory and host/instance-attached
+    memory via PCIe/network/storage bandwidth, depending on the chosen strategy.
+  overhead_bottleneck: Mismatch between the offloading strategy's bottleneck resource
+    (compute, memory capacity, or bandwidth) and what a given pre-packaged VM instance
+    actually provides.
+  primary_tradeoff: Aggressive KV/attention offloading -> relieves GPU memory pressure
+    and enables larger batches/contexts, but shifts the bottleneck to interconnect/storage
+    bandwidth, so the cost-optimal VM instance type depends on the offloading strategy
+    chosen.
+  quantitative_claims:
+  - up to 2.31x cost-efficiency improvement over prior methods (AWS evaluation)
+  why_useful_for_learning: Illustrates how virtualization's packaging of compute/memory/bandwidth
+    into fixed cloud VM instance types constrains an application-level optimization
+    (LLM serving cost) — why VM instance granularity matters even to a paper that
+    never modifies the virtualization layer.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: 'Threshold call per batch instructions: kept CONTEXT despite touching ''public
+    cloud VM clusters'' because the contribution is a cost/offloading optimization
+    consuming VM instance types as given, not a virtualization mechanism.'
+- id: VIRT-CCGRID26-06
+  title: Green or Fast? Learning to Balance Cold Starts and Idle Carbon in Serverless
+    Computing
+  title_correction:
+  authors:
+  - Bowen Sun
+  - Christos Antonopoulos
+  - Evgenia Smirni
+  - Bin Ren
+  - Nikolaos Bellas
+  - Spyros Lalis
+  venue: CCGrid
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid68966.2026.00034
+  official_url: https://doi.org/10.1109/CCGrid68966.2026.00034
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: A generic serverless keep-alive/cold-start scheduling policy
+    optimized for latency and carbon; it consumes container-pod warm-start infrastructure
+    without touching the isolation or runtime mechanism itself.
+  drop_reason:
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  physical_resource: CPU core
+  logical_abstraction: Serverless function-pod retention duration (keep-alive) as
+    an RL-controlled resource decision.
+  problem: Static keep-alive policies for serverless warm instances cannot jointly
+    balance cold-start latency and idle-instance carbon emissions under time-varying
+    grid carbon intensity and workload patterns.
+  mechanism: 'LACE-RL: a deep-RL framework that models serverless pod retention as
+    a sequential decision problem, dynamically tuning keep-alive duration using cold-start
+    probability, per-function latency cost, and real-time grid carbon intensity.'
+  isolation_mechanism: N/A.
+  multiplexing_mechanism: N/A (per-function keep-alive policy, not a physical-resource-sharing
+    mechanism).
+  state_mechanism: N/A.
+  overhead_bottleneck: Idle warm-container retention time versus cold-start probability,
+    evaluated against real-time grid carbon intensity.
+  primary_tradeoff: Longer keep-alive -> fewer cold starts (lower latency) but more
+    idle-carbon emissions; LACE-RL learns a per-function, carbon-aware middle ground
+    instead of a static policy.
+  quantitative_claims:
+  - 51.69% fewer cold starts vs Huawei's static keep-alive policy (Huawei Public Cloud
+    Trace)
+  - 77.08% lower idle keep-alive carbon emissions vs the same static baseline
+  why_useful_for_learning: 'A clear example of the brief''s default CONTEXT bucket
+    for serverless cost/carbon work: it consumes warm-container infrastructure without
+    touching the isolation or runtime mechanism.'
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: Has a companion 2-page 'Artifact Appendix' published separately in the CCGrid
+    2026 Workshops (CCGridW) proceedings (DOI 10.1109/CCGridW69005.2026.00030); that
+    artifact-appendix item is excluded from main-track counting (see excluded_by_pubtype).
+- id: VIRT-CCGRID26-07
+  title: 'Kumo: A Security-Focused Serverless Cloud Simulator'
+  title_correction:
+  authors:
+  - Wei Shao
+  - Khaled N. Khasawneh
+  - Setareh Rafatirad
+  - Houman Homayoun
+  - Chongzhou Fang
+  venue: CCGrid
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid68966.2026.00076
+  official_url: https://doi.org/10.1109/CCGrid68966.2026.00076
+  fullpaper_source: https://arxiv.org/abs/2603.19787
+  classification: CONTEXT
+  classification_note: Kumo is a discrete-event simulator that studies the security
+    consequences of existing serverless scheduling/container-reuse policies (co-location
+    and DoS risk) rather than implementing an isolation or virtualization mechanism
+    itself; kept CONTEXT (not forced to SUPPORT) per the brief's ambiguous-goes-to-CONTEXT
+    rule, reflected in an elevated priority.
+  drop_reason:
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  - T5
+  physical_resource: CPU core
+  logical_abstraction: A discrete-event simulation of a serverless platform's scheduler,
+    container-reuse policy, and resource contention, with attackers/victims modeled
+    as first-class entities.
+  problem: Production serverless platforms are vulnerable to co-location and resource-contention
+    attacks exploiting shared execution environments, but studying these risks on
+    real platforms is impractical (limited observability, high cost, no experimental
+    control), and existing simulators model performance/cost rather than security.
+  mechanism: Kumo models invocation arrivals, scheduler placement, container reuse,
+    resource contention, and queuing in a discrete-event framework, computing security
+    metrics (co-location probability, time-to-first-co-location, invocation drop rate,
+    tail latency) for arbitrary scheduler/placement policies.
+  isolation_mechanism: Simulates (does not implement) the isolation weaknesses created
+    by container-reuse and shared-execution-environment placement policies in serverless
+    platforms.
+  multiplexing_mechanism: Models how a serverless scheduler multiplexes worker/container
+    capacity across tenant invocations, and how that multiplexing policy determines
+    attacker-victim co-location probability.
+  state_mechanism: N/A (simulation, not an implemented runtime).
+  overhead_bottleneck: N/A in the traditional sense; the quantity studied is attack
+    exposure (co-location probability, DoS drop rate), not runtime cost.
+  primary_tradeoff: Scheduler policies that improve resistance to co-location attacks
+    are shown to be largely independent of the policies governing DoS/contention behavior
+    (which instead depend on service time, queuing policy, and cluster capacity) —
+    isolation-security and contention-robustness are separate axes, not one trade-off.
+  quantitative_claims:
+  - scheduler choice produces orders-of-magnitude differences in co-location-attack
+    likelihood under identical workloads (two case studies)
+  why_useful_for_learning: Explains why container-reuse and scheduler placement policy
+    matter for serverless runtime isolation — background that helps interpret the
+    isolation trade-offs made by any CORE serverless-isolation or sandboxing paper.
+  priority: P2
+  related: []
+  relations: []
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - preprint
+  - official-web
+  confidence: MEDIUM
+  notes: Open-access preprint located at arXiv:2603.19787 (linked from Semantic Scholar's
+    record for the CCGrid DOI); only the abstract was read from the arXiv abstract
+    page, not the full PDF. Has a companion Artifact Appendix in CCGridW (DOI 10.1109/CCGridW69005.2026.00032),
+    excluded from main-track counting.
+- id: VIRT-CCGRID26-08
+  title: 'LogLearners: Identifying Compromised AI Functions in Serverless Systems'
+  title_correction:
+  authors:
+  - Adil Bin Bhutto
+  - Erik Elmroth
+  - Monowar Bhuyan
+  venue: CCGrid
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid68966.2026.00077
+  official_url: https://doi.org/10.1109/CCGrid68966.2026.00077
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: A security-application paper that consumes FaaS/container isolation
+    as the substrate being defended (via runtime syscall analysis) without building
+    or changing the isolation mechanism itself.
+  drop_reason:
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  physical_resource: CPU core
+  logical_abstraction: Runtime system-call behavior of short-lived FaaS function containers,
+    used as a detection signal for supply-chain compromise.
+  problem: AI functions on FaaS platforms integrate unvetted open-source libraries,
+    creating a supply-chain attack surface where malicious dependencies can execute
+    undetected inside short-lived containers; static analysis fails to catch these
+    dynamic threats.
+  mechanism: Evaluates five learning-based detection methods over multiple system-call
+    feature representations, using a purpose-built dataset of 1.6 million syscalls
+    from 30 serverless functions deployed on an OpenFaaS-Kubernetes testbed, to identify
+    compromised AI functions at runtime.
+  isolation_mechanism: Relies on standard container/namespace isolation of FaaS functions
+    as the boundary being monitored for supply-chain compromise via syscall behavior;
+    does not modify the isolation boundary.
+  multiplexing_mechanism: N/A.
+  state_mechanism: N/A.
+  overhead_bottleneck: Runtime syscall-tracing/analysis overhead needed to catch dynamic
+    threats that static analysis misses (not separately quantified in the abstract).
+  primary_tradeoff: Runtime system-call behavioral analysis -> catches dynamic supply-chain
+    compromises that static analysis misses, at the cost of needing continuous syscall-monitoring
+    infrastructure.
+  quantitative_claims:
+  - up to 100% detection rate with 99.90% F1 score across five learning-based methods
+    (1.6M-syscall OpenFaaS-Kubernetes dataset, 30 functions)
+  why_useful_for_learning: A real operational security concern (AI supply-chain compromise)
+    that motivates strong container isolation, illustrated without the paper itself
+    building or changing the isolation mechanism.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: Has a companion Artifact Appendix in CCGridW (DOI 10.1109/CCGridW69005.2026.00033),
+    excluded from main-track counting.
+- id: VIRT-CCGRID26-09
+  title: 'PoliFlow: Inferring Control-Flow Policies from Serverless Workflows'
+  title_correction:
+  authors:
+  - Pedro Escaleira
+  - Vitor A. Cunha
+  - Joao P. Barraca
+  - Diogo Gomes
+  - Rui L. Aguiar
+  venue: CCGrid
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1109/CCGrid68966.2026.00078
+  official_url: https://doi.org/10.1109/CCGrid68966.2026.00078
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: A control-flow-integrity/access-control mechanism for serverless
+    workflows operating entirely above the virtualization/isolation layer; kept CONTEXT
+    (not DROP) per the brief's serverless-lands-in-CONTEXT default, as a contrast
+    case for what does not count as a virtualization contribution.
+  drop_reason:
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  physical_resource: CPU core
+  logical_abstraction: A per-workflow set of admissible cross-function execution paths,
+    enforced at each function/service boundary independent of the underlying compute/container
+    substrate.
+  problem: Pairwise RBAC permissions in serverless workflows cannot guarantee that
+    requests follow the intended cross-function execution order, allowing control-flow
+    violations even when every individual permission check passes.
+  mechanism: PoliFlow's Extractor computes admissible execution-path sets directly
+    from workflow definitions (rather than profiling or hand-written RBAC policies),
+    and a decentralized Enforcer co-located with each function/service validates requests
+    against precomputed path prefixes, rejecting out-of-order executions.
+  isolation_mechanism: N/A (access-control/control-flow-integrity mechanism, not a
+    resource-isolation boundary).
+  multiplexing_mechanism: N/A.
+  state_mechanism: Per-request execution-path/prefix state is tracked and validated
+    by each entity's co-located Enforcer.
+  overhead_bottleneck: Per-request policy-validation overhead at each function/service
+    in the workflow (reported as 'modest' in the abstract, not itemized).
+  primary_tradeoff: Deriving control-flow policy directly from the workflow specification
+    -> avoids profiling/hand-written RBAC and hardens against control-flow attacks,
+    at the cost of requiring an explicit, accurate workflow specification to derive
+    policies from.
+  quantitative_claims: []
+  why_useful_for_learning: A serverless-application security mechanism that sits entirely
+    above the virtualization/isolation layer; useful as a contrast case for what does
+    NOT count as a virtualization contribution even when it targets serverless infrastructure.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes:
+- id: VIRT-HPDC26-01
+  title: Enabling Floating Point Virtualization With Tiny Numbers
+  title_correction:
+  authors:
+  - Kevin Hayes
+  - Peter Dinda
+  venue: HPDC
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3806645.3807578
+  official_url: https://doi.org/10.1145/3806645.3807578
+  fullpaper_source: UNKNOWN
+  classification: CORE
+  classification_note: The contribution is a new instruction-level virtualization
+    mechanism (trap-based interception plus a boxed value representation) that lets
+    unmodified binaries run with an alternative, smaller-than-native floating-point
+    arithmetic system; virtualizing the arithmetic ISA itself is the paper's entire
+    subject.
+  drop_reason:
+  taxonomy_primary: T1
+  taxonomy_secondary:
+  - T10
+  physical_resource: CPU core
+  logical_abstraction: A virtual floating-point arithmetic system that lets unmodified
+    binaries execute IEEE-754-shaped operations at a programmer-chosen precision as
+    small as 3 bits, transparently substituted for native FP instructions.
+  problem: Hardware and compilers only provide fixed IEEE-754 widths (e.g., 32/64-bit),
+    while low-precision AI accelerators increasingly want arithmetic narrower than
+    any native binary format, and no existing mechanism lets an unmodified binary
+    transparently run with such 'tiny' numbers.
+  mechanism: 'A hardware/software co-design on x64: ''lazy FPU abduction'' traps floating-point
+    instructions by exploiting otherwise-idle x64 FPU-state-ownership machinery, and
+    ''tiny value boxing'' compactly encodes reduced-precision values in the FP register/memory
+    representation the trap handler manages; precision (down to 3 bits) can be chosen
+    per-value or per-instruction at runtime.'
+  isolation_mechanism: N/A (single-process arithmetic substitution, not a multi-tenant
+    boundary).
+  multiplexing_mechanism: N/A.
+  state_mechanism: Reduced-precision values are boxed/encoded directly in the FP register
+    and memory locations the trap handler manages, analogous to how the companion
+    2025 system NaN-boxed pointers to larger-than-native alternative-arithmetic results
+    — here the boxing runs in the opposite direction, for smaller-than-native values.
+  overhead_bottleneck: Trap frequency/cost of intercepting FP instructions in software
+    — the same fundamental bottleneck the companion 2025 paper attacked for large
+    numbers, now faced again for tiny numbers.
+  primary_tradeoff: Trapping at the instruction level to emulate arbitrary sub-native
+    precision -> gains binary compatibility and per-value/per-instruction precision
+    control without recompilation, but costs per-instruction trap/emulation overhead
+    relative to native hardware execution.
+  quantitative_claims:
+  - supports IEEE-754-shaped precision down to 3 bits, adjustable per-value or per-instruction
+    at runtime, validated with NAS and other benchmarks across a range of lower-precision
+    settings
+  why_useful_for_learning: 'Shows the opposite end of the floating-point-virtualization
+    design space from the HPDC 2025 FPVM paper: instead of accelerating trap-and-emulate
+    for wider/alternative arithmetic, it extends the same trap-based virtualization
+    idea to narrower-than-native precision relevant to low-precision AI hardware,
+    illustrating that ''virtualizing an ISA-level numeric format'' is a general technique
+    independent of which direction the size changes.'
+  priority: P1
+  related:
+  - Virtualization So Light, It Floats! Accelerating Floating Point Virtualization
+    (Wanninger, Dhiantravan, Dinda; HPDC 2025)
+  relations:
+  - type: EXTENSION
+    target: Virtualization So Light, It Floats! Accelerating Floating Point Virtualization
+      (Wanninger, Dhiantravan, Dinda; HPDC 2025, DOI 10.1145/3731545.3731584)
+    basis: Same senior/last author (Peter Dinda) and the same overall floating-point-virtualization
+      research program (per the author's own publication list, listed consecutively
+      as HPDC 2025 and HPDC 2026 entries); the 2025 system (FPVM) uses trap-and-emulate
+      plus 'NaN-boxing' to virtualize toward LARGER alternative arithmetic (MPFR,
+      posits, interval arithmetic), while the 2026 abstract explicitly targets the
+      complementary, previously-unaddressed direction of SMALLER (tiny, down to 3-bit)
+      numbers using an analogous but distinct mechanism ('tiny value boxing' + 'lazy
+      FPU abduction'), extending floating-point virtualization to a numeric regime
+      the 2025 design's optimizations (trap short-circuiting, instruction-sequence
+      emulation, kernel-bypass) were not built for.
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: 'Full-text access failed after 4 distinct routes: (1) ACM DL doi.org/10.1145/3806645.3807578
+    -> 403; (2) ACM DL direct PDF path dl.acm.org/doi/pdf/10.1145/3806645.3807578
+    -> 403 (site blocks automated fetch despite the paper being flagged Gold/CC-BY
+    open access by Semantic Scholar); (3) the author''s own curated publications page
+    (users.cs.northwestern.edu/~pdinda/papers.html) lists the entry as ''To Appear''
+    with no PDF link (the link text seen in one fetch was a hallucination by the page-summarizing
+    model, not a real href — confirmed by re-fetching and requesting the raw HTML,
+    which shows no href); (4) guessed filenames in the author''s own Papers/ directory
+    (hpdc26.pdf) and a Kevin Hayes personal-page guess both 404/403. Classification
+    rests on the complete official abstract + Semantic Scholar TLDR, which is sufficiently
+    detailed to identify the mechanism and confirm CORE status, but design/evaluation-section
+    detail was not reached. By contrast, the HPDC 2025 companion paper''s own PDF
+    (hpdc25.pdf) WAS successfully retrieved and read in full from the same author
+    page for the lineage comparison.'
+- id: VIRT-HPDC26-02
+  title: 'Enabling High-Utilization and Low-Contention FaaS: A Request-Level Resource
+    Provisioning Approach'
+  title_correction:
+  authors:
+  - Runfu Li
+  - Zishu Yu
+  - Yifan Wang
+  - Xiaohui Peng
+  - Ninghui Sun
+  - Zhiwei Xu
+  venue: HPDC
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3806645.3807810
+  official_url: https://doi.org/10.1145/3806645.3807810
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: RRP is a FaaS platform scheduling/resource-provisioning system
+    operating above existing instance (VM/container) boundaries; it changes allocation
+    granularity, not the virtualization mechanism itself, matching the brief's default
+    CONTEXT landing zone for generic serverless resource management.
+  drop_reason:
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  physical_resource: CPU core
+  logical_abstraction: Per-request (rather than per-instance) resource allocation
+    and release within a FaaS platform, unified with request routing.
+  problem: Static, coarse-grained instance-level resource allocation in FaaS platforms
+    cannot match millisecond-level bursty request patterns, forcing a trade-off between
+    resource utilization and QoS.
+  mechanism: RRP shifts the unit of scheduling/resource management from the VM/container
+    instance to the individual request ('request-level provisioning'), unifying instance
+    placement and request routing with millisecond-level global visibility so each
+    request gets and releases exactly the resources it needs.
+  isolation_mechanism: Per-request resource isolation from contention, implemented
+    at the platform-scheduling level rather than via a new sandboxing/VM primitive.
+  multiplexing_mechanism: Compute/memory resources are multiplexed at request granularity
+    across a scalable FaaS platform rather than at coarse per-instance granularity.
+  state_mechanism: N/A.
+  overhead_bottleneck: Coordination/visibility overhead of tracking global, millisecond-level
+    resource state across the whole platform to allocate/release resources per request.
+  primary_tradeoff: Finer (request-level) resource granularity -> higher utilization
+    and lower tail latency than instance-level allocation, at the cost of needing
+    low-overhead global visibility/coordination infrastructure that instance-level
+    systems avoid.
+  quantitative_claims:
+  - 1.33x-30.15x average end-to-end latency speedup over instance-level baselines
+    (real-world Azure traces)
+  - 1.37x-61.46x P99 latency speedup (same traces)
+  - CPU utilization raised from 44.80%-56.32% to 72.49% under bursty load
+  why_useful_for_learning: A concrete instance-level-vs-request-level resource-granularity
+    trade-off in FaaS platforms; useful CONTEXT for understanding why serverless platforms
+    want finer resource multiplexing than a VM/container instance boundary naturally
+    provides, without itself changing the virtualization boundary.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes: Flagged Gold/CC-BY open access by Semantic Scholar but the underlying ACM
+    DL page returns 403 to automated fetch; not pursued further given CONTEXT classification
+    is clear from the abstract alone.
+- id: VIRT-HPDC26-03
+  title: 'Cremes: Cost-Efficient and Reliable Microservice Execution on Spot Instances'
+  title_correction: 'seed list said: "Cremes: Cost-Efficient Microservice Execution
+    on Spot Instances"'
+  authors:
+  - Liao Chen
+  - Chenyu Lin
+  - Junlin Chen
+  - Shutian Luo
+  - Huanle Xu
+  - Chengzhong Xu
+  venue: HPDC
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3806645.3807817
+  official_url: https://doi.org/10.1145/3806645.3807817
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: A cost-aware microservice autoscaler for spot cloud VM instances;
+    it reacts to VM preemption/provisioning mechanics from the outside rather than
+    contributing a virtualization mechanism.
+  drop_reason:
+  taxonomy_primary: T9
+  taxonomy_secondary:
+  - T8
+  physical_resource: CPU core
+  logical_abstraction: Spot cloud VM instances (preemptible, provisioning-delayed)
+    as the substrate for microservice autoscaling decisions.
+  problem: Spot cloud instances are cheaper but face preemption and unpredictable
+    provisioning delays, which conventional microservice autoscalers (assuming immediate
+    instance availability) handle poorly, causing SLO violations.
+  mechanism: Cremes models both instance-waiting-time and microservice-startup latency,
+    uses cloud-exposed availability metrics plus lightweight ML latency prediction,
+    and feeds a multi-dimensional optimization engine that decides scaling actions
+    to keep recovery within the spot grace period at minimum cost.
+  isolation_mechanism: N/A.
+  multiplexing_mechanism: N/A (cost/availability-aware autoscaling across spot VM
+    instances, not a sharing mechanism).
+  state_mechanism: N/A.
+  overhead_bottleneck: Spot-instance provisioning/waiting time combined with microservice
+    cold-start latency, both of which must fit inside the cloud provider's preemption
+    grace period.
+  primary_tradeoff: Using spot instances -> large cost savings at the cost of preemption
+    risk; Cremes' predictive scaling recovers most of the savings while bounding SLO-violation
+    risk, but depends on accurate latency/availability prediction.
+  quantitative_claims:
+  - up to 37.1% infrastructure cost reduction (AWS, evaluated with DeathStarBench,
+    TrainTicket, and Alibaba-trace-driven experiments)
+  - SLO violation rate kept below 6.7% under preemptible spot instances
+  why_useful_for_learning: Shows a concrete operational cost of not accounting for
+    the underlying virtualization/instance-provisioning reality (spot VM preemption
+    and startup latency) in microservice autoscaling — CONTEXT for how VM-level provisioning
+    mechanics ripple into higher-level system design.
+  priority: P3
+  related: []
+  relations: []
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes:
+- id: VIRT-HPDC26-04
+  title: 'Krysha: Cost-Efficient Resource Orchestration for Geo-Distributed Serverless
+    Microservices'
+  title_correction: 'seed list said: "Krysha: Cost-Efficient Geo-Distributed Serverless
+    Microservices"'
+  authors:
+  - Yuqiu Zhang
+  - Hans-Arno Jacobsen
+  venue: HPDC
+  year: 2026
+  publication_type: ARCHIVAL_MAIN_PAPER
+  doi: 10.1145/3806645.3807589
+  official_url: https://doi.org/10.1145/3806645.3807589
+  fullpaper_source: UNKNOWN
+  classification: CONTEXT
+  classification_note: A geo-distributed serverless orchestration/scheduling system
+    operating above the function-instance abstraction; it decouples CPU/memory provisioning
+    at the orchestration layer rather than changing any virtualization mechanism.
+  drop_reason:
+  taxonomy_primary: T8
+  taxonomy_secondary:
+  - T9
+  physical_resource: CPU core
+  logical_abstraction: A bi-level (region, then node) function-placement and resource-provisioning
+    scheme for geo-distributed serverless microservices, with CPU and memory decoupled
+    per function instance.
+  problem: Serverless orchestrators tuned for single-region utilization or cold-start
+    mitigation are suboptimal for geo-distributed microservices, where SLO compliance
+    and cost-efficiency both depend on cross-region function placement.
+  mechanism: Krysha uses bi-level scheduling — fast global early-binding of functions
+    to regions, then regional late-binding to specific compute nodes — plus decoupled
+    CPU/memory provisioning with in-place vertical scaling of individual function
+    instances, guided by an explicit cost model.
+  isolation_mechanism: N/A.
+  multiplexing_mechanism: Decouples CPU and memory provisioning per function instance
+    so each resource is allocated independently rather than as a fixed bundle.
+  state_mechanism: N/A.
+  overhead_bottleneck: Cost of over-provisioning CPU/memory as a fixed bundle per
+    function instance when only one resource is actually the bottleneck for a given
+    geo-distributed workload.
+  primary_tradeoff: Decoupling CPU/memory provisioning and using region-then-node
+    bi-level binding -> substantial cost savings while meeting SLOs, at the cost of
+    a more complex two-level scheduling/cost-modeling system than single-level orchestrators.
+  quantitative_claims:
+  - up to 74.7% cost savings vs state-of-the-art alternatives in scaled deployments,
+    while maintaining SLO requirements
+  why_useful_for_learning: Illustrates that even at the serverless/FaaS layer, resources
+    are ultimately fulfilled by underlying VM/container instances with fixed CPU:memory
+    bundles — the friction this paper resolves at the orchestration layer is a direct
+    symptom of that lower-level virtualization packaging, echoing the CCGrid VM-sizing
+    paper's point about instance-level bundling.
+  priority: P3
+  related:
+  - VIRT-CCGRID26-02
+  relations:
+  - type: CONTRASTS_WITH
+    target: VIRT-CCGRID26-02
+    basis: Both papers concern the mismatch between fixed VM/instance resource bundles
+      and actual workload needs — one at the level of raw IaaS VM catalogs (CCGrid26-02),
+      the other at the level of serverless function provisioning built atop those
+      instances (this paper).
+  existing_corpus_overlap:
+  previous_analysis_depth:
+  evidence_depth: ABSTRACT
+  evidence_kinds:
+  - official-web
+  confidence: MEDIUM
+  notes:
+venue_populations:
+- venue: CCGrid
+  year: 2026
+  official_source: https://www.ccgrid2026.org/programs.html
+  main_track_paper_count: 74
+  count_basis: Full official conference program; main-track count recorded in CENSUS_2026.md.
+- venue: HPDC
+  year: 2026
+  official_source: https://www.hpdc.org/2026/
+  main_track_paper_count: UNKNOWN
+  count_basis: Conference metadata confirmed, but the original retrieval pass could
+    not establish a reliable main-track population.
+possible_omissions: []
+possible_expansion: []
+excluded_by_pubtype: []
+access_failures: []
+seed_corrections:
+- seed_title: 'Cremes: Cost-Efficient Microservice Execution on Spot Instances'
+  official_title: 'Cremes: Cost-Efficient and Reliable Microservice Execution on Spot
+    Instances'
+  source: https://doi.org/10.1145/3806645.3807817
+- seed_title: 'Krysha: Cost-Efficient Geo-Distributed Serverless Microservices'
+  official_title: 'Krysha: Cost-Efficient Resource Orchestration for Geo-Distributed
+    Serverless Microservices'
+  source: https://doi.org/10.1145/3806645.3807589
+batch_observations: Recovered during the 2026-09-21 final reconciliation from the
+  13 merged records whose _src field named batch6c.yaml. This restores the missing
+  raw batch/provenance layer without changing any paper verdict or merged-corpus count.

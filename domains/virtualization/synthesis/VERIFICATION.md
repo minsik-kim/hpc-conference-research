@@ -9,7 +9,7 @@
 |---|---|---|---|---|---|---|---|
 | VIRT-EUROSYS25-03 (HyperAlloc) | OK (저자 호스팅 PDF로 확인, 단 PDF 자체는 익명화된 제출본) | OK (형식·리졸브 경로 타당, 직접 resolve는 프록시 차단으로 미실시) | 간접 확인 (PDF가 익명이라 SRA Hannover 페이지 출처에 의존 — 카탈로그도 이를 명시) | OK | 7건 중 6건 원문과 정확히 일치, **1건 불일치 발견**(아래 참조) | OK (익명 제출본이지만 실제 전체 본문·수치 확인됨) | **경미한 오류** |
 | VIRT-OSDI26-01 (JANUS) | OK — USENIX 공식 presentation 페이지에서 제목·저자 20명 전원 정확히 일치 확인 | OK (USENIX가 OSDI 개별 논문에 DOI를 부여하지 않는다는 카탈로그 설명이 타당 — UNKNOWN 처리 적절) | OK (20명 전원 일치) | OK (main track) | UNVERIFIED (예산상 수치 대조 미실시) | OK (DESIGN_EVAL은 오히려 보수적) | **OK** |
-| VIRT-OSDI26-06 (Nixie) | 제목/저자는 arXiv에서 확인되나 **OSDI 2026 소속 자체를 독립적으로 확인하지 못함**(아래 참조) | OK (UNKNOWN으로 정직하게 기재) | OK (arXiv와 일치) | UNVERIFIED (main track 가정, 미확인) | 부분 확인 (초록 요약과 일치하는 수치 존재, 전체 대조는 못함) | FULL은 "논문 내용을 완전히 읽었다"는 의미로는 타당하나, venue 귀속 자체가 불확실한 채로 OSDI26 카탈로그에 등재됨 | **경미한 오류** (카탈로그가 이미 스스로 리스크를 명시했다는 점은 감안) |
+| VIRT-OSDI26-06 (Nixie) | OK — 2026-09-21 USENIX 공식 presentation page로 제목·저자·venue·pages 확인 | OK (USENIX 논문은 DOI 없음) | OK | OK (main track) | 부분 확인 (초록 요약과 일치; 기존 full-text read 유지) | FULL 타당 | **OK — 이전 venue 미확인 해소** |
 | VIRT-EUROSYS24-01 (HD-IOV) | OK | OK 개연성 (ACM DL 403, 직접 resolve 불가하나 같은 EuroSys'24 proceedings 접두사(3627703)를 S-NIC과 공유 — 정합적) | **불완전**: GitHub 저장소 자체에 전체 10명 저자가 나와 있음에도 카탈로그는 3명+"et al."만 기재 | OK | OK — "2.96x" 및 "2.9x" 수치가 GitHub README에 **원문 그대로** 확인됨 | OK (artifact 기반 DESIGN_EVAL 타당) | **경미한 오류** (저자 누락) |
 | VIRT-EUROSYS24-04 (S-NIC) | OK | OK 개연성 (같은 이유로 403이나 형식 정합) | OK (4명 전원 저자 호스팅 PDF와 일치) | OK | OK — 6개 수치 전부 원문에서 **정확히 확인**됨 | OK (저자 호스팅 전문 확인, FULL 타당) | **OK** |
 | VIRT-SOSP24-02 (VPRI) | OK (dblp SOSP'24 페이지, pp.541–557) | OK (UNKNOWN 처리 타당 — dblp에도 DOI 없음) | OK (12명 전원, "et al." 표기는 포맷상 특이하나 내용은 정확) | OK | OK — "최대 50% DRAM 낭비" 포함 6개 수치 전부 원문에서 **정확히 확인**됨 | OK | **OK** |
@@ -47,9 +47,12 @@ Crossref 서지 검색으로 정답 DOI를 복원했다:
 
 카탈로그는 저자를 "Zongpu Zhang; Jiangtao Chen; Banghao Ying; et al."로 축약했으나, 정작 카탈로그가 근거로 인용한 바로 그 GitHub artifact(Maphist0/hdiov-ae)의 인용 정보에 전체 10명(Zongpu Zhang, Jiangtao Chen, Banghao Ying, Yahui Cao, Lingyu Liu, Jian Li, Xin Zeng, Junyuan Wang, Weigang Li, Haibing Guan)이 명시되어 있다. 확보 가능했던 정보를 활용하지 않은 완성도 문제다. (참고: "2.96x device density"와 "2.9x faster initialization" 수치는 같은 README에서 **원문 그대로** 확인되어 정확했다.)
 
-### 4. [경미한 오류/미확인] OSDI26-06 (Nixie) — OSDI 2026 소속 자체가 미확인 상태로 남아 있음
+### 4. [해결] OSDI26-06 (Nixie) — OSDI 2026 공식 소속 확인
 
-카탈로그 스스로 "OSDI 2026 venue/session placement... 독립적으로 확인되지 않았다"고 명시하고 있는데, 본 검증에서도 USENIX의 OSDI'26 technical-sessions 프로그램 전체를 재조회했지만 "Nixie"나 저자(Yechen Xu, Danyang Zhuo, Yiran Chen)를 찾지 못했고, `usenix.org/conference/osdi26/presentation/xu` 등 URL 추정도 404였다. arXiv 원문(제목·저자·초록 내용)은 정확히 일치하므로 논문 자체의 존재와 내용은 진짜이지만, **이 논문이 실제로 OSDI 2026에 채택되었는지는 이번 검증으로도 확인할 수 없었다** — 카탈로그의 venue/year 필드는 여전히 가정(제목이 seed list와 일치한다는 것)에 의존한다. 정직하게 플래그된 리스크이므로 "중대한 오류"까지는 아니지만, 미해결 상태다.
+2026-09-21 최종 pass에서 USENIX 공식 page
+`https://www.usenix.org/conference/osdi26/presentation/xu-yechen`을 확인했다. 제목,
+저자 5명, OSDI 2026, pages 2085–2101이 모두 record와 일치한다. 이전 pass가 추정한
+`/presentation/xu` slug가 틀렸던 것이 원인이며, venue/year 미확인 상태는 해소됐다.
 
 ### 5. [미확인] HPCA26-05 (DSAssassin) — 수치·메커니즘 디테일은 독립 확인 불가
 
@@ -68,7 +71,38 @@ DOI·저자·venue·year는 Semantic Scholar를 통해 정확히 일치 확인�
 
 ## 종합 평가
 
-12건 중 완전히 깨끗한(OK) 레코드는 6건(JANUS, S-NIC, VPRI, Elastic Translations, vNPU/NeuISA, Faascale, SOSP25-01 RDMA — 정확히는 7건), 경미한 오류가 있는 레코드는 3건(HyperAlloc의 수치 1건 불일치, HD-IOV의 저자 누락, Nixie의 venue 미확인), 확인 불가로 남은 레코드는 1건(DSAssassin의 수치/메커니즘), 그리고 **중대한 오류가 확정된 레코드는 2건(CCGRID24-03, CCGRID24-06 — 둘 다 DOI가 틀렸고, 서로 다른 정답 DOI를 복원함)**이다.
+최종 재확인 기준 Nixie의 venue 미확인은 해소됐다. 남은 표본 이슈는 HyperAlloc 수치 1건,
+HD-IOV 저자 축약, DSAssassin 세부 수치/메커니즘 미확인이다. CCGRID24-03/06 DOI 오류는
+각각 올바른 값으로 복원됐고 raw batch에도 역반영됐다.
+
+## 2026-09-21 최종 upload/retrieval reconciliation
+
+- 최종 corpus record 410건과 `PAPER_CATALOG.csv` 410행은 ID 집합이 완전히 일치한다.
+- batch/log paper record 397개 ID와 merged 410개 ID를 대조해, `_src: batch6c.yaml`을
+  가리키지만 원 파일이 없던 CCGrid26 9건 + HPDC26 4건을 발견했다. 13건 모두 corpus에는
+  이미 있었으므로 paper 누락은 아니며, 누락된 raw provenance layer를 `batches/batch6c.yaml`로
+  복원했다.
+- raw batch와 merged가 달랐던 DOI 정정 3건과 HyperAlloc `[VERIFY]` 경고를 raw batch에도
+  동기화했다.
+- `possible_omissions`에만 남은 EuroSys24/SOSP24 19개 제목은 원문을 읽지 못해 판정을
+  확정하지 않은 `BORDERLINE/UNRESOLVED`다. 누락으로 숨기지 않고
+  `batches/census24a_eurosys_osdi_sosp.yaml`에 제목·venue·year·탐색 근거가 보존돼 있다.
+- 확정된 corpus 기준 의도적 배제는 DROP 48건이다. duplicate DOI/duplicate ID는 0건이며,
+  ASPLOS 프로그램의 wrong-year/re-presentation 5건은 최종 corpus에서 제외된 상태다.
+
+### 구조화 source 필드가 비어 있는 title-only record의 공식 program pointer
+
+아래 record는 DOI/개별 URL/fullpaper가 `UNKNOWN`이지만, paper 자체를 확인한 공식 program
+pointer를 이 표에 보존한다. PDF를 repository에 저장하지 않는 정책이므로 PDF 부재는 누락이 아니다.
+
+| records | official source |
+|---|---|
+| `VIRT-HPCA25-04`, `-07`, `-08`, `-09` | https://hpca-conf.org/2025/main-program/ |
+| `VIRT-MICRO25-07`, `-08`, `-09`, `-10` | https://microarch.org/micro58/program/index.php |
+| `VIRT-HPCA26-01`, `-06`–`-11` | https://2026.hpca-conf.org/ |
+| `VIRT-OSDI26-10` | https://www.usenix.org/conference/osdi26/presentation/srivatsan |
+| `VIRT-OSDI26-14` | https://www.usenix.org/conference/osdi26/presentation/chai |
+| `VIRT-OSDI26-06` (resolved venue flag) | https://www.usenix.org/conference/osdi26/presentation/xu-yechen |
 
 이 표본을 근거로 판단하면, 이 코퍼스는 **부분적으로만 신뢰할 수 있다**. 긍정적인 면: 저자들이 스스로 "UNKNOWN", "ABSTRACT depth", "artifact-only evidence" 등을 매우 정직하게 표기하고 있고, 실제로 원문·GitHub artifact·공식 프로그램과 대조했을 때 제목·저자·핵심 수치의 정합률이 상당히 높았다(특히 S-NIC, VPRI, Faascale, SOSP25-01, 그리고 가장 중요하게는 MICRO24-02의 결정적 분류 판단까지 전부 검증 통과). 즉 "지어낸" 흔적은 거의 없었다.
 
