@@ -113,3 +113,16 @@ screen the whole population, apply the full-paper gate, and update **only** the
 topic and synthesis documents the new sources actually change. Re-check the
 watchlist in `synthesis/GPU_PENDING_FULLTEXT.md` first — several entries there
 are expected to become reachable with time rather than with effort.
+
+## Integrity audit — 2026-09-21
+
+- All **85/85 deep-analysis files** are uniquely identified and reachable from
+  `synthesis/GPU_MASTER_INDEX.md`; no duplicate analysis ID, title or primary
+  DOI, filename/ID mismatch, dangling master-index reference, or real broken
+  local Markdown link was found.
+- Five stale cross-cluster mirror rows were reconciled to their authoritative
+  owner ledgers: Debunking the CUDA Myth, Lit Silicon, CCL-D, DEFT, and
+  Mille-feuille. Derived summary/watchlist rows were updated with them.
+- This audit found **no missing investigated paper record**. The denominator,
+  access and depth gaps listed above remain coverage gaps, not corpus-integrity
+  failures.
