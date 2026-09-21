@@ -948,7 +948,7 @@ venue_populations:
   count_basis: Full official conference program; main-track count recorded in CENSUS_2026.md.
 - venue: HPDC
   year: 2026
-  official_source: https://www.hpdc.org/2026/
+  official_source: https://www.hpdc.org/
   main_track_paper_count: UNKNOWN
   count_basis: Conference metadata confirmed, but the original retrieval pass could
     not establish a reliable main-track population.
